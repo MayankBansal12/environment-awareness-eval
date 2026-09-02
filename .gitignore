@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+# Run artifacts are scratch output. The two reference live smoke runs under
+# results/live-* are force-added so a reviewer can read a real trace.
+results/
+*.log
+*.tsbuildinfo
+.DS_Store
+.env
+.env.local
+
+# Patch/merge leftovers
+*.orig
+*.rej

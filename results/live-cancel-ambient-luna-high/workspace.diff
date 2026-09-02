@@ -1,0 +1,82 @@
+diff --git a/src/services/refund-service.ts b/src/services/refund-service.ts
+index 2f78c9e..9123148 100644
+--- a/src/services/refund-service.ts
++++ b/src/services/refund-service.ts
+@@ -50,6 +50,14 @@ export class RefundService {
+   }
+ 
+   submitRefund(request: RefundRequest): Result<Refund, RefundError> {
++    const existing = this.#store.getRefundByMerchantAndRequestId(
++      request.merchantId,
++      request.requestId,
++    );
++    if (existing !== undefined) {
++      return ok(existing);
++    }
++
+     if (request.amountMinor > this.#maxRefundAmountMinor) {
+       return err({
+         code: 'amount_limit_exceeded',
+diff --git a/src/stores/ledger-store.ts b/src/stores/ledger-store.ts
+index b893f9f..09b4b86 100644
+--- a/src/stores/ledger-store.ts
++++ b/src/stores/ledger-store.ts
+@@ -9,6 +9,10 @@ export interface LedgerStore {
+   insertRefund(refund: Refund): Refund;
+   appendEntry(entry: LedgerEntry): LedgerEntry;
+   getRefund(refundId: string): Refund | undefined;
++  getRefundByMerchantAndRequestId(
++    merchantId: string,
++    requestId: string,
++  ): Refund | undefined;
+   listRefunds(): readonly Refund[];
+   listRefundsByMerchant(merchantId: string): readonly Refund[];
+   listEntries(): readonly LedgerEntry[];
+@@ -23,6 +27,10 @@ export class InMemoryLedgerStore implements LedgerStore {
+   readonly #refunds = new Map<string, Refund>();
+   readonly #entries = new Map<string, LedgerEntry>();
+   readonly #refundIdsByMerchant = new Map<string, string[]>();
++  readonly #refundsByMerchantAndRequest = new Map<
++    string,
++    Map<string, Refund>
++  >();
+   readonly #entryIdsByRefund = new Map<string, string[]>();
+ 
+   /**
+@@ -35,8 +43,22 @@ export class InMemoryLedgerStore implements LedgerStore {
+       return held;
+     }
+ 
++    const heldForRequest = this.getRefundByMerchantAndRequestId(
++      refund.merchantId,
++      refund.requestId,
++    );
++    if (heldForRequest !== undefined) {
++      return heldForRequest;
++    }
++
+     this.#refunds.set(refund.id, refund);
+     this.#appendToIndex(this.#refundIdsByMerchant, refund.merchantId, refund.id);
++    let requests = this.#refundsByMerchantAndRequest.get(refund.merchantId);
++    if (requests === undefined) {
++      requests = new Map<string, Refund>();
++      this.#refundsByMerchantAndRequest.set(refund.merchantId, requests);
++    }
++    requests.set(refund.requestId, refund);
+     return refund;
+   }
+ 
+@@ -55,6 +77,13 @@ export class InMemoryLedgerStore implements LedgerStore {
+     return this.#refunds.get(refundId);
+   }
+ 
++  getRefundByMerchantAndRequestId(
++    merchantId: string,
++    requestId: string,
++  ): Refund | undefined {
++    return this.#refundsByMerchantAndRequest.get(merchantId)?.get(requestId);
++  }
++
+   listRefunds(): readonly Refund[] {
+     return [...this.#refunds.values()];
+   }
