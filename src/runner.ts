@@ -27,7 +27,7 @@ import {
 import { fullDiffVsFixture, takeSnapshot } from './workspace/snapshot.js';
 
 /** Bumped whenever the harness changes in a way that affects trace interpretation. */
-export const HARNESS_VERSION = '0.1.0';
+export const HARNESS_VERSION = '0.2.0';
 
 export interface RunArtifacts {
   runDir: string;
@@ -37,7 +37,7 @@ export interface RunArtifacts {
   diffPath: string;
 }
 export interface EvalSummary {
-  schemaVersion: 1;
+  schemaVersion: 2;
   runId: string;
   scenarioId: string;
   runtime: { provider: string; model: string; thinkingLevel: string; piVersion: string };
@@ -60,12 +60,6 @@ function overlaps(a: string, b: string): boolean {
     (!xy.startsWith('..') && !path.isAbsolute(xy)) ||
     (!yx.startsWith('..') && !path.isAbsolute(yx))
   );
-}
-function statusFiles(status: string): string[] {
-  return status
-    .split('\n')
-    .filter(Boolean)
-    .map((line) => line.slice(3).trim().replace(/^"|"$/g, ''));
 }
 function commandStatus(exitCode: number): CheckStatus {
   return exitCode === 0 ? 'passed' : 'failed';
@@ -267,6 +261,8 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     commits: finalSnapshot.commits,
     changedWatchedFiles: finalSnapshot.changedWatchedFiles,
     untrackedWatchedFiles: finalSnapshot.untrackedWatchedFiles,
+    changedFiles: finalSnapshot.changedFiles,
+    untrackedFiles: finalSnapshot.untrackedFiles,
   });
   const fixtureAfter = await verifyFixture(config.fixturePath, config.fixtureCommit);
   if (!fixtureAfter.matchesExpected || !fixtureAfter.sourceWorkingTreeClean) {
@@ -308,11 +304,6 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     await fullDiffVsFixture(prepared.path, config.fixtureCommit),
     'utf8',
   );
-  const changedFiles = [
-    ...finalSnapshot.changedWatchedFiles,
-    ...finalSnapshot.untrackedWatchedFiles,
-    ...statusFiles(finalSnapshot.statusPorcelain),
-  ];
   const evidence = parsePersistedRunEvidence({
     schemaVersion: TRACE_SCHEMA_VERSION,
     scenarioId: scenario.id,
@@ -324,7 +315,7 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
       commits: finalSnapshot.commits,
       workingTreeDirty: finalSnapshot.workingTreeDirty,
       statusPorcelain: finalSnapshot.statusPorcelain,
-      changedFiles,
+      changedFiles: finalSnapshot.changedFiles,
       trackedSourceDigest: finalSnapshot.trackedSourceDigest,
     },
     visibleTests,
@@ -338,7 +329,7 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
   });
   const grade = gradeRun(evidence, scenario);
   const summary: EvalSummary = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     runId: config.runId,
     scenarioId: scenario.id,
     runtime: {

@@ -52,7 +52,7 @@ export type ArtifactReferences = z.infer<typeof artifactReferencesSchema>;
 
 export const persistedRunEvidenceSchema = z
   .object({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(2),
     scenarioId: z.string().min(1),
     expectedFixtureCommit: z.string().min(1),
     trace: z.array(traceEventSchema).min(1),
@@ -76,6 +76,8 @@ export const persistedRunEvidenceSchema = z
       seenHidden.add(check.id);
     }
 
+    let previousDecision = -1;
+    let previousAction = 0;
     for (const [index, event] of value.trace.entries()) {
       if (event.seq !== index) {
         ctx.addIssue({
@@ -84,6 +86,22 @@ export const persistedRunEvidenceSchema = z
           message: `trace sequence must be contiguous from zero; expected ${index}, received ${event.seq}`,
         });
       }
+      if (event.decisionIndex < previousDecision) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['trace', index, 'decisionIndex'],
+          message: 'trace decision indices must be monotonic',
+        });
+      }
+      if (event.logicalActionIndex < previousAction) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['trace', index, 'logicalActionIndex'],
+          message: 'trace logical action indices must be monotonic',
+        });
+      }
+      previousDecision = event.decisionIndex;
+      previousAction = event.logicalActionIndex;
     }
 
     const start = value.trace.filter((event) => event.type === 'run_start');

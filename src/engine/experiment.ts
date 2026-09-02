@@ -229,6 +229,7 @@ export class ExperimentEngine {
       counts,
       anchoredEvents: this.#anchoredEvents,
     });
+    const authoritativeContentMessageIds = this.#authoritativeContentIds(result.messages);
 
     this.emit({
       type: 'decision_boundary',
@@ -242,13 +243,15 @@ export class ExperimentEngine {
       contextMessageCount: messages.length,
       slackUnread: counts.unread,
       slackMentions: counts.mentions,
+      authoritativeContentMessageIds,
     });
 
+    this.#checkAmbientLeak(authoritativeContentMessageIds);
     this.#recordIndicatorExposure(counts.unread, counts.mentions, result.statusBlock);
     this.#recordPendingContentExposure(
       result.appliedEventBlocks.map((item) => item.slackMessageId),
+      authoritativeContentMessageIds,
     );
-    this.#checkAmbientLeak(result.messages);
 
     return result.messages;
   }
@@ -274,7 +277,10 @@ export class ExperimentEngine {
     });
   }
 
-  #recordPendingContentExposure(appliedSlackIds: readonly string[]): void {
+  #recordPendingContentExposure(
+    appliedSlackIds: readonly string[],
+    authoritativeContentMessageIds: readonly string[],
+  ): void {
     if (this.#pendingExposureKind === undefined) return;
     if (this.#state.contentExposedAtDecisionIndex !== undefined) {
       this.#pendingExposureKind = undefined;
@@ -282,10 +288,10 @@ export class ExperimentEngine {
       return;
     }
     const placed =
-      this.#pendingExposureKind === 'steer' ||
-      (this.#pendingExposureKind === 'content' &&
-        this.#deps.scenario.delivery === 'ambient') ||
-      (this.#pendingExposureSlackId !== undefined &&
+      this.#pendingExposureSlackId !== undefined &&
+      authoritativeContentMessageIds.includes(this.#pendingExposureSlackId) &&
+      (this.#pendingExposureKind === 'steer' ||
+        this.#deps.scenario.delivery === 'ambient' ||
         appliedSlackIds.includes(this.#pendingExposureSlackId));
     if (!placed) return;
     const created = this.#state.eventCreated;
@@ -303,18 +309,27 @@ export class ExperimentEngine {
     this.#pendingExposureSlackId = undefined;
   }
 
+  #authoritativeContentIds(messages: readonly AnnotatableMessage[]): string[] {
+    const created = this.#state.eventCreated;
+    if (created === undefined) return [];
+    const probe = firstMeaningfulLine(created.text);
+    if (probe.length === 0 || !contextText(messages).includes(probe)) return [];
+    return [created.slackMessageId];
+  }
+
   /**
-   * Ambient delivery must expose counters only. If the authoritative text ever appears in
-   * the model's context before the agent reads Slack, the run is invalid.
+   * Ambient delivery must expose counters only until a matching Slack read. Persisting the
+   * content-presence ids at every boundary lets the post-run grader re-check this invariant.
    */
-  #checkAmbientLeak(messages: readonly AnnotatableMessage[]): void {
+  #checkAmbientLeak(authoritativeContentMessageIds: readonly string[]): void {
     if (this.#deps.scenario.delivery !== 'ambient') return;
     const created = this.#state.eventCreated;
     if (created === undefined) return;
-    if (this.#state.contentExposedAtDecisionIndex !== undefined) return;
-    const probe = firstMeaningfulLine(created.text);
-    if (probe.length === 0) return;
-    if (contextText(messages).includes(probe)) {
+    if (!authoritativeContentMessageIds.includes(created.slackMessageId)) return;
+    const matchingRead = this.#state.slackReadActions.some((read) =>
+      read.messageIds.includes(created.slackMessageId),
+    );
+    if (!matchingRead) {
       this.#state.ambientLeakDetected = true;
       this.emit({
         type: 'harness_error',
@@ -334,6 +349,12 @@ export class ExperimentEngine {
     this.#state.actionIndex = this.#actionIndex;
     this.#currentTurnActionIndices.push(actionIndex);
 
+    const command = observation.input['command'];
+    const testOutcome =
+      typeof command === 'string' && isTestCommand(command)
+        ? classifyTestOutcome(observation.isError, observation.outputText)
+        : undefined;
+
     this.emit({
       type: 'tool_action',
       actionIndex,
@@ -347,21 +368,20 @@ export class ExperimentEngine {
       isError: observation.isError,
       outputBytes: Buffer.byteLength(observation.outputText, 'utf8'),
       outputPreview: boundText(observation.outputText, 1_500),
+      ...(testOutcome === undefined ? {} : { observedTestOutcome: testOutcome }),
       blockedByHarness: observation.blockedByHarness === true,
       ...(observation.blockReason === undefined
         ? {}
         : { blockReason: observation.blockReason }),
     });
 
-    const command = observation.input['command'];
     if (typeof command === 'string') {
-      if (isTestCommand(command)) {
-        const outcome = classifyTestOutcome(observation.isError, observation.outputText);
+      if (testOutcome !== undefined) {
         this.#state.testRuns.push({
           actionIndex,
           turnIndex: this.#state.turns.length,
           command,
-          outcome,
+          outcome: testOutcome,
         });
       }
       if (isCommitCommand(command)) {
@@ -456,6 +476,8 @@ export class ExperimentEngine {
       commits: snapshot.commits,
       changedWatchedFiles: snapshot.changedWatchedFiles,
       untrackedWatchedFiles: snapshot.untrackedWatchedFiles,
+      changedFiles: snapshot.changedFiles,
+      untrackedFiles: snapshot.untrackedFiles,
     });
 
     const previous = this.#previousSnapshot;
@@ -550,14 +572,14 @@ export class ExperimentEngine {
       origin: 'scenario',
     });
 
+    let mechanism: 'slack_unread' | 'context_event' | 'pi_steer' = 'slack_unread';
     if (scenario.delivery === 'exposed') {
+      mechanism = 'context_event';
       this.#pendingExposedText = renderEventBlock(toView(message));
       this.#pendingExposureKind = 'content';
       this.#pendingExposureSlackId = message.id;
-      return;
-    }
-
-    if (scenario.delivery === 'steer') {
+    } else if (scenario.delivery === 'steer') {
+      mechanism = 'pi_steer';
       // Steering is queued here and picked up by the runtime immediately after this turn
       // settles, so it lands before the next model call: the same boundary the other
       // delivery modes use.
@@ -568,6 +590,17 @@ export class ExperimentEngine {
       // sitting unread in the channel.
       this.#deps.slack.markMessageRead(message.id);
     }
+
+    this.emit({
+      type: 'environment_delivery',
+      scenarioId: scenario.id,
+      eventSemantic: scenario.eventSemantic,
+      delivery: scenario.delivery,
+      slackMessageId: message.id,
+      mechanism,
+      intendedDecisionIndex: this.#decisionIndex + 1,
+      intendedLogicalActionIndex: this.#actionIndex,
+    });
   }
 
   #stopDecision(turnIndex: number): StopDecision | undefined {

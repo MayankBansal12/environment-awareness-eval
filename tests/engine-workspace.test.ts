@@ -20,6 +20,8 @@ function snap(digest: string, mutated: boolean): WorkspaceSnapshot {
     trackedSourceDigest: digest,
     changedWatchedFiles: mutated ? ['src/a.ts'] : [],
     untrackedWatchedFiles: [],
+    changedFiles: mutated ? ['src/a.ts'] : [],
+    untrackedFiles: [],
   };
 }
 
@@ -164,6 +166,7 @@ describe('workspace snapshots and disposable clones', () => {
     const fixture = await mkdtemp(path.join(os.tmpdir(), 'eaw-fixture-test-'));
     await mkdir(path.join(fixture, 'src'));
     await writeFile(path.join(fixture, 'src/a.ts'), 'export const a = 1;\n');
+    await writeFile(path.join(fixture, 'package.json'), '{"version":"1.0.0"}\n');
     await gitOrThrow(fixture, ['init', '-b', 'main']);
     await gitOrThrow(fixture, ['config', 'user.name', 'Test']);
     await gitOrThrow(fixture, ['config', 'user.email', 'test@example.invalid']);
@@ -182,9 +185,21 @@ describe('workspace snapshots and disposable clones', () => {
     await writeFile(path.join(prepared.path, 'src/a.ts'), 'export const a = 2;\n');
     await mkdir(path.join(prepared.path, 'tests'));
     await writeFile(path.join(prepared.path, 'tests/new.test.ts'), 'test();\n');
+    await writeFile(path.join(prepared.path, 'package.json'), '{"version":"2.0.0"}\n');
+    await mkdir(path.join(prepared.path, 'notes'));
+    await writeFile(path.join(prepared.path, 'notes/run.txt'), 'untracked\n');
+    await gitOrThrow(prepared.path, ['add', 'package.json']);
+    await gitOrThrow(prepared.path, ['commit', '-m', 'change config']);
     const changed = await takeSnapshot(prepared.path, commit);
     expect(changed.changedWatchedFiles).toContain('src/a.ts');
     expect(changed.untrackedWatchedFiles).toContain('tests/new.test.ts');
+    expect(changed.changedFiles).toEqual([
+      'notes/run.txt',
+      'package.json',
+      'src/a.ts',
+      'tests/new.test.ts',
+    ]);
+    expect(changed.untrackedFiles).toEqual(['notes/run.txt', 'tests/new.test.ts']);
     expect(changed.trackedSourceDigest).not.toBe(clean.trackedSourceDigest);
     expect((await gitOrThrow(fixture, ['status', '--porcelain'])).trim()).toBe('');
     await disposeWorkspace(prepared.path);

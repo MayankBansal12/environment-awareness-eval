@@ -15,7 +15,7 @@
 
 import { z } from 'zod';
 
-export const TRACE_SCHEMA_VERSION = 1;
+export const TRACE_SCHEMA_VERSION = 2;
 
 /** Bounded text: raw command output is truncated before it reaches an artifact. */
 export const MAX_TRACE_TEXT = 4_000;
@@ -29,7 +29,7 @@ export function boundText(value: string, limit: number = MAX_TRACE_TEXT): string
 }
 
 const baseFields = {
-  schemaVersion: z.number().int(),
+  schemaVersion: z.literal(TRACE_SCHEMA_VERSION),
   seq: z.number().int().nonnegative(),
   /** Model decision opportunity this event belongs to. -1 before the first model call. */
   decisionIndex: z.number().int(),
@@ -93,6 +93,8 @@ export const traceEventSchema = z.discriminatedUnion('type', [
     contextMessageCount: z.number().int(),
     slackUnread: z.number().int(),
     slackMentions: z.number().int(),
+    /** Scenario message ids whose authoritative text was actually present in context. */
+    authoritativeContentMessageIds: z.array(z.string()),
   }),
   z.object({
     ...baseFields,
@@ -116,6 +118,8 @@ export const traceEventSchema = z.discriminatedUnion('type', [
     isError: z.boolean(),
     outputBytes: z.number().int(),
     outputPreview: z.string(),
+    /** Normalized from the full output before trace truncation. Present for test commands. */
+    observedTestOutcome: z.enum(['passed', 'failed', 'unknown']).optional(),
     blockedByHarness: z.boolean(),
     blockReason: z.string().optional(),
   }),
@@ -165,6 +169,18 @@ export const traceEventSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     ...baseFields,
+    type: z.literal('environment_delivery'),
+    scenarioId: z.string(),
+    eventSemantic: z.string(),
+    delivery: z.string(),
+    slackMessageId: z.string(),
+    mechanism: z.enum(['slack_unread', 'context_event', 'pi_steer']),
+    /** The decision at which the queued event is intended to become perceivable. */
+    intendedDecisionIndex: z.number().int().nonnegative(),
+    intendedLogicalActionIndex: z.number().int().nonnegative(),
+  }),
+  z.object({
+    ...baseFields,
     type: z.literal('environment_exposure'),
     exposureKind: z.enum(['indicator', 'content', 'steer']),
     slackMessageId: z.string().nullable(),
@@ -185,6 +201,9 @@ export const traceEventSchema = z.discriminatedUnion('type', [
     commits: z.array(commitRecordSchema).optional(),
     changedWatchedFiles: z.array(z.string()).optional(),
     untrackedWatchedFiles: z.array(z.string()).optional(),
+    /** Every tracked or untracked path differing from the fixture, repo-wide. */
+    changedFiles: z.array(z.string()).optional(),
+    untrackedFiles: z.array(z.string()).optional(),
   }),
   z.object({
     ...baseFields,

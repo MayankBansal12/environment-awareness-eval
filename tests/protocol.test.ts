@@ -24,6 +24,8 @@ function snap(digest: string, mutated: boolean): WorkspaceSnapshot {
     trackedSourceDigest: digest,
     changedWatchedFiles: mutated ? ['src/a.ts'] : [],
     untrackedWatchedFiles: [],
+    changedFiles: mutated ? ['src/a.ts'] : [],
+    untrackedFiles: [],
   };
 }
 

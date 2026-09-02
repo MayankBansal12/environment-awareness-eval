@@ -41,18 +41,21 @@ export interface WorkspaceSnapshot {
   changedWatchedFiles: string[];
   /** Untracked files under watched paths. */
   untrackedWatchedFiles: string[];
+  /** Every tracked or untracked path that differs from the fixture commit. */
+  changedFiles: string[];
+  /** Every untracked path in the repository. */
+  untrackedFiles: string[];
 }
 
-function parseStatus(porcelain: string): Array<{ code: string; file: string }> {
-  return porcelain
-    .split('\n')
-    .filter((line) => line.trim().length > 0)
-    .map((line) => ({ code: line.slice(0, 2), file: line.slice(3).trim() }));
+function nulPaths(output: string): string[] {
+  return output
+    .split('\0')
+    .filter((file) => file.length > 0)
+    .sort();
 }
 
 function isUnderWatched(file: string, watched: readonly string[]): boolean {
-  const normalized = file.replace(/^"|"$/g, '');
-  return watched.some((dir) => normalized === dir || normalized.startsWith(dir + '/'));
+  return watched.some((dir) => file === dir || file.startsWith(dir + '/'));
 }
 
 export async function takeSnapshot(
@@ -63,7 +66,6 @@ export async function takeSnapshot(
   const head = (await git(workspacePath, ['rev-parse', 'HEAD'])).stdout.trim();
   const statusPorcelain = (await git(workspacePath, ['status', '--porcelain=v1', '-uall']))
     .stdout;
-  const entries = parseStatus(statusPorcelain);
 
   const aheadRaw = (
     await git(workspacePath, ['rev-list', '--count', fixtureCommit + '..HEAD'])
@@ -86,16 +88,28 @@ export async function takeSnapshot(
   const diffVsFixture = (
     await git(workspacePath, ['diff', fixtureCommit, '--', ...watchedPaths])
   ).stdout;
-  const changedWatchedFiles = (
-    await git(workspacePath, ['diff', '--name-only', fixtureCommit, '--', ...watchedPaths])
-  ).stdout
-    .split('\n')
-    .filter((line) => line.trim().length > 0);
-
-  const untrackedWatchedFiles = entries
-    .filter((entry) => entry.code === '??' && isUnderWatched(entry.file, watchedPaths))
-    .map((entry) => entry.file)
-    .sort();
+  const trackedChangedFiles = nulPaths(
+    (
+      await git(workspacePath, [
+        'diff',
+        '--no-renames',
+        '--name-only',
+        '-z',
+        fixtureCommit,
+        '--',
+      ])
+    ).stdout,
+  );
+  const untrackedFiles = nulPaths(
+    (await git(workspacePath, ['ls-files', '--others', '--exclude-standard', '-z'])).stdout,
+  );
+  const changedFiles = [...new Set([...trackedChangedFiles, ...untrackedFiles])].sort();
+  const changedWatchedFiles = trackedChangedFiles.filter((file) =>
+    isUnderWatched(file, watchedPaths),
+  );
+  const untrackedWatchedFiles = untrackedFiles.filter((file) =>
+    isUnderWatched(file, watchedPaths),
+  );
 
   const hash = createHash('sha256');
   hash.update(diffVsFixture);
@@ -113,11 +127,13 @@ export async function takeSnapshot(
     commitsAheadOfFixture: Number.isNaN(commitsAheadOfFixture) ? 0 : commitsAheadOfFixture,
     commits,
     sourceMutated: changedWatchedFiles.length > 0 || untrackedWatchedFiles.length > 0,
-    workingTreeDirty: entries.length > 0,
+    workingTreeDirty: statusPorcelain.trim().length > 0,
     statusPorcelain,
     trackedSourceDigest: hash.digest('hex'),
     changedWatchedFiles,
     untrackedWatchedFiles,
+    changedFiles,
+    untrackedFiles,
   };
 }
 
