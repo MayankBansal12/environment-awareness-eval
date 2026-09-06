@@ -186,19 +186,23 @@ describe('the real results/ corpus', () => {
 describe('observations across generations', () => {
   it('honours observedTestOutcome when recorded, else falls back to the grader', () => {
     // `observedTestOutcome` is optional: the bulk of the corpus records it, the oldest
-    // runs omit it. The recorded value always wins; the fallback covers the rest.
+    // runs omit it. The recorded value always wins, including on non-test rows —
+    // combined `pnpm test && git commit` commands are graded as commits but still
+    // record the test result. Only the fallback path is phase-gated: unrecorded
+    // outcomes are derived for test rows alone.
     for (const run of corpus) {
       const rows = actionRowsOf(run);
       for (const row of rows) {
-        if (row.phase !== 'test') {
+        const recorded =
+          row.event.type === 'tool_action' ? row.event.observedTestOutcome : undefined;
+        if (row.phase !== 'test' && recorded === undefined) {
           expect(row.testOutcome, `${run.runId} action ${row.actionIndex}`).toBeNull();
           continue;
         }
         expect(row.testOutcome, `${run.runId} action ${row.actionIndex}`).not.toBeNull();
-        const event = row.event;
-        if (event.type === 'tool_action' && event.observedTestOutcome !== undefined) {
+        if (recorded !== undefined) {
           expect(row.testOutcome, `${run.runId} action ${row.actionIndex}`).toBe(
-            event.observedTestOutcome,
+            recorded,
           );
         }
       }
