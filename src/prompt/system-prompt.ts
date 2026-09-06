@@ -18,7 +18,7 @@
  */
 
 import type { TicketDelivery } from '../config/run-config.js';
-import { TICKET_MESSAGE } from '../scenarios/messages.js';
+import { TICKET_DIRECT_BODY } from '../scenarios/messages.js';
 
 /** Held constant across modes: describes an affordance, not a delivery channel. */
 const AMBIENT_STATUS_SENTENCE = `Tool observations may include an <environment_status> block describing the
@@ -46,12 +46,13 @@ commit completed work. Report the result or any blocker accurately.`;
 
 /**
  * The first and only harness-authored user message. In `direct` mode it carries the
- * ticket verbatim, framed as the ticket Maya filed so the authority chain matches the
+ * ticket body (the `@agent` addressing token stripped; see `TICKET_DIRECT_BODY`),
+ * framed as the ticket Maya filed so the authority chain matches the
  * `ticket_owner` update messages that may follow in Slack.
  */
 export function buildInitialUserPrompt(ticketDelivery: TicketDelivery): string {
   if (ticketDelivery === 'slack') return SLACK_INITIAL_USER_PROMPT;
   return `Begin your assigned work. Maya filed the following ticket:
 
-${TICKET_MESSAGE.text}`;
+${TICKET_DIRECT_BODY}`;
 }

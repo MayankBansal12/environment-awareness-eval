@@ -2,8 +2,10 @@
  * Coverage for the `ticketDelivery` run-level factor (`slack` vs `direct`).
  *
  * The governing rule is that only the ticket's delivery channel changes: the ticket
- * wording, the `<environment_status>` affordance sentence, and every scenario's grader
+ * body, the `<environment_status>` affordance sentence, and every scenario's grader
  * policy except `baseline`'s inspection requirement must be identical across modes.
+ * (The leading `@agent` is Slack's channel addressing token, not body, so `direct`
+ * mode carries the body without it.)
  */
 
 import { describe, expect, it } from 'vitest';
@@ -14,7 +16,7 @@ import { SlackState } from '../src/engine/slack.js';
 import { effectiveGraderPolicy } from '../src/grading/grader.js';
 import { buildInitialUserPrompt, buildSystemPrompt } from '../src/prompt/system-prompt.js';
 import { getScenario, listScenarioIds } from '../src/scenarios/catalog.js';
-import { TICKET_MESSAGE } from '../src/scenarios/messages.js';
+import { TICKET_DIRECT_BODY, TICKET_MESSAGE } from '../src/scenarios/messages.js';
 import type { TraceEvent } from '../src/trace/schema.js';
 
 /** The exact prompts from before the `ticketDelivery` factor existed. */
@@ -40,15 +42,19 @@ describe('ticketDelivery prompts', () => {
     expect(buildInitialUserPrompt('slack')).toBe(LEGACY_INITIAL_USER_PROMPT);
   });
 
-  it('delivers the byte-identical ticket text in both modes', () => {
-    // Slack mode: the ticket lives in channel history with this exact text.
+  it('delivers the ticket body in direct mode without the Slack addressing token', () => {
+    // Single source of truth: the Slack text is the addressing token plus the body.
+    expect(TICKET_MESSAGE.text).toBe('@agent ' + TICKET_DIRECT_BODY);
+
+    // Slack mode: the ticket lives in channel history with the full native form.
     const slack = new SlackState();
     const seeded = slack.post({ ...TICKET_MESSAGE, logicalTime: -1 });
     expect(seeded.text).toBe(TICKET_MESSAGE.text);
 
-    // Direct mode: the initial user prompt carries the same text verbatim.
+    // Direct mode: the initial user prompt carries the body, still Maya's ticket.
     const directPrompt = buildInitialUserPrompt('direct');
-    expect(directPrompt).toContain(TICKET_MESSAGE.text);
+    expect(directPrompt).toContain(TICKET_DIRECT_BODY);
+    expect(directPrompt).not.toContain('@agent');
     expect(seeded.sender).toBe('Maya');
     expect(directPrompt).toContain('Maya');
   });
@@ -66,6 +72,14 @@ describe('ticketDelivery prompts', () => {
     expect(direct).toContain('user message');
     for (const priming of ['poll', 'cancel', 'evaluation', 'may change']) {
       expect(direct.toLowerCase()).not.toContain(priming);
+    }
+  });
+
+  it('leaks no Slack vocabulary into direct-mode prompts', () => {
+    for (const prompt of [buildSystemPrompt('direct'), buildInitialUserPrompt('direct')]) {
+      for (const token of ['slack', '@agent', 'channel', 'message tool']) {
+        expect(prompt.toLowerCase()).not.toContain(token);
+      }
     }
   });
 });

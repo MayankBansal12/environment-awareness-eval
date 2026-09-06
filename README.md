@@ -50,8 +50,10 @@ Delivery salience is the manipulated variable, with byte-identical text across c
 
 Ticket delivery is a separate run-level factor (`slack`, the default, vs `direct`). In
 `slack` mode the ticket is the initial unread Slack message and the first user prompt is
-just `Begin your assigned work.`; in `direct` mode the byte-identical ticket text arrives
-in the initial prompt as the ticket Maya filed, and the seeded Slack copy starts already
+just `Begin your assigned work.`; in `direct` mode the byte-identical ticket body
+arrives in the initial prompt as the ticket Maya filed — without Slack's `@agent`
+addressing token, which is channel metadata rather than task content — and the seeded
+Slack copy starts already
 read. Only the delivery channel changes — wording, authority chain, and grading stay
 identical except that `baseline` requires Slack inspection in `slack` mode only. The
 factor exists because `slack` mode primes the agent on turn 1 to treat Slack as the place

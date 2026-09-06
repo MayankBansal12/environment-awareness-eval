@@ -37,7 +37,7 @@ export interface RunArtifacts {
   diffPath: string;
 }
 export interface EvalSummary {
-  schemaVersion: 2;
+  schemaVersion: 3;
   runId: string;
   scenarioId: string;
   ticketDelivery: RunConfig['ticketDelivery'];
@@ -339,7 +339,7 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
   });
   const grade = gradeRun(evidence, scenario, config.ticketDelivery);
   const summary: EvalSummary = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     runId: config.runId,
     scenarioId: scenario.id,
     ticketDelivery: config.ticketDelivery,
