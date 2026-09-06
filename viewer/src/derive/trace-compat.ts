@@ -1,0 +1,119 @@
+/**
+ * Trace schema version compatibility.
+ *
+ * `traceEventSchema` pins `schemaVersion` with `z.literal(TRACE_SCHEMA_VERSION)`, so the
+ * schema imported from `src/` accepts exactly one generation and rejects every other
+ * outright — a v2 schema rejects a v1 trace with `Invalid input: expected 2`, and the
+ * incoming v3 schema rejects both.
+ *
+ * The corpus spans all three: the two oldest reference runs are v1, the bulk are v2, and
+ * v3 arrives with the ticket-delivery work. A mixed-generation corpus is the normal case,
+ * not drift, so the viewer normalizes each event onto whatever version the local schema
+ * declares before validating, and records the version the event actually came from. It
+ * deliberately does not fork or restate the schema: the structural rules still come from
+ * `src/`, and only the version literal and the fields newer versions added are reconciled
+ * here.
+ *
+ * v3 adds a required `ticketDelivery` to `run_start`. Per the brief a legacy trace without
+ * it describes a run whose ticket arrived over Slack, so that default is injected when
+ * normalizing up, and the real value is captured before validating so it survives when
+ * normalizing down (a v2 schema would silently strip the unknown key). Likewise v2 added
+ * the required `authoritativeContentMessageIds` list to `decision_boundary`, which v1
+ * traces predate — that defaults to empty (no record, not proven absence).
+ */
+
+export const SUPPORTED_TRACE_SCHEMA_VERSIONS = [1, 2, 3] as const;
+
+export type SupportedTraceSchemaVersion =
+  (typeof SUPPORTED_TRACE_SCHEMA_VERSIONS)[number];
+
+export type TicketDelivery = 'slack' | 'direct';
+
+/** A trace or summary that predates the field describes a Slack-delivered ticket. */
+export const DEFAULT_TICKET_DELIVERY: TicketDelivery = 'slack';
+
+export function coerceTicketDelivery(value: unknown): TicketDelivery {
+  return value === 'direct' || value === 'slack' ? value : DEFAULT_TICKET_DELIVERY;
+}
+
+export function isSupportedVersion(value: unknown): value is SupportedTraceSchemaVersion {
+  return (
+    typeof value === 'number' &&
+    (SUPPORTED_TRACE_SCHEMA_VERSIONS as readonly number[]).includes(value)
+  );
+}
+
+export interface NormalizedEvent {
+  /** The event rewritten onto the local schema version, ready to validate. */
+  candidate: Record<string, unknown>;
+  /** The version the event was written at, before normalization. */
+  sourceVersion: SupportedTraceSchemaVersion;
+  /** Present only on `run_start`; captured before validation so v2 cannot strip it. */
+  ticketDelivery: TicketDelivery | null;
+}
+
+export type NormalizeResult =
+  | { ok: true; value: NormalizedEvent }
+  | { ok: false; reason: string };
+
+/**
+ * Rewrites one raw trace event onto `localVersion`, filling in fields a newer schema
+ * requires. Returns a reason rather than throwing so the caller can attribute the failure
+ * to a run and a line number.
+ */
+export function normalizeTraceEvent(raw: unknown, localVersion: number): NormalizeResult {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    return { ok: false, reason: 'event is not a JSON object' };
+  }
+
+  const event = raw as Record<string, unknown>;
+  const sourceVersion = event['schemaVersion'];
+
+  if (!isSupportedVersion(sourceVersion)) {
+    return {
+      ok: false,
+      reason:
+        `schemaVersion ${JSON.stringify(sourceVersion)} is not supported. The viewer ` +
+        `reads versions ${SUPPORTED_TRACE_SCHEMA_VERSIONS.join(' and ')}; extend ` +
+        `SUPPORTED_TRACE_SCHEMA_VERSIONS in viewer/src/derive/trace-compat.ts once the ` +
+        `new version's shape is understood.`,
+    };
+  }
+
+  const candidate: Record<string, unknown> = {
+    ...event,
+    schemaVersion: localVersion,
+  };
+
+  let ticketDelivery: TicketDelivery | null = null;
+  if (event['type'] === 'run_start') {
+    ticketDelivery = coerceTicketDelivery(event['ticketDelivery']);
+    // Injected unconditionally: harmless under a v2 schema, which strips unknown keys,
+    // and required under v3, which would otherwise reject every legacy trace.
+    candidate['ticketDelivery'] = ticketDelivery;
+  }
+
+  if (event['type'] === 'decision_boundary') {
+    // v2 added the required `authoritativeContentMessageIds` list; v1 traces predate it.
+    // Default to empty — the run header already surfaces the trace version, so a reader
+    // can tell this is a legacy run with no record rather than a run with proven absence.
+    if (candidate['authoritativeContentMessageIds'] === undefined) {
+      candidate['authoritativeContentMessageIds'] = [];
+    }
+  }
+
+  return { ok: true, value: { candidate, sourceVersion, ticketDelivery } };
+}
+
+/**
+ * The version to report for a whole run. A trace is written by one runner in one pass, so
+ * a run with mixed versions is corruption worth surfacing rather than averaging.
+ */
+export function runTraceVersion(
+  versions: readonly SupportedTraceSchemaVersion[],
+): { version: SupportedTraceSchemaVersion | null; mixed: boolean } {
+  const distinct = [...new Set(versions)];
+  const first = distinct[0];
+  if (first === undefined) return { version: null, mixed: false };
+  return { version: first, mixed: distinct.length > 1 };
+}
