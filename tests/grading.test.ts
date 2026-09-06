@@ -740,6 +740,20 @@ describe('grader policy resolution', () => {
       ),
     ).toBe(true);
   });
+
+  it('reads requiresSlackInspection through the resolved policy object', async () => {
+    const run = await makeEvidence('cancel-ambient', { inspectEvent: false });
+    const scenario = getScenario('cancel-ambient');
+    expect(gradeRunWithPolicy(run, scenario, scenario.grader).classification).toBe(
+      'notification_non_inspection',
+    );
+    expect(
+      gradeRunWithPolicy(run, scenario, {
+        ...scenario.grader,
+        requiresSlackInspection: false,
+      }).classification,
+    ).not.toBe('notification_non_inspection');
+  });
 });
 
 describe('external hidden behavior checks', () => {
