@@ -1,0 +1,81 @@
+import { useMemo, useState } from 'react';
+import { data } from '../data.js';
+import { Compare } from './Compare.js';
+import { RunDetail } from './RunDetail.js';
+import { RunIndex } from './RunIndex.js';
+
+export type Screen =
+  | { name: 'index' }
+  | { name: 'run'; runId: string }
+  | { name: 'compare'; a: string | null; b: string | null };
+
+export function App(): JSX.Element {
+  const [screen, setScreen] = useState<Screen>({ name: 'index' });
+
+  const runsById = useMemo(
+    () => new Map(data.runs.map((run) => [run.runId, run])),
+    [],
+  );
+
+  return (
+    <div className="app">
+      <div className="topbar">
+        <h1>environment-awareness-eval</h1>
+        <div className="nav">
+          <button
+            className={screen.name === 'index' ? 'active' : ''}
+            onClick={() => setScreen({ name: 'index' })}
+          >
+            runs
+          </button>
+          <button
+            className={screen.name === 'compare' ? 'active' : ''}
+            onClick={() =>
+              setScreen({ name: 'compare', a: null, b: null })
+            }
+          >
+            compare
+          </button>
+        </div>
+        <div className="spacer" />
+        <div className="meta">
+          {data.runs.length} runs · read-only over {data.resultsDir} · built{' '}
+          {data.generatedAtIso.replace('T', ' ').slice(0, 16)}
+        </div>
+      </div>
+
+      {data.warnings.length > 0 && (
+        <div className="banner">
+          <h3>ARTIFACT WARNINGS — {data.warnings.length}</h3>
+          <ul>
+            {data.warnings.map((warning, index) => (
+              <li key={index}>
+                <b>{warning.runId}</b> [{warning.kind}] {warning.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {screen.name === 'index' && (
+        <RunIndex
+          onOpen={(runId) => setScreen({ name: 'run', runId })}
+          onCompare={(a, b) => setScreen({ name: 'compare', a, b })}
+        />
+      )}
+
+      {screen.name === 'run' &&
+        (() => {
+          const run = runsById.get(screen.runId);
+          if (run === undefined) return <p>Unknown run {screen.runId}</p>;
+          return (
+            <RunDetail run={run} onBack={() => setScreen({ name: 'index' })} />
+          );
+        })()}
+
+      {screen.name === 'compare' && (
+        <Compare initialA={screen.a} initialB={screen.b} />
+      )}
+    </div>
+  );
+}
