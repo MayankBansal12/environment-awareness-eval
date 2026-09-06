@@ -11,9 +11,9 @@ import {
   type ToolExecutionEndEvent,
 } from '@earendil-works/pi-coding-agent';
 
-import type { ThinkingLevelName } from '../config/run-config.js';
+import type { RunConfig, ThinkingLevelName } from '../config/run-config.js';
 import type { ExperimentEngine } from '../engine/experiment.js';
-import { INITIAL_USER_PROMPT, CONTROLLED_SYSTEM_PROMPT } from '../prompt/system-prompt.js';
+import { buildInitialUserPrompt, buildSystemPrompt } from '../prompt/system-prompt.js';
 import { guardToolCall, type GuardOptions } from '../tools/path-guard.js';
 import {
   createSlackTools,
@@ -28,6 +28,7 @@ export interface PiRunOptions {
   model: string;
   thinkingLevel: ThinkingLevelName;
   timeoutMs: number;
+  ticketDelivery: RunConfig['ticketDelivery'];
   engine: ExperimentEngine;
   guard: GuardOptions;
   onSessionReady?: (steer: (text: string) => Promise<void>) => void;
@@ -241,7 +242,7 @@ export async function runPiAgentWithSlack(
     noPromptTemplates: true,
     noThemes: true,
     noContextFiles: true,
-    systemPrompt: CONTROLLED_SYSTEM_PROMPT,
+    systemPrompt: buildSystemPrompt(options.ticketDelivery),
     appendSystemPrompt: [],
     extensionFactories: [ownedExtension],
   });
@@ -296,7 +297,10 @@ export async function runPiAgentWithSlack(
         reject(new Error('eval run timed out'));
       }, options.timeoutMs);
     });
-    await Promise.race([session.prompt(INITIAL_USER_PROMPT), timeout]);
+    await Promise.race([
+      session.prompt(buildInitialUserPrompt(options.ticketDelivery)),
+      timeout,
+    ]);
   } catch (error) {
     if (forced === undefined) {
       forced = {

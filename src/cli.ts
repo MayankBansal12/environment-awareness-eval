@@ -20,6 +20,7 @@ Options:
   --max-actions <n>         Maximum tool actions
   --timeout-ms <n>          Run timeout
   --dependency-mode <mode>  copy | symlink | none (default copy)
+  --ticket-delivery <mode>  slack | direct (default slack)
   --dry-run                 Validate and prepare without inference
   --keep-workspace          Retain the disposable checkout
   --skip-hidden-checks      Skip external behavior checks
@@ -64,6 +65,7 @@ function parseArgs(args: string[]): {
       else if (flag === '--results') input.resultsDir = value;
       else if (flag === '--workspace-root') input.workspaceRoot = value;
       else if (flag === '--dependency-mode') input.dependencyMode = value;
+      else if (flag === '--ticket-delivery') input.ticketDelivery = value;
       else if (flag === '--run-id') input.runId = value;
       else if (flag === '--max-turns') input.maxTurns = positive(value, flag);
       else if (flag === '--max-actions') input.maxActions = positive(value, flag);

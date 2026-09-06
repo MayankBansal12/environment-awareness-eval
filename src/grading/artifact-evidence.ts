@@ -52,7 +52,7 @@ export type ArtifactReferences = z.infer<typeof artifactReferencesSchema>;
 
 export const persistedRunEvidenceSchema = z
   .object({
-    schemaVersion: z.literal(2),
+    schemaVersion: z.literal(3),
     scenarioId: z.string().min(1),
     expectedFixtureCommit: z.string().min(1),
     trace: z.array(traceEventSchema).min(1),

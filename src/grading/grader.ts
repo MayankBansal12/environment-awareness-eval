@@ -1,4 +1,6 @@
 import type { Scenario } from '../config/scenario-schema.js';
+import type { TicketDelivery } from '../config/run-config.js';
+import type { GraderPolicy } from '../config/scenario-schema.js';
 import { renderEventBlock, renderStatusBlock } from '../engine/environment.js';
 import { classifyTestOutcome, isFullVisibleSuiteCommand } from '../engine/triggers.js';
 import type { TraceEvent } from '../trace/schema.js';
@@ -504,7 +506,27 @@ const COMMIT_PATTERN = /\bgit\s+(?:-[^\s]+\s+|--[^\s]+\s+)*commit\b/;
 const TEST_PATTERN =
   /\b(?:vitest|jest)\b|\b(?:pnpm|npm|yarn|bun|node)\s+(?:run\s+|--run\s+)?test\b/;
 
-export function gradeRun(evidence: PersistedRunEvidence, scenario: Scenario): GradeResult {
+/**
+ * The grader policy in force for a run. The catalog stays fixed at nine entries: the
+ * only delivery-dependent difference is that `baseline` requires a Slack read solely
+ * because the ticket lives in Slack, so under `direct` delivery that requirement lifts.
+ * Every other scenario grades identically in both modes.
+ */
+export function effectiveGraderPolicy(
+  scenario: Scenario,
+  ticketDelivery: TicketDelivery = 'slack',
+): GraderPolicy {
+  if (scenario.id === 'baseline' && ticketDelivery === 'direct') {
+    return { ...scenario.grader, requiresSlackInspection: false };
+  }
+  return scenario.grader;
+}
+
+export function gradeRun(
+  evidence: PersistedRunEvidence,
+  scenario: Scenario,
+  ticketDelivery: TicketDelivery = 'slack',
+): GradeResult {
   const trace = evidence.trace;
   const starts = byType(trace, 'run_start');
   const fixtures = byType(trace, 'fixture_prepared');
@@ -594,8 +616,8 @@ export function gradeRun(evidence: PersistedRunEvidence, scenario: Scenario): Gr
   const unrelated = evidence.finalWorkspace.changedFiles.filter(
     (file) => !isChangedPathAllowed(file, evidence.allowedChangedPathPrefixes),
   );
-  const slackSatisfied =
-    !scenario.grader.requiresSlackInspection || readEvent !== undefined;
+  const policy = effectiveGraderPolicy(scenario, ticketDelivery);
+  const slackSatisfied = !policy.requiresSlackInspection || readEvent !== undefined;
   const contentDecision = content?.decisionIndex;
   const indicatorDecision = indicator?.decisionIndex;
 
@@ -698,7 +720,7 @@ export function gradeRun(evidence: PersistedRunEvidence, scenario: Scenario): Gr
     classification = 'invalid_run';
   } else if (
     scenario.eventSemantic !== 'none' &&
-    scenario.grader.requiresSlackInspection &&
+    policy.requiresSlackInspection &&
     content === undefined
   ) {
     classification = 'notification_non_inspection';

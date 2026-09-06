@@ -12,7 +12,7 @@ import {
 import { gradeRun, type GradeResult } from './grading/grader.js';
 import { runHiddenRefundChecks } from './grading/hidden-checks.js';
 import { runPiAgentWithSlack } from './pi/adapter.js';
-import { CONTROLLED_SYSTEM_PROMPT, INITIAL_USER_PROMPT } from './prompt/system-prompt.js';
+import { buildInitialUserPrompt, buildSystemPrompt } from './prompt/system-prompt.js';
 import { getScenario, isScenarioSupported } from './scenarios/catalog.js';
 import { TICKET_MESSAGE } from './scenarios/messages.js';
 import { TRACE_SCHEMA_VERSION } from './trace/schema.js';
@@ -40,6 +40,7 @@ export interface EvalSummary {
   schemaVersion: 2;
   runId: string;
   scenarioId: string;
+  ticketDelivery: RunConfig['ticketDelivery'];
   runtime: { provider: string; model: string; thinkingLevel: string; piVersion: string };
   fixtureCommit: string;
   termination: { reason: string; detail: string };
@@ -77,6 +78,7 @@ function report(summary: EvalSummary): string {
 
 - Run: \`${summary.runId}\`
 - Scenario: \`${summary.scenarioId}\`
+- Ticket delivery: \`${summary.ticketDelivery}\`
 - Runtime: \`${summary.runtime.provider}/${summary.runtime.model}\` (${summary.runtime.thinkingLevel})
 - Classification: \`${summary.grade.classification}\`
 - Valid: \`${summary.grade.valid}\`
@@ -154,6 +156,12 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     mentionsAgent: TICKET_MESSAGE.mentionsAgent,
     logicalTime: -1,
   });
+  if (config.ticketDelivery === 'direct') {
+    // The ticket stays in channel history so a curious agent finds a coherent past,
+    // but it starts already read: a badge at t=0 would make the baseline
+    // incomparable across delivery modes.
+    slack.markMessageRead(initialMessage.id);
+  }
   let steer: ((text: string) => Promise<void>) | undefined;
   const engine = new ExperimentEngine({
     scenario,
@@ -173,6 +181,7 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     eventSemantic: scenario.eventSemantic,
     delivery: scenario.delivery,
     trigger: scenario.trigger,
+    ticketDelivery: config.ticketDelivery,
     provider: config.provider,
     model: config.model,
     thinkingLevel: config.thinkingLevel,
@@ -214,8 +223,8 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
   ];
   engine.emit({
     type: 'system_prompt',
-    systemPrompt: CONTROLLED_SYSTEM_PROMPT,
-    initialUserPrompt: INITIAL_USER_PROMPT,
+    systemPrompt: buildSystemPrompt(config.ticketDelivery),
+    initialUserPrompt: buildInitialUserPrompt(config.ticketDelivery),
     tools: activeTools,
     resourceIsolation: {
       extensionsDisabledExceptOwned: true,
@@ -234,6 +243,7 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     model: config.model,
     thinkingLevel: config.thinkingLevel,
     timeoutMs: config.timeoutMs,
+    ticketDelivery: config.ticketDelivery,
     engine,
     slack,
     // Guard the whole results tree, not just this run's directory, so one run cannot
@@ -327,11 +337,12 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
       workspaceDiff: artifacts.diffPath,
     },
   });
-  const grade = gradeRun(evidence, scenario);
+  const grade = gradeRun(evidence, scenario, config.ticketDelivery);
   const summary: EvalSummary = {
     schemaVersion: 2,
     runId: config.runId,
     scenarioId: scenario.id,
+    ticketDelivery: config.ticketDelivery,
     runtime: {
       provider: config.provider,
       model: config.model,

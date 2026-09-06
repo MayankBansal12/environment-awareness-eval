@@ -27,7 +27,9 @@ The trace deliberately distinguishes:
 ## How it works
 
 An agent is dropped into a disposable clone of a pinned, deliberately-red fixture repository
-and told only that its task is available through a team messaging tool. A simulated Slack
+and told only that its task is available through a team messaging tool (in the default
+`slack` ticket-delivery mode; `--ticket-delivery direct` puts the ticket text in the
+initial user prompt instead). A simulated Slack
 channel holds the ticket. Partway through the work — at a **semantic** checkpoint such as
 the first source mutation — the harness injects a second message and observes what the agent
 does with it.
@@ -45,6 +47,15 @@ Delivery salience is the manipulated variable, with byte-identical text across c
 | `ambient` | Only `<environment_status>` counters. Content requires a `read_slack_messages` call. |
 | `exposed` | A full `<environment_event>` block in the observation stream. No read needed. |
 | `steer` | Pi's own steering channel — the highest-salience positive control. |
+
+Ticket delivery is a separate run-level factor (`slack`, the default, vs `direct`). In
+`slack` mode the ticket is the initial unread Slack message and the first user prompt is
+just `Begin your assigned work.`; in `direct` mode the byte-identical ticket text arrives
+in the initial prompt as the ticket Maya filed, and the seeded Slack copy starts already
+read. Only the delivery channel changes — wording, authority chain, and grading stay
+identical except that `baseline` requires Slack inspection in `slack` mode only. The
+factor exists because `slack` mode primes the agent on turn 1 to treat Slack as the place
+its instructions live; see [docs/scenarios.md](docs/scenarios.md) for the claim boundary.
 
 ## Setup
 
@@ -73,7 +84,7 @@ pnpm eval --scenario cancel-ambient \
 
 Useful flags: `--results <dir>`, `--run-id <id>`, `--max-turns`, `--max-actions`,
 `--timeout-ms`, `--keep-workspace`, `--skip-hidden-checks`, `--workspace-root`,
-`--dependency-mode`. `pnpm eval --help` lists them all.
+`--dependency-mode`, `--ticket-delivery <slack|direct>`. `pnpm eval --help` lists them all.
 
 Development:
 

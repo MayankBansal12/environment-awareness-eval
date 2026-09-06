@@ -15,7 +15,7 @@
 
 import { z } from 'zod';
 
-export const TRACE_SCHEMA_VERSION = 2;
+export const TRACE_SCHEMA_VERSION = 3;
 
 /** Bounded text: raw command output is truncated before it reaches an artifact. */
 export const MAX_TRACE_TEXT = 4_000;
@@ -54,6 +54,8 @@ export const traceEventSchema = z.discriminatedUnion('type', [
     eventSemantic: z.string(),
     delivery: z.string(),
     trigger: z.string(),
+    /** Where the ticket text arrived: unread Slack message, or the user prompt. */
+    ticketDelivery: z.enum(['slack', 'direct']),
     provider: z.string(),
     model: z.string(),
     thinkingLevel: z.string(),

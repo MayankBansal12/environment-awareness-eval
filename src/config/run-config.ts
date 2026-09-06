@@ -26,6 +26,9 @@ export const thinkingLevelSchema = z.enum([
 ]);
 export type ThinkingLevelName = z.infer<typeof thinkingLevelSchema>;
 
+export const ticketDeliverySchema = z.enum(['slack', 'direct']);
+export type TicketDelivery = z.infer<typeof ticketDeliverySchema>;
+
 export const runConfigSchema = z.object({
   scenarioId: z.string().min(1),
   fixturePath: z.string().min(1),
@@ -48,6 +51,8 @@ export const runConfigSchema = z.object({
   keepWorkspace: z.boolean(),
   /** Validate configuration and prepare the fixture without any model inference. */
   dryRun: z.boolean(),
+  /** How the ticket reaches the agent: unread Slack message, or the user prompt. */
+  ticketDelivery: ticketDeliverySchema.default('slack'),
   /** Deterministic run identifier used in artifact paths. */
   runId: z.string().regex(/^[A-Za-z0-9._-]+$/),
   /** Skip the post-run hidden behaviour checks (they shell out to vitest). */
@@ -72,6 +77,7 @@ export interface RunConfigInput {
   keepWorkspace?: boolean;
   dryRun?: boolean;
   runId?: string;
+  ticketDelivery?: string;
   skipHiddenChecks?: boolean;
 }
 
@@ -88,6 +94,7 @@ export const DEFAULTS = {
 
 export function buildRunConfig(input: RunConfigInput, now: Date = new Date()): RunConfig {
   const stamp = now.toISOString().replace(/[:.]/g, '-');
+  const ticketDelivery = input.ticketDelivery ?? 'slack';
   return runConfigSchema.parse({
     scenarioId: input.scenarioId,
     fixturePath: path.resolve(input.fixturePath ?? DEFAULT_FIXTURE_PATH),
@@ -105,7 +112,8 @@ export function buildRunConfig(input: RunConfigInput, now: Date = new Date()): R
     timeoutMs: input.timeoutMs ?? DEFAULTS.timeoutMs,
     keepWorkspace: input.keepWorkspace ?? false,
     dryRun: input.dryRun ?? false,
-    runId: input.runId ?? input.scenarioId + '-' + stamp,
+    ticketDelivery,
+    runId: input.runId ?? input.scenarioId + '-' + ticketDelivery + '-' + stamp,
     skipHiddenChecks: input.skipHiddenChecks ?? false,
   });
 }
