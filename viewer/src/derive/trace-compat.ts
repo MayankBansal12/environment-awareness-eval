@@ -3,11 +3,11 @@
  *
  * `traceEventSchema` pins `schemaVersion` with `z.literal(TRACE_SCHEMA_VERSION)`, so the
  * schema imported from `src/` accepts exactly one generation and rejects every other
- * outright — a v2 schema rejects a v1 trace with `Invalid input: expected 2`, and the
- * incoming v3 schema rejects both.
+ * outright — the current v3 schema rejects a v2 trace with `Invalid input: expected 3`,
+ * and a v1 trace likewise.
  *
  * The corpus spans all three: the two oldest reference runs are v1, the bulk are v2, and
- * v3 arrives with the ticket-delivery work. A mixed-generation corpus is the normal case,
+ * v3 landed with the ticket-delivery work. A mixed-generation corpus is the normal case,
  * not drift, so the viewer normalizes each event onto whatever version the local schema
  * declares before validating, and records the version the event actually came from. It
  * deliberately does not fork or restate the schema: the structural rules still come from
@@ -17,9 +17,13 @@
  * v3 adds a required `ticketDelivery` to `run_start`. Per the brief a legacy trace without
  * it describes a run whose ticket arrived over Slack, so that default is injected when
  * normalizing up, and the real value is captured before validating so it survives when
- * normalizing down (a v2 schema would silently strip the unknown key). Likewise v2 added
- * the required `authoritativeContentMessageIds` list to `decision_boundary`, which v1
- * traces predate — that defaults to empty (no record, not proven absence).
+ * normalizing down (an older schema would silently strip the unknown key). Likewise v2
+ * added the required `authoritativeContentMessageIds` list to `decision_boundary`, which
+ * v1 traces predate — that defaults to empty (no record, not proven absence).
+ *
+ * Normalizing *down* stays supported deliberately: the viewer is read-only over an
+ * artifact tree that outlives any one schema bump, so it must open a corpus written by a
+ * newer runner than the `src/` it was built against.
  */
 
 export const SUPPORTED_TRACE_SCHEMA_VERSIONS = [1, 2, 3] as const;
@@ -48,7 +52,7 @@ export interface NormalizedEvent {
   candidate: Record<string, unknown>;
   /** The version the event was written at, before normalization. */
   sourceVersion: SupportedTraceSchemaVersion;
-  /** Present only on `run_start`; captured before validation so v2 cannot strip it. */
+  /** Present only on `run_start`; captured before validation so v1/v2 cannot strip it. */
   ticketDelivery: TicketDelivery | null;
 }
 
@@ -74,9 +78,10 @@ export function normalizeTraceEvent(raw: unknown, localVersion: number): Normali
       ok: false,
       reason:
         `schemaVersion ${JSON.stringify(sourceVersion)} is not supported. The viewer ` +
-        `reads versions ${SUPPORTED_TRACE_SCHEMA_VERSIONS.join(' and ')}; extend ` +
+        `reads v${SUPPORTED_TRACE_SCHEMA_VERSIONS.join(', v')}; extend ` +
         `SUPPORTED_TRACE_SCHEMA_VERSIONS in viewer/src/derive/trace-compat.ts once the ` +
-        `new version's shape is understood.`,
+        `new version's shape is understood, adding any newly required field to ` +
+        `normalizeTraceEvent so legacy traces keep loading.`,
     };
   }
 
@@ -88,7 +93,7 @@ export function normalizeTraceEvent(raw: unknown, localVersion: number): Normali
   let ticketDelivery: TicketDelivery | null = null;
   if (event['type'] === 'run_start') {
     ticketDelivery = coerceTicketDelivery(event['ticketDelivery']);
-    // Injected unconditionally: harmless under a v2 schema, which strips unknown keys,
+    // Injected unconditionally: harmless under a v1/v2 schema, which strips unknown keys,
     // and required under v3, which would otherwise reject every legacy trace.
     candidate['ticketDelivery'] = ticketDelivery;
   }
