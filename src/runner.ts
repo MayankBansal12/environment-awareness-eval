@@ -157,9 +157,11 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     logicalTime: -1,
   });
   if (config.ticketDelivery === 'direct') {
-    // The ticket stays in channel history so a curious agent finds a coherent past,
-    // but it starts already read: a badge at t=0 would make the baseline
-    // incomparable across delivery modes.
+    // Recorded in channel history for trace completeness only: `read_slack_messages`
+    // returns unread messages, so a direct-mode agent that opens Slack observes an
+    // empty channel at t=0, not this ticket. Starting it already read keeps the badge
+    // at zero so the baseline stays comparable across delivery modes. The tool surface
+    // itself is identical in both modes; see docs/limitations.md.
     slack.markMessageRead(initialMessage.id);
   }
   let steer: ((text: string) => Promise<void>) | undefined;

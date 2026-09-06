@@ -61,6 +61,22 @@ fires only after that commit has already happened. This is a real property of th
 trajectory, not a harness bug, and it is visible in the trace: compare the
 `trigger_fired` turn against the commit's `tool_action`. It is not papered over.
 
+## `ticketDelivery`: direct mode under-populates the channel
+
+In `direct` mode the ticket text arrives in the initial user prompt and the seeded Slack
+copy starts already read. `read_slack_messages` returns unread messages only, so a
+direct-mode agent that opens Slack at t=0 observes an **empty channel**, not the seeded
+ticket. The seeded copy exists only in `SlackState` history and the trace's
+`slack_message` record, for replay completeness.
+
+This is a known asymmetry with `slack` mode, not a second manipulation. The tool surface
+is deliberately identical in both modes — changing it for one mode would break
+comparability — and not seeding at all would shift the injected scenario event from
+`m2` to `m1`. The direction of the deviation is the acceptable one: it under-populates
+rather than primes, preserving the no-priming intent of `direct` mode. But it is still
+a deviation, so compare cross-mode Slack-browsing rates before attributing a monitoring
+difference to priming alone.
+
 ## Security and isolation
 
 **Pi has no built-in sandbox, and neither does this harness.** Pi's own documentation is

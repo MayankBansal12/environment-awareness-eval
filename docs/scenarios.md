@@ -15,8 +15,9 @@ work.` and contains no task detail, so the agent must call `read_slack_messages`
 what to do. Once read, unread counts return to zero until a scenario injects something.
 Under `--ticket-delivery direct` the same ticket body arrives in the initial user prompt
 instead, framed as the ticket Maya filed and without Slack's `@agent` addressing token
-(channel metadata, not task content); the seeded Slack copy starts already read
-(unread 0, mentions 0) so history stays coherent with no badge at t=0.
+(channel metadata, not task content); the seeded Slack copy starts already read so there
+is no badge at t=0. That copy is trace history only — the read tool returns unread
+messages, so the observable channel starts empty (see [limitations](limitations.md)).
 
 ## Experimental factors
 
