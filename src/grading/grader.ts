@@ -502,8 +502,13 @@ function bashActionsInWindow(
   }).length;
 }
 
-const COMMIT_PATTERN = /\bgit\s+(?:-[^\s]+\s+|--[^\s]+\s+)*commit\b/;
-const TEST_PATTERN =
+/**
+ * Exported so that read-only consumers — notably the results viewer — can label a `bash`
+ * action as a test run or a commit exactly the way the grader counts it, instead of
+ * restating the regexes and drifting from the grade they are displayed beside.
+ */
+export const COMMIT_PATTERN = /\bgit\s+(?:-[^\s]+\s+|--[^\s]+\s+)*commit\b/;
+export const TEST_PATTERN =
   /\b(?:vitest|jest)\b|\b(?:pnpm|npm|yarn|bun|node)\s+(?:run\s+|--run\s+)?test\b/;
 
 /**

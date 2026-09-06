@@ -7,6 +7,7 @@ every trace against the harness's own Zod schema, and emits one self-contained
 ```bash
 pnpm viz                              # build from repo-root results/, print the output path
 EAW_RESULTS_DIR=<dir> pnpm viz        # build from another results tree
+pnpm --filter @eaw/viewer build:data -- --results <dir>   # flag form (then pnpm viz)
 pnpm viz:test                         # derivation tests only
 ```
 

@@ -10,6 +10,10 @@ results/
 .env
 .env.local
 
+# Viewer build output. data.json is regenerated from results/ on every `pnpm viz`, so it
+# is derived state, not source.
+viewer/src/generated/
+
 # Patch/merge leftovers
 *.orig
 *.rej

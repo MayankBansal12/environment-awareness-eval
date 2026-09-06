@@ -1,3 +1,6 @@
+packages:
+  - viewer
+
 allowBuilds:
   '@google/genai': false
   esbuild: true
