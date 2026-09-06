@@ -30,8 +30,15 @@ import {
   coerceTicketDelivery,
   normalizeTraceEvent,
   runTraceVersion,
+  type SupportedTraceSchemaVersion,
 } from '../src/derive/trace-compat.js';
 import { groupIntoBatches } from '../src/derive/batches.js';
+import { environmentEventOf, slackThreadOf } from '../src/derive/slack.js';
+import {
+  decisionRangeOf,
+  finalReportOf,
+  turnRowsOf,
+} from '../src/derive/turns.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)), '..');
 const resultsDir = process.env['EAW_RESULTS_DIR'] ?? path.join(repoRoot, 'results');
@@ -45,7 +52,7 @@ async function loadCorpus(): Promise<RunBundle[]> {
     const runDir = path.join(resultsDir, runId);
     const raw = await readFile(path.join(runDir, 'trace.jsonl'), 'utf8');
     const trace: TraceEvent[] = [];
-    const versions: (1 | 2 | 3)[] = [];
+    const versions: SupportedTraceSchemaVersion[] = [];
     let runStartDelivery: string | undefined;
     for (const line of raw.split('\n')) {
       if (line.trim() === '') continue;
@@ -238,6 +245,126 @@ describe('observations across generations', () => {
         if (event.type !== 'assistant_turn') continue;
         if (event.stopReason === 'stop') continue;
         expect(event.text, `${run.runId} turn ${event.turnIndex}`).toBe('');
+      }
+    }
+  });
+});
+
+describe('the slack channel across the corpus', () => {
+  it('reconstructs a channel for every run whose ticket arrived over slack', () => {
+    for (const run of corpus) {
+      if (run.ticketDelivery !== 'slack') continue;
+      const thread = slackThreadOf(run.trace);
+      expect(thread.length, run.runId).toBeGreaterThan(0);
+    }
+  });
+
+  it('never reports a message as perceived before it arrived', () => {
+    for (const run of corpus) {
+      for (const message of slackThreadOf(run.trace)) {
+        for (const moment of [
+          message.readAtDecision,
+          message.indicatedAtDecision,
+          message.exposedAtDecision,
+        ]) {
+          if (moment === null) continue;
+          expect(
+            moment,
+            `${run.runId}/${message.messageId} perceived at D${moment} but arrived at D${message.arrivedAtDecision}`,
+          ).toBeGreaterThanOrEqual(message.arrivedAtDecision);
+        }
+      }
+    }
+  });
+
+  it('indicates before it exposes, whenever it does both', () => {
+    // Under ambient delivery the status block precedes the read. A run where content
+    // preceded its own indicator would mean the harness leaked the text early.
+    for (const run of corpus) {
+      for (const message of slackThreadOf(run.trace)) {
+        if (message.indicatedAtDecision === null) continue;
+        if (message.exposedAtDecision === null) continue;
+        expect(
+          message.exposedAtDecision,
+          `${run.runId}/${message.messageId}`,
+        ).toBeGreaterThanOrEqual(message.indicatedAtDecision);
+      }
+    }
+  });
+
+  it('agrees with the graded exposure decisions', () => {
+    for (const run of corpus) {
+      const event = environmentEventOf(slackThreadOf(run.trace));
+      if (event === null) continue;
+      const metrics = run.summary.grade.metrics as unknown as Record<string, unknown>;
+      const indicator = metrics['indicatorDecision'];
+      const content = metrics['contentDecision'];
+      if (typeof indicator === 'number') {
+        expect(event.indicatedAtDecision, `${run.runId} indicator`).toBe(indicator);
+      }
+      if (typeof content === 'number') {
+        expect(event.exposedAtDecision, `${run.runId} content`).toBe(content);
+      }
+    }
+  });
+
+  it('finds exactly one injected environment event in every run that has one', () => {
+    for (const run of corpus) {
+      const events = slackThreadOf(run.trace).filter((entry) => entry.isEnvironmentEvent);
+      expect(events.length, run.runId).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe('turn rows across the corpus', () => {
+  it('accounts for every tool action exactly once', () => {
+    for (const run of corpus) {
+      const actions = actionRowsOf(run);
+      const attached = turnRowsOf(run, actions).flatMap((turn) => turn.actions);
+      expect(attached.length, run.runId).toBe(actions.length);
+      expect(new Set(attached.map((action) => action.actionIndex)).size).toBe(
+        actions.length,
+      );
+    }
+  });
+
+  it('keeps turns ordered on the logical clock', () => {
+    for (const run of corpus) {
+      const turns = turnRowsOf(run, actionRowsOf(run));
+      for (let index = 1; index < turns.length; index += 1) {
+        expect(turns[index]!.seq, run.runId).toBeGreaterThan(turns[index - 1]!.seq);
+        expect(turns[index]!.decisionIndex, run.runId).toBeGreaterThanOrEqual(
+          turns[index - 1]!.decisionIndex,
+        );
+      }
+    }
+  });
+
+  it('collapses the activity view well below the raw action count', () => {
+    // One row per decision is the point: if this stopped holding, the pane would be the
+    // action timeline again and the narrative altitude would be lost.
+    for (const run of corpus) {
+      const actions = actionRowsOf(run);
+      const turns = turnRowsOf(run, actions);
+      expect(turns.length, run.runId).toBeLessThanOrEqual(actions.length + 1);
+    }
+  });
+
+  it('recovers a final report for every run', () => {
+    for (const run of corpus) {
+      const report = finalReportOf(turnRowsOf(run, actionRowsOf(run)));
+      expect(report.trim(), run.runId).not.toBe('');
+    }
+  });
+
+  it('keeps the cursor range inside the decisions the trace recorded', () => {
+    for (const run of corpus) {
+      const range = decisionRangeOf(run.trace);
+      const turns = turnRowsOf(run, actionRowsOf(run));
+      expect(range.min, run.runId).toBeLessThanOrEqual(range.max);
+      for (const turn of turns) {
+        expect(turn.decisionIndex, run.runId).toBeGreaterThanOrEqual(range.min);
+        expect(turn.decisionIndex, run.runId).toBeLessThanOrEqual(range.max);
       }
     }
   });

@@ -2,7 +2,11 @@
 
 import { z } from 'zod';
 
-import { traceEventSchema, type TraceEvent } from '../trace/schema.js';
+import {
+  traceEventSchema,
+  TRACE_SCHEMA_VERSION,
+  type TraceEvent,
+} from '../trace/schema.js';
 
 export const HIDDEN_CHECK_IDS = ['idempotent_retry', 'merchant_scoped_identity'] as const;
 
@@ -52,7 +56,13 @@ export type ArtifactReferences = z.infer<typeof artifactReferencesSchema>;
 
 export const persistedRunEvidenceSchema = z
   .object({
-    schemaVersion: z.literal(3),
+    /**
+     * Evidence embeds `trace`, so its generation is the trace's generation by
+     * construction. Pinned to the constant rather than restated as a literal: a restated
+     * copy silently disagrees with the runner, which has always filled this field from
+     * `TRACE_SCHEMA_VERSION`.
+     */
+    schemaVersion: z.literal(TRACE_SCHEMA_VERSION),
     scenarioId: z.string().min(1),
     expectedFixtureCommit: z.string().min(1),
     trace: z.array(traceEventSchema).min(1),

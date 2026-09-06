@@ -707,3 +707,573 @@ pre.block.empty {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+/* ================================================================ cockpit */
+
+/*
+ * Four panes on one screen. Each pane scrolls internally and the grid itself does not, so
+ * the relationship between the panes — the thing the layout exists to show — stays on
+ * screen while any one of them is read.
+ */
+
+.app.wide {
+  max-width: none;
+  padding-bottom: 16px;
+}
+
+.cockpit {
+  display: grid;
+  grid-template-columns: 226px minmax(0, 1fr) minmax(0, 400px);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'rail centre right'
+    'scrub scrub scrub';
+  gap: 10px;
+  height: calc(100vh - 118px);
+  min-height: 460px;
+}
+
+.railpane {
+  grid-area: rail;
+}
+
+.cockpit-centre {
+  grid-area: centre;
+  display: grid;
+  grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 10px;
+  min-height: 0;
+}
+
+.cockpit-right {
+  grid-area: right;
+  display: grid;
+  grid-template-rows: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 10px;
+  min-height: 0;
+}
+
+/* The context panel is sticky in the detail screen; inside the cockpit it is a grid cell. */
+.cockpit-right .panel {
+  position: static;
+  max-height: none;
+  min-height: 0;
+}
+
+@media (max-width: 1300px) {
+  .cockpit {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'rail'
+      'centre'
+      'right'
+      'scrub';
+    height: auto;
+  }
+
+  .cockpit-centre,
+  .cockpit-right {
+    grid-template-rows: none;
+  }
+
+  .pane .pane-body {
+    max-height: 520px;
+  }
+}
+
+/* ---------------------------------------------------------------- panes */
+
+.pane {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pane > h3 {
+  margin: 0;
+  padding: 7px 10px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--dim);
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.pane-note {
+  color: var(--faint);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.pane .pane-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.pane .facts {
+  flex: none;
+}
+
+.empty-note {
+  color: var(--faint);
+  padding: 10px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.linklike {
+  border: none;
+  padding: 0 2px;
+  color: var(--faint);
+  font-size: 11px;
+  background: none;
+}
+
+.linklike:hover {
+  color: var(--explore);
+  background: none;
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------- rail */
+
+.railrow {
+  padding: 5px 8px;
+  border-bottom: 1px solid #171d25;
+}
+
+.rail-scenario {
+  color: var(--text);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.rail-ticket {
+  color: var(--faint);
+  font-size: 11px;
+  margin-left: 6px;
+}
+
+.rail-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.raildot {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0 5px;
+  background: var(--panel-2);
+}
+
+.raildot .round-n {
+  color: var(--faint);
+  font-size: 10px;
+}
+
+.raildot.selected {
+  border-color: #fff;
+  background: #1d2836;
+}
+
+.raildot.good .dot {
+  color: var(--ok);
+}
+.raildot.delayed .dot {
+  color: var(--modify);
+}
+.raildot.bad .dot {
+  color: var(--danger);
+}
+.raildot.invalid .dot {
+  color: var(--faint);
+}
+
+.rail-legend {
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------------- activity */
+
+.turncard {
+  padding: 6px 10px;
+  border-bottom: 1px solid #171d25;
+  cursor: pointer;
+}
+
+.turncard:hover {
+  background: var(--panel-2);
+}
+
+.turncard.active {
+  background: #1d2836;
+  box-shadow: inset 3px 0 0 var(--explore);
+}
+
+/* Rows the cursor has not reached yet stay legible but recede. */
+.turncard.future {
+  opacity: 0.4;
+}
+
+.turn-head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.turn-headline {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.turn-targets {
+  color: var(--dim);
+  font-size: 11px;
+  margin-left: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
+}
+
+.narration {
+  margin-top: 3px;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-left: 2px solid var(--line);
+  padding-left: 8px;
+}
+
+/* Absence of narration is a fact about the trace, so it is stated, not left blank. */
+.narration.none {
+  color: var(--faint);
+  font-style: italic;
+  border-left-color: #1c232c;
+}
+
+.turn-calls {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.callchip {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0 5px;
+  font-size: 11px;
+  color: var(--dim);
+  background: var(--panel-2);
+}
+
+.callchip.err {
+  border-color: #5f2f2f;
+  color: #f0a0a0;
+}
+
+.callchip.explore {
+  color: var(--explore);
+}
+.callchip.modify {
+  color: var(--modify);
+}
+.callchip.inspect {
+  color: var(--inspect);
+}
+.callchip.report {
+  color: var(--report);
+}
+.callchip.test {
+  color: var(--test);
+}
+.callchip.commit {
+  color: var(--commit);
+}
+
+.finalreport {
+  border-top: 1px solid var(--line);
+  background: #12181f;
+  padding: 8px 10px;
+}
+
+.fr-title {
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.fr-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------- terminal */
+
+.pane-body.term {
+  background: #0b0e12;
+}
+
+.logentry {
+  border-bottom: 1px solid #171d25;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.logentry:hover {
+  background: #11161d;
+}
+
+.log-cmd {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.log-cmd .prompt {
+  color: var(--ok);
+}
+
+.log-cmd .cmd {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.log-cmd .cmd.commit {
+  color: var(--commit);
+}
+
+.log-cmd .cmd.test {
+  color: var(--test);
+}
+
+.log-out {
+  margin: 4px 0 0;
+  padding: 0 0 0 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11.5px;
+  color: var(--dim);
+  border-left: 2px solid #1c232c;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.log-foot {
+  color: var(--faint);
+  font-size: 10.5px;
+  margin-top: 3px;
+}
+
+/* ---------------------------------------------------------------- slack */
+
+.slackmsg {
+  padding: 7px 10px;
+  border-bottom: 1px solid #171d25;
+}
+
+.slackmsg header {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.slackmsg .avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 3px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--dim);
+  font-size: 10px;
+  align-self: center;
+}
+
+.slackmsg .who {
+  color: #fff;
+}
+
+.slackmsg .role {
+  color: var(--faint);
+  font-size: 10.5px;
+}
+
+.mention-tag {
+  color: var(--indicator);
+  border: 1px solid var(--indicator);
+  border-radius: 8px;
+  padding: 0 5px;
+  font-size: 10px;
+}
+
+.slacktext {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 3px 0 0 23px;
+  color: var(--text);
+}
+
+.slackmsg footer {
+  margin: 4px 0 0 23px;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 10.5px;
+}
+
+.slackmsg .vis {
+  color: var(--faint);
+}
+
+.slackmsg .vis.unread,
+.slackmsg .vis.indicated {
+  color: var(--indicator);
+}
+
+.slackmsg .vis.exposed {
+  color: #8ec2f0;
+}
+
+.slackmsg .vis.read {
+  color: var(--ok);
+}
+
+.slackmsg .mech {
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+/* A message the agent has not perceived is dimmed: unseen is the point, not a detail. */
+.slackmsg.unread,
+.slackmsg.indicated {
+  opacity: 0.62;
+}
+
+.slackmsg.own {
+  background: #12181f;
+}
+
+/* The injected event is what the scenario is about; it must be findable at a glance. */
+.slackmsg.is-event {
+  box-shadow: inset 3px 0 0 var(--indicator);
+}
+
+.slackmsg.is-event.exposed,
+.slackmsg.is-event.read {
+  box-shadow: inset 3px 0 0 var(--content);
+}
+
+/* ---------------------------------------------------------------- scrubber */
+
+.scrubber {
+  grid-area: scrub;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.scrub-track {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.scrub-track input[type='range'] {
+  width: 100%;
+  accent-color: var(--explore);
+}
+
+.scrub-mark {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.scrub-mark.indicator {
+  background: var(--indicator);
+}
+
+.scrub-mark.content {
+  background: var(--content);
+}
+
+.scrub-label {
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.scrubber .jump {
+  font-size: 11px;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- run strip */
+
+.runstrip {
+  margin-bottom: 10px;
+}
+
+.classification.good {
+  color: var(--ok);
+}
+.classification.delayed {
+  color: var(--modify);
+}
+.classification.bad {
+  color: var(--danger);
+}
+.classification.invalid {
+  color: var(--faint);
+}
+
+.reasoning {
+  margin-top: 4px;
+  padding: 5px 8px;
+  color: #cbb8e6;
+  background: #1a1424;
+  border-left: 2px solid var(--report);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.reasoning-tag {
+  display: block;
+  color: var(--report);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}

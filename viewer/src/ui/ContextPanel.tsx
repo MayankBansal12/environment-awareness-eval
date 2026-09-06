@@ -13,9 +13,19 @@ type Boundary = Extract<TraceEvent, { type: 'decision_boundary' }>;
 
 type Tab = 'status' | 'events' | 'io' | 'raw';
 
+/**
+ * What the panel is describing. The timeline selects a concrete row; the cockpit only has
+ * a cursor, and a bare decision is a complete answer to "what was in context" on its own —
+ * the status and event blocks are properties of the decision, not of any row inside it.
+ */
+export type ContextSelection =
+  | ActionRow
+  | MarkerRow
+  | { kind: 'decision'; decisionIndex: number };
+
 interface Props {
   run: RunBundle;
-  selected: ActionRow | MarkerRow | null;
+  selected: ContextSelection | null;
 }
 
 export function ContextPanel({ run, selected }: Props): JSX.Element {

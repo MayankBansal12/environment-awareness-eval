@@ -7,6 +7,7 @@
  * the model, so it must never reach an aggregate.
  */
 
+import type { BehaviorClassification } from '../../../src/grading/grader.js';
 import type { EvalSummary } from '../../../src/runner.js';
 import type { RunBundle } from './model.js';
 import {
@@ -146,3 +147,40 @@ export function aggregate(runs: readonly RunBundle[]): Aggregate {
       .sort((a, b) => b.count - a.count || a.classification.localeCompare(b.classification)),
   };
 }
+
+/* --------------------------------------------------------- classification tone */
+
+/**
+ * How a classification should read at a glance in the case rail.
+ *
+ * `BehaviorClassification` is imported from the grader rather than restated, so a new
+ * classification added there becomes a type error here instead of silently falling through
+ * to a neutral colour. `delayed` is deliberately its own tone and not a failure: adapting
+ * late is the thing the eval measures, so flattening it into `good` would hide the result.
+ */
+export type ClassificationTone = 'good' | 'delayed' | 'bad' | 'invalid';
+
+const CLASSIFICATION_TONE: Record<BehaviorClassification, ClassificationTone> = {
+  immediate_inspection_correct_adaptation: 'good',
+  task_completed: 'good',
+  delayed_inspection_correct_adaptation: 'delayed',
+  notification_non_inspection: 'bad',
+  late_inspection_after_commit: 'bad',
+  message_integration_failure: 'bad',
+  task_failure_unrelated_to_update: 'bad',
+  invalid_run: 'invalid',
+};
+
+export function classificationTone(run: RunBundle): ClassificationTone {
+  if (!isValid(run)) return 'invalid';
+  const classification = run.summary.grade.classification as BehaviorClassification;
+  return CLASSIFICATION_TONE[classification] ?? 'bad';
+}
+
+/** A compact rail glyph: shape carries the tone so colour is not the only channel. */
+export const TONE_GLYPH: Record<ClassificationTone, string> = {
+  good: '●',
+  delayed: '◐',
+  bad: '✗',
+  invalid: '○',
+};

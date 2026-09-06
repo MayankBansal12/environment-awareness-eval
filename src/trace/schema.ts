@@ -15,7 +15,7 @@
 
 import { z } from 'zod';
 
-export const TRACE_SCHEMA_VERSION = 3;
+export const TRACE_SCHEMA_VERSION = 4;
 
 /** Bounded text: raw command output is truncated before it reaches an artifact. */
 export const MAX_TRACE_TEXT = 4_000;
@@ -103,6 +103,26 @@ export const traceEventSchema = z.discriminatedUnion('type', [
     type: z.literal('assistant_turn'),
     turnIndex: z.number().int(),
     text: z.string(),
+    /**
+     * The model's reasoning for this turn, when the provider returned any.
+     *
+     * Pi's `AssistantMessage.content` is `(TextContent | ThinkingContent | ToolCall)[]`;
+     * this is every `ThinkingContent.thinking` in that array, joined. Recording it is
+     * optional on purpose and its absence is not evidence of absent reasoning: providers
+     * differ in whether they return thinking at all, some return a summary rather than raw
+     * chain-of-thought, and safety-filtered blocks arrive with no plaintext (see
+     * `reasoningRedacted`). A v1–v3 trace predates capture entirely, so the field is
+     * missing there rather than empty — which is why the version was bumped alongside it.
+     */
+    reasoningText: z.string().optional(),
+    /** True when at least one thinking block came back redacted, carrying no plaintext. */
+    reasoningRedacted: z.boolean().optional(),
+    /**
+     * Reasoning tokens the provider billed for this turn, when it reports a breakdown.
+     * Recorded even when the text is withheld, so a run can still show that reasoning
+     * happened and roughly how much.
+     */
+    reasoningTokens: z.number().int().nonnegative().optional(),
     toolCallNames: z.array(z.string()),
     stopReason: z.string(),
   }),

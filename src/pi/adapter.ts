@@ -74,31 +74,73 @@ function textFromContent(value: unknown): string {
     .join('\n');
 }
 
-function assistantInfo(message: unknown): {
+export interface AssistantInfo {
   text: string;
+  /** Joined `thinking` blocks, or undefined when the provider returned none. */
+  reasoning: string | undefined;
+  /** True when a thinking block came back redacted, carrying only a signature. */
+  reasoningRedacted: boolean;
+  /** `usage.reasoning`, when the provider reports a reasoning token breakdown. */
+  reasoningTokens: number | undefined;
   stopReason: string;
   calls: Array<{ id: string; name: string; input: Record<string, unknown> }>;
-} {
-  if (typeof message !== 'object' || message === null) {
-    return { text: '', stopReason: 'unknown', calls: [] };
-  }
+}
+
+/**
+ * Reads one Pi `AssistantMessage`.
+ *
+ * `content` is `(TextContent | ThinkingContent | ToolCall)[]`. Thinking blocks are read
+ * alongside text and tool calls rather than dropped: what the model reasoned before acting
+ * is the most direct evidence there is about whether it noticed an environment change, and
+ * it is recoverable only here — nothing downstream can reconstruct it.
+ *
+ * Whether anything comes back is the provider's decision, not the harness's. A redacted
+ * block carries an encrypted signature and no plaintext, and some providers return a
+ * summary or nothing at all; `reasoning` stays undefined in those cases so that an absent
+ * capture is never mistaken for a model that reasoned about nothing. `usage.reasoning` is
+ * read separately for exactly that reason — providers that withhold the text often still
+ * report the token count.
+ */
+export function assistantInfo(message: unknown): AssistantInfo {
+  const empty: AssistantInfo = {
+    text: '',
+    reasoning: undefined,
+    reasoningRedacted: false,
+    reasoningTokens: undefined,
+    stopReason: 'unknown',
+    calls: [],
+  };
+  if (typeof message !== 'object' || message === null) return empty;
+
   const record = message as {
     content?: unknown;
     stopReason?: unknown;
+    usage?: unknown;
   };
   const blocks = Array.isArray(record.content) ? record.content : [];
   const calls: Array<{ id: string; name: string; input: Record<string, unknown> }> = [];
   const text: string[] = [];
+  const reasoning: string[] = [];
+  let reasoningRedacted = false;
+
   for (const block of blocks) {
     if (typeof block !== 'object' || block === null) continue;
     const part = block as {
       type?: unknown;
       text?: unknown;
+      thinking?: unknown;
+      redacted?: unknown;
       id?: unknown;
       name?: unknown;
       arguments?: unknown;
     };
     if (part.type === 'text' && typeof part.text === 'string') text.push(part.text);
+    if (part.type === 'thinking') {
+      if (part.redacted === true) reasoningRedacted = true;
+      if (typeof part.thinking === 'string' && part.thinking !== '') {
+        reasoning.push(part.thinking);
+      }
+    }
     if (
       part.type === 'toolCall' &&
       typeof part.id === 'string' &&
@@ -114,8 +156,24 @@ function assistantInfo(message: unknown): {
       });
     }
   }
+
+  const usage =
+    typeof record.usage === 'object' && record.usage !== null
+      ? (record.usage as { reasoning?: unknown })
+      : undefined;
+  const reasoningTokens =
+    typeof usage?.reasoning === 'number' && Number.isFinite(usage.reasoning)
+      ? usage.reasoning
+      : undefined;
+
   return {
     text: text.join('\n'),
+    // A redacted-only turn still reasoned; it is recorded as present but empty so the
+    // distinction from "no thinking blocks at all" survives into the trace.
+    reasoning:
+      reasoning.length > 0 ? reasoning.join('\n') : reasoningRedacted ? '' : undefined,
+    reasoningRedacted,
+    reasoningTokens,
     stopReason: typeof record.stopReason === 'string' ? record.stopReason : 'unknown',
     calls,
   };
@@ -210,6 +268,11 @@ export async function runPiAgentWithSlack(
         const stop = await options.engine.settleTurn({
           turnIndex: event.turnIndex,
           assistantText: info.text,
+          ...(info.reasoning === undefined ? {} : { reasoningText: info.reasoning }),
+          ...(info.reasoningRedacted ? { reasoningRedacted: true } : {}),
+          ...(info.reasoningTokens === undefined
+            ? {}
+            : { reasoningTokens: info.reasoningTokens }),
           stopReason: info.stopReason,
           toolCallNames: info.calls.map((call) => call.name),
         });

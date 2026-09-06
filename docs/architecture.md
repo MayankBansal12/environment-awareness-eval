@@ -64,6 +64,7 @@ Mapped onto Pi 0.84.4:
 | 2–4 | `turn_end` | Fires after the assistant message *and* every tool result has been appended. Extension handlers are awaited, so work here completes before the loop continues. |
 | 5–6 | `context` | Fires once immediately before each LLM request, with a `structuredClone` of the messages, and the returned array is what is sent. |
 | tool observations | `tool_execution_end` + `turn_end` | Results are collected as they settle and attributed to actions in assistant source order at the boundary. |
+| reasoning capture | `turn_end` | `AssistantMessage.content` is `(TextContent \| ThinkingContent \| ToolCall)[]`; `assistantInfo` reads all three. Thinking is recoverable only here — nothing downstream can reconstruct it. |
 | path guard | `tool_call` | The only place a tool call can be refused before execution. |
 | `steer` delivery | `session.steer()` from `turn_end` | Pi's agent loop polls `getSteeringMessages()` immediately after `turn_end`, so the steered message lands before the next model call — the same boundary the other delivery modes use. |
 
@@ -87,6 +88,18 @@ The harness rebuilds the surface deterministically on every call:
 
 `annotateMessages` is a pure function over a structural message type, so the whole exposure
 layer is unit-tested with plain object literals and no SDK.
+
+## Reasoning
+
+`assistant_turn` carries optional `reasoningText`, `reasoningRedacted` and
+`reasoningTokens`, populated from Pi's `ThinkingContent` blocks and `usage.reasoning`.
+Whether anything arrives is the provider's decision: some return raw thinking, some return
+a summary, some return nothing, and a safety-filtered block carries an encrypted signature
+with no plaintext. The fields are therefore **omitted** rather than emitted empty when a
+provider returns nothing, so three states stay distinguishable downstream — the harness
+never looked (trace < v4), the provider returned none, or the text was redacted. The token
+count is recorded separately because providers that withhold the text often still report
+it, which is enough to show that reasoning happened.
 
 ## Logical time
 

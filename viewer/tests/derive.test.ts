@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import { COMMIT_PATTERN, TEST_PATTERN } from '../../src/grading/grader.js';
 import { traceEventSchema, TRACE_SCHEMA_VERSION } from '../../src/trace/schema.js';
+import type { TraceEvent } from '../../src/trace/schema.js';
 import { batchSizes, groupIntoBatches } from '../src/derive/batches.js';
 import {
   DEFAULT_TICKET_DELIVERY,
@@ -32,7 +33,19 @@ import {
   phaseForAction,
   testOutcomeFor,
 } from '../src/derive/phases.js';
+import {
+  environmentEventOf,
+  isPerceived,
+  slackThreadOf,
+  visibilityAt,
+} from '../src/derive/slack.js';
 import { describeComposition, describeTargets } from '../src/derive/timeline.js';
+import {
+  decisionRangeOf,
+  finalReportOf,
+  reasoningStateOf,
+  turnRowsOf,
+} from '../src/derive/turns.js';
 import {
   coerceTicketDelivery,
   normalizeTraceEvent,
@@ -569,5 +582,409 @@ describe('grouping runs into index cells', () => {
   it('falls back to ordinal rounds when ids encode none', () => {
     const cells = groupRuns([bundle({ runId: 'alpha' }), bundle({ runId: 'beta' })]);
     expect(cells[0]?.runs.map((entry) => entry.round)).toEqual([1, 2]);
+  });
+});
+
+/* ------------------------------------------------------------- slack channel */
+
+/** A minimal trace builder: only the fields the slack derivation actually reads. */
+function slackTrace(events: Array<Record<string, unknown>>): TraceEvent[] {
+  return events.map(
+    (event, index) =>
+      ({
+        schemaVersion: TRACE_SCHEMA_VERSION,
+        seq: index,
+        decisionIndex: 0,
+        logicalActionIndex: 0,
+        wallClockIso: '2026-01-01T00:00:00.000Z',
+        ...event,
+      }) as unknown as TraceEvent,
+  );
+}
+
+function message(
+  messageId: string,
+  logicalTime: number,
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    type: 'slack_message',
+    messageId,
+    logicalTime,
+    channel: 'engineering',
+    sender: 'Maya',
+    senderRole: 'ticket_owner',
+    text: `text of ${messageId}`,
+    mentionsAgent: false,
+    origin: 'scenario',
+    ...overrides,
+  };
+}
+
+describe('slack channel reconstruction', () => {
+  it('keeps arrival order and carries the recorded fields through', () => {
+    const thread = slackThreadOf(
+      slackTrace([message('m1', -1, { origin: 'initial' }), message('m2', 9)]),
+    );
+    expect(thread.map((entry) => entry.messageId)).toEqual(['m1', 'm2']);
+    expect(thread[0]?.arrivedAtDecision).toBe(-1);
+    expect(thread[1]?.arrivedAtDecision).toBe(9);
+    expect(thread[1]?.text).toBe('text of m2');
+  });
+
+  it('records a read at the decision the read happened, keeping the earliest', () => {
+    const thread = slackThreadOf(
+      slackTrace([
+        message('m1', 0),
+        {
+          type: 'slack_read',
+          decisionIndex: 7,
+          actionIndex: 3,
+          returnedMessageIds: ['m1'],
+          readCursorAfter: 1,
+        },
+        {
+          type: 'slack_read',
+          decisionIndex: 12,
+          actionIndex: 8,
+          returnedMessageIds: ['m1'],
+          readCursorAfter: 1,
+        },
+      ]),
+    );
+    expect(thread[0]?.readAtDecision).toBe(7);
+  });
+
+  it('separates an indicator exposure from a content exposure', () => {
+    // The distinction is the experiment: an indicator says an unread exists, and says
+    // nothing about what it contains. Collapsing the two would erase the measured gap.
+    const thread = slackThreadOf(
+      slackTrace([
+        message('m2', 9),
+        {
+          type: 'environment_exposure',
+          decisionIndex: 11,
+          exposureKind: 'indicator',
+          slackMessageId: 'm2',
+          exposedText: '<environment_status/>',
+        },
+        {
+          type: 'environment_exposure',
+          decisionIndex: 14,
+          exposureKind: 'content',
+          slackMessageId: 'm2',
+          exposedText: 'Stop work on TICKET-14.',
+        },
+      ]),
+    );
+    expect(thread[0]?.indicatedAtDecision).toBe(11);
+    expect(thread[0]?.exposedAtDecision).toBe(14);
+  });
+
+  it('treats a steer exposure as content, because the text does enter context', () => {
+    const thread = slackThreadOf(
+      slackTrace([
+        message('m2', 9),
+        {
+          type: 'environment_exposure',
+          decisionIndex: 10,
+          exposureKind: 'steer',
+          slackMessageId: 'm2',
+          exposedText: 'Stop work.',
+        },
+      ]),
+    );
+    expect(thread[0]?.exposedAtDecision).toBe(10);
+    expect(thread[0]?.indicatedAtDecision).toBeNull();
+  });
+
+  it('marks the injected event and its delivery mechanism', () => {
+    const thread = slackThreadOf(
+      slackTrace([
+        message('m1', -1, { origin: 'initial' }),
+        message('m2', 9),
+        {
+          type: 'environment_delivery',
+          decisionIndex: 9,
+          scenarioId: 'cancel-ambient',
+          eventSemantic: 'cancellation',
+          delivery: 'ambient',
+          slackMessageId: 'm2',
+          mechanism: 'slack_unread',
+          intendedDecisionIndex: 10,
+          intendedLogicalActionIndex: 20,
+        },
+      ]),
+    );
+    expect(environmentEventOf(thread)?.messageId).toBe('m2');
+    expect(thread[1]?.deliveryMechanism).toBe('slack_unread');
+    expect(thread[0]?.isEnvironmentEvent).toBe(false);
+  });
+
+  it('ignores an exposure with no message id rather than throwing', () => {
+    const thread = slackThreadOf(
+      slackTrace([
+        message('m1', 0),
+        {
+          type: 'environment_exposure',
+          decisionIndex: 3,
+          exposureKind: 'indicator',
+          slackMessageId: null,
+          exposedText: '<environment_status/>',
+        },
+      ]),
+    );
+    expect(thread[0]?.indicatedAtDecision).toBeNull();
+  });
+});
+
+describe('slack visibility at a decision', () => {
+  const base = {
+    messageId: 'm2',
+    seq: 10,
+    arrivedAtDecision: 9,
+    channel: 'engineering',
+    sender: 'Priya',
+    senderRole: 'ticket_owner',
+    text: 'Stop work.',
+    mentionsAgent: true,
+    origin: 'scenario' as const,
+    readAtDecision: null,
+    indicatedAtDecision: null,
+    exposedAtDecision: null,
+    isEnvironmentEvent: true,
+    deliveryMechanism: null,
+  };
+
+  it('is unsent before it arrives', () => {
+    expect(visibilityAt(base, 8)).toBe('unsent');
+    expect(visibilityAt(base, 9)).toBe('unread');
+  });
+
+  it('reports an indicator without claiming the text was seen', () => {
+    const message = { ...base, indicatedAtDecision: 11 };
+    expect(visibilityAt(message, 10)).toBe('unread');
+    expect(visibilityAt(message, 11)).toBe('indicated');
+    expect(isPerceived(visibilityAt(message, 11))).toBe(false);
+  });
+
+  it('promotes to read once the agent received it', () => {
+    const message = { ...base, indicatedAtDecision: 11, readAtDecision: 14 };
+    expect(visibilityAt(message, 13)).toBe('indicated');
+    expect(visibilityAt(message, 14)).toBe('read');
+    expect(isPerceived(visibilityAt(message, 14))).toBe(true);
+  });
+
+  it('ranks an exposure above a read, since the harness placed the text itself', () => {
+    const message = { ...base, readAtDecision: 20, exposedAtDecision: 12 };
+    expect(visibilityAt(message, 15)).toBe('exposed');
+  });
+
+  it('never asks whether the agent read its own post', () => {
+    const own = { ...base, origin: 'agent' as const, arrivedAtDecision: 4 };
+    expect(visibilityAt(own, 3)).toBe('unsent');
+    expect(visibilityAt(own, 4)).toBe('own');
+    expect(isPerceived(visibilityAt(own, 4))).toBe(true);
+  });
+});
+
+/* ------------------------------------------------------------------- turns */
+
+function turnEvent(
+  decisionIndex: number,
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    type: 'assistant_turn',
+    decisionIndex,
+    turnIndex: decisionIndex,
+    text: '',
+    toolCallNames: [],
+    stopReason: 'toolUse',
+    ...overrides,
+  };
+}
+
+function actionRow(overrides: Partial<ActionRow> = {}): ActionRow {
+  return {
+    kind: 'action',
+    actionIndex: 0,
+    decisionIndex: 0,
+    seq: 0,
+    toolName: 'read',
+    phase: 'explore',
+    label: 'read a.ts',
+    path: 'a.ts',
+    detail: null,
+    isError: false,
+    blockedByHarness: false,
+    testOutcome: null,
+    batchId: 'turn-0',
+    siblingOrdinal: 0,
+    inParallelBatch: false,
+    outputPreview: '',
+    outputBytes: 0,
+    event: {} as TraceEvent,
+    ...overrides,
+  };
+}
+
+/**
+ * `traceSchemaVersion` is explicit because it is load-bearing for reasoning: the same
+ * absent field means "not captured" below v4 and "provider returned none" at or above it.
+ * Defaulting it to the local constant would silently reclassify these fixtures the next
+ * time the schema moves.
+ */
+function bundleWith(
+  events: Array<Record<string, unknown>>,
+  traceSchemaVersion: RunBundle['traceSchemaVersion'] = TRACE_SCHEMA_VERSION as
+    RunBundle['traceSchemaVersion'],
+): RunBundle {
+  return {
+    runId: 'r',
+    summary: {} as RunBundle['summary'],
+    trace: slackTrace(events),
+    reportMd: '',
+    diff: '',
+    workspacePath: null,
+    traceSchemaVersion,
+    ticketDelivery: 'slack',
+  };
+}
+
+describe('turn rows', () => {
+  it('attaches actions to the turn recorded at the same decision', () => {
+    const run = bundleWith([turnEvent(0), turnEvent(1)]);
+    const rows = turnRowsOf(run, [
+      actionRow({ actionIndex: 0, decisionIndex: 0 }),
+      actionRow({ actionIndex: 1, decisionIndex: 1, label: 'read b.ts', path: 'b.ts' }),
+      actionRow({ actionIndex: 2, decisionIndex: 1, label: 'read c.ts', path: 'c.ts' }),
+    ]);
+    expect(rows.map((row) => row.actions.length)).toEqual([1, 2]);
+  });
+
+  it('groups by decision rather than by batch id', () => {
+    // decisionIndex is the only clock the harness guarantees; batchId is a convenience.
+    const run = bundleWith([turnEvent(0)]);
+    const rows = turnRowsOf(run, [
+      actionRow({ actionIndex: 0, decisionIndex: 0, batchId: null }),
+      actionRow({ actionIndex: 1, decisionIndex: 0, batchId: 'something-else' }),
+    ]);
+    expect(rows[0]?.actions).toHaveLength(2);
+  });
+
+  it('orders siblings by assistant source order, not settle order', () => {
+    const run = bundleWith([turnEvent(0)]);
+    const rows = turnRowsOf(run, [
+      actionRow({ actionIndex: 5, decisionIndex: 0, siblingOrdinal: 2, label: 'third' }),
+      actionRow({ actionIndex: 3, decisionIndex: 0, siblingOrdinal: 0, label: 'first' }),
+      actionRow({ actionIndex: 4, decisionIndex: 0, siblingOrdinal: 1, label: 'second' }),
+    ]);
+    expect(rows[0]?.actions.map((action) => action.label)).toEqual([
+      'first',
+      'second',
+      'third',
+    ]);
+  });
+
+  it('names a single call by its own label and a batch by its census', () => {
+    const run = bundleWith([turnEvent(0), turnEvent(1)]);
+    const rows = turnRowsOf(run, [
+      actionRow({ actionIndex: 0, decisionIndex: 0, label: 'edit ledger-store.ts' }),
+      actionRow({ actionIndex: 1, decisionIndex: 1, toolName: 'read' }),
+      actionRow({ actionIndex: 2, decisionIndex: 1, toolName: 'ls', phase: 'explore' }),
+    ]);
+    expect(rows[0]?.headline).toBe('edit ledger-store.ts');
+    expect(rows[1]?.headline).toBe('2 calls · 1 ls, 1 read');
+  });
+
+  it('reports narration only when the trace recorded some', () => {
+    const run = bundleWith([
+      turnEvent(0),
+      turnEvent(1, { text: '  ', stopReason: 'toolUse' }),
+      turnEvent(2, { text: 'Done. Left the tree as-is.', stopReason: 'stop' }),
+    ]);
+    const rows = turnRowsOf(run, []);
+    expect(rows.map((row) => row.hasNarration)).toEqual([false, false, true]);
+    expect(rows[2]?.isFinal).toBe(true);
+  });
+
+  it('takes the dominant phase of a mixed batch', () => {
+    const run = bundleWith([turnEvent(0)]);
+    const rows = turnRowsOf(run, [
+      actionRow({ actionIndex: 0, decisionIndex: 0, phase: 'explore' }),
+      actionRow({ actionIndex: 1, decisionIndex: 0, phase: 'modify' }),
+      actionRow({ actionIndex: 2, decisionIndex: 0, phase: 'modify' }),
+    ]);
+    expect(rows[0]?.phase).toBe('modify');
+  });
+
+  it('finds the final report as the last turn carrying text', () => {
+    const run = bundleWith([
+      turnEvent(0, { text: 'thinking out loud' }),
+      turnEvent(1),
+      turnEvent(2, { text: 'final answer', stopReason: 'stop' }),
+    ]);
+    expect(finalReportOf(turnRowsOf(run, []))).toBe('final answer');
+  });
+
+  it('returns an empty report rather than a placeholder when nothing was recorded', () => {
+    expect(finalReportOf(turnRowsOf(bundleWith([turnEvent(0)]), []))).toBe('');
+  });
+});
+
+describe('decision range', () => {
+  it('spans every decision the model was called at', () => {
+    const run = bundleWith([turnEvent(0), turnEvent(1), turnEvent(2)]);
+    expect(decisionRangeOf(run.trace)).toEqual({ min: 0, max: 2 });
+  });
+
+  it('falls back to a single point for a trace with no model calls', () => {
+    expect(decisionRangeOf([])).toEqual({ min: 0, max: 0 });
+  });
+});
+
+describe('reasoning capture', () => {
+  const v4 = (overrides: Record<string, unknown>): RunBundle =>
+    bundleWith([turnEvent(0, overrides)], 4);
+  const legacy = (overrides: Record<string, unknown> = {}): RunBundle =>
+    bundleWith([turnEvent(0, overrides)], 3);
+
+  it('shows reasoning when a v4 trace recorded some', () => {
+    const rows = turnRowsOf(v4({ reasoningText: 'The channel has an unread mention.' }), []);
+    expect(rows[0]?.reasoningState).toBe('present');
+    expect(rows[0]?.reasoning).toBe('The channel has an unread mention.');
+  });
+
+  it('distinguishes a provider that returned nothing from a harness that never asked', () => {
+    // This is the whole reason the schema version moved: the same absent field means
+    // different things either side of v4, and the reader must not have to guess which.
+    expect(turnRowsOf(v4({}), [])[0]?.reasoningState).toBe('none_returned');
+    expect(turnRowsOf(legacy(), [])[0]?.reasoningState).toBe('not_captured');
+  });
+
+  it('reports a redacted block as redacted, not as absent', () => {
+    const rows = turnRowsOf(v4({ reasoningText: '', reasoningRedacted: true }), []);
+    expect(rows[0]?.reasoningState).toBe('redacted');
+    expect(rows[0]?.reasoning).toBeNull();
+  });
+
+  it('keeps the token count even when the text was withheld', () => {
+    const rows = turnRowsOf(v4({ reasoningTokens: 512 }), []);
+    expect(rows[0]?.reasoningState).toBe('none_returned');
+    expect(rows[0]?.reasoningTokens).toBe(512);
+  });
+
+  it('never reports reasoning as captured for a pre-v4 trace, whatever the fields say', () => {
+    expect(reasoningStateOf({ reasoningText: 'x' }, false)).toBe('not_captured');
+    expect(
+      turnRowsOf(legacy({ reasoningText: 'leaked from somewhere' }), [])[0]?.reasoning,
+    ).toBeNull();
+  });
+
+  it('treats whitespace-only reasoning as nothing returned', () => {
+    expect(turnRowsOf(v4({ reasoningText: '   \n ' }), [])[0]?.reasoningState).toBe(
+      'none_returned',
+    );
   });
 });

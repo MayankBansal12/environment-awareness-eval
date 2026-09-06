@@ -22,7 +22,8 @@ export function RunDetail({
   onBack,
 }: {
   run: RunBundle;
-  onBack: () => void;
+  /** Omitted when an enclosing screen already provides navigation. */
+  onBack?: (() => void) | undefined;
 }): JSX.Element {
   const [zoom, setZoom] = useState<Zoom>('digest');
   const [tab, setTab] = useState<ArtifactTab>('timeline');
@@ -50,7 +51,7 @@ export function RunDetail({
   return (
     <>
       <div className="controls">
-        <button onClick={onBack}>← runs</button>
+        {onBack !== undefined && <button onClick={onBack}>← runs</button>}
         <div className="spacer" />
         <label>
           zoom

@@ -6,13 +6,13 @@
  * outright — the current v3 schema rejects a v2 trace with `Invalid input: expected 3`,
  * and a v1 trace likewise.
  *
- * The corpus spans all three: the two oldest reference runs are v1, the bulk are v2, and
- * v3 landed with the ticket-delivery work. A mixed-generation corpus is the normal case,
- * not drift, so the viewer normalizes each event onto whatever version the local schema
- * declares before validating, and records the version the event actually came from. It
- * deliberately does not fork or restate the schema: the structural rules still come from
- * `src/`, and only the version literal and the fields newer versions added are reconciled
- * here.
+ * The corpus spans several: the two oldest reference runs are v1, the bulk are v2, v3
+ * landed with the ticket-delivery work and v4 with reasoning capture. A mixed-generation
+ * corpus is the normal case, not drift, so the viewer normalizes each event onto whatever
+ * version the local schema declares before validating, and records the version the event
+ * actually came from. It deliberately does not fork or restate the schema: the structural
+ * rules still come from `src/`, and only the version literal and the fields newer versions
+ * added are reconciled here.
  *
  * v3 adds a required `ticketDelivery` to `run_start`. Per the brief a legacy trace without
  * it describes a run whose ticket arrived over Slack, so that default is injected when
@@ -21,12 +21,19 @@
  * added the required `authoritativeContentMessageIds` list to `decision_boundary`, which
  * v1 traces predate — that defaults to empty (no record, not proven absence).
  *
+ * v4 adds `reasoningText` / `reasoningRedacted` / `reasoningTokens` to `assistant_turn`,
+ * all optional, so nothing is injected in either direction. The version still moved,
+ * because the fields being *absent* means different things either side of it: before v4
+ * the harness did not capture reasoning at all, after v4 an absent field means the
+ * provider returned none. The UI relies on that distinction, so it must stay recoverable
+ * from the trace's own version rather than inferred from an empty string.
+ *
  * Normalizing *down* stays supported deliberately: the viewer is read-only over an
  * artifact tree that outlives any one schema bump, so it must open a corpus written by a
  * newer runner than the `src/` it was built against.
  */
 
-export const SUPPORTED_TRACE_SCHEMA_VERSIONS = [1, 2, 3] as const;
+export const SUPPORTED_TRACE_SCHEMA_VERSIONS = [1, 2, 3, 4] as const;
 
 export type SupportedTraceSchemaVersion =
   (typeof SUPPORTED_TRACE_SCHEMA_VERSIONS)[number];

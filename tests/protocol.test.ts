@@ -385,3 +385,73 @@ describe('workspace confinement', () => {
     }
   });
 });
+
+describe('reasoning passthrough at turn settlement', () => {
+  it('records reasoning on the assistant_turn event when the adapter supplied it', async () => {
+    const setup = harness('baseline');
+    await setup.engine.settleTurn({
+      turnIndex: 0,
+      assistantText: '',
+      reasoningText: 'An unread mention arrived; read it before editing further.',
+      reasoningTokens: 256,
+      stopReason: 'toolUse',
+      toolCallNames: ['read'],
+    });
+
+    const turn = setup.traces.find((event) => event.type === 'assistant_turn');
+    expect(turn).toMatchObject({
+      reasoningText: 'An unread mention arrived; read it before editing further.',
+      reasoningTokens: 256,
+    });
+  });
+
+  it('omits the fields entirely when the provider returned no reasoning', async () => {
+    // Emitting `reasoningText: ''` here would make a provider that withholds reasoning
+    // indistinguishable from a model that reasoned about nothing.
+    const setup = harness('baseline');
+    await setup.engine.settleTurn({
+      turnIndex: 0,
+      assistantText: '',
+      stopReason: 'toolUse',
+      toolCallNames: ['read'],
+    });
+
+    const turn = setup.traces.find((event) => event.type === 'assistant_turn');
+    expect(turn).toBeDefined();
+    expect(turn).not.toHaveProperty('reasoningText');
+    expect(turn).not.toHaveProperty('reasoningTokens');
+    expect(turn).not.toHaveProperty('reasoningRedacted');
+  });
+
+  it('carries the redaction flag for a turn whose reasoning was filtered', async () => {
+    const setup = harness('baseline');
+    await setup.engine.settleTurn({
+      turnIndex: 0,
+      assistantText: '',
+      reasoningText: '',
+      reasoningRedacted: true,
+      stopReason: 'toolUse',
+      toolCallNames: ['read'],
+    });
+
+    const turn = setup.traces.find((event) => event.type === 'assistant_turn');
+    expect(turn).toMatchObject({ reasoningText: '', reasoningRedacted: true });
+  });
+
+  it('bounds long reasoning the way it bounds every other persisted text', async () => {
+    const setup = harness('baseline');
+    await setup.engine.settleTurn({
+      turnIndex: 0,
+      assistantText: '',
+      reasoningText: 'x'.repeat(20_000),
+      stopReason: 'toolUse',
+      toolCallNames: ['read'],
+    });
+
+    const turn = setup.traces.find((event) => event.type === 'assistant_turn');
+    const recorded =
+      turn !== undefined && 'reasoningText' in turn ? (turn.reasoningText ?? '') : '';
+    expect(recorded.length).toBeLessThan(20_000);
+    expect(recorded).toContain('omitted by the trace writer');
+  });
+});

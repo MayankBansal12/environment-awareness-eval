@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { data } from '../data.js';
 import { Compare } from './Compare.js';
-import { RunDetail } from './RunDetail.js';
 import { RunIndex } from './RunIndex.js';
+import { RunScreen } from './RunScreen.js';
 
 export type Screen =
   | { name: 'index' }
@@ -18,7 +18,9 @@ export function App(): JSX.Element {
   );
 
   return (
-    <div className="app">
+    // The cockpit puts four panes side by side, so the run screen is given the full
+    // viewport width rather than the reading-width column the tables want.
+    <div className={screen.name === 'run' ? 'app wide' : 'app'}>
       <div className="topbar">
         <h1>environment-awareness-eval</h1>
         <div className="nav">
@@ -69,7 +71,11 @@ export function App(): JSX.Element {
           const run = runsById.get(screen.runId);
           if (run === undefined) return <p>Unknown run {screen.runId}</p>;
           return (
-            <RunDetail run={run} onBack={() => setScreen({ name: 'index' })} />
+            <RunScreen
+              run={run}
+              onBack={() => setScreen({ name: 'index' })}
+              onSelectRun={(runId) => setScreen({ name: 'run', runId })}
+            />
           );
         })()}
 

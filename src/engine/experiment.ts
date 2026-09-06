@@ -61,6 +61,12 @@ export interface ToolObservation {
 export interface TurnSettlement {
   turnIndex: number;
   assistantText: string;
+  /** Concatenated thinking blocks, when the provider returned any. */
+  reasoningText?: string;
+  /** True when a thinking block was redacted by a safety filter, carrying no plaintext. */
+  reasoningRedacted?: boolean;
+  /** Reasoning tokens billed for this turn, when the provider reports a breakdown. */
+  reasoningTokens?: number;
   stopReason: string;
   toolCallNames: string[];
 }
@@ -453,10 +459,21 @@ export class ExperimentEngine {
 
   async settleTurn(turn: TurnSettlement): Promise<StopDecision | undefined> {
     this.#state.finalAssistantText = turn.assistantText;
+    // Reasoning is omitted rather than emitted empty when the provider returned none, so
+    // "this provider withheld it" stays distinguishable from "the model reasoned briefly".
     this.emit({
       type: 'assistant_turn',
       turnIndex: turn.turnIndex,
       text: boundText(turn.assistantText, 4_000),
+      ...(turn.reasoningText === undefined
+        ? {}
+        : { reasoningText: boundText(turn.reasoningText, 12_000) }),
+      ...(turn.reasoningRedacted === undefined
+        ? {}
+        : { reasoningRedacted: turn.reasoningRedacted }),
+      ...(turn.reasoningTokens === undefined
+        ? {}
+        : { reasoningTokens: turn.reasoningTokens }),
       toolCallNames: turn.toolCallNames,
       stopReason: turn.stopReason,
     });
