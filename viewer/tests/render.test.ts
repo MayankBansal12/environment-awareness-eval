@@ -1,3 +1,4 @@
+import { NO_CONTEXT } from '../src/derive/context.js';
 /**
  * Render smoke test for the cockpit, over the whole real corpus.
  *
@@ -71,6 +72,7 @@ async function loadCorpus(): Promise<RunBundle[]> {
       await readFile(path.join(runDir, 'summary.json'), 'utf8'),
     ) as RunBundle['summary'];
     runs.push({
+      context: NO_CONTEXT,
       runId: entry.name,
       summary,
       trace,
@@ -113,7 +115,8 @@ describe('cockpit rendering', () => {
     expect(html).toContain('Terminal &amp; tool logs');
     expect(html).toContain('Slack workspace');
     expect(html).toContain('Whole-run summary');
-    expect(html).toContain('what was in context');
+    expect(html).toContain('environment at this decision');
+    expect(html).toContain('Model call inspector');
   });
 
   it('renders the run that carries the ticket over the user prompt', () => {

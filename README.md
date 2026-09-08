@@ -127,8 +127,9 @@ Each run writes to `<results>/<run-id>/`, always outside the agent workspace:
   metrics, behavioural classification, final state, artifact references.
 - `report.md` — a short human-readable digest.
 - `workspace.diff` — the agent's full diff against the pinned commit.
+- `context.jsonl` — captured runtime context and assistant outputs, with structured message blocks, the effective system prompt and tool schemas, and an independent capture audit. Trace schema v5 and context schema v2 are separate versions.
 
-Command output is bounded and passed through secret redaction before it is written.
+Captured text is bounded and secret patterns are redacted before writing. Text blocks and nested string arguments have explicit truncation/redaction metadata. Image payloads and unsupported blocks are described rather than retained. This is captured runtime context, not the serialized provider request. Capture failures are reported separately from behavioral grades.
 
 ## Grading
 
@@ -162,3 +163,13 @@ v0. `pre_commit_attempt` is declared and deliberately **unsupported**; see
 [docs/limitations.md](docs/limitations.md). Pi has no sandbox and neither does this harness —
 `bash` runs as the host user, and the path guard is workspace discipline, not a security
 boundary.
+
+
+## Model-call inspector
+
+`pnpm viz` builds a self-contained viewer. Select a run and decision, then **Inspect D…**
+to see captured inputs, assistant output, reasoning when returned, tool arguments/results,
+and the system prompt/tool schemas. Missing historical context is labeled as a partial
+reconstruction. Body interning keeps repeated context from being copied verbatim into the
+bundle for every decision. See [viewer/README.md](viewer/README.md) and the
+[four-condition pilot report](docs/v5-pilot.md).

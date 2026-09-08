@@ -47,7 +47,7 @@ direct — no regex copies, no source-text scraping — so a combined
 counts it as one.
 
 A mixed-generation corpus is the normal case, not drift: the loader accepts trace
-schema v1/v2/v3/v4/v5 and summary v1/v2/v3. Each event is normalised onto the local schema
+schema v1/v2/v3/v4/v5 and summary v1/v2/v3/v4. Each event is normalised onto the local schema
 version before validation (`viewer/src/derive/trace-compat.ts`); a missing
 `ticketDelivery` becomes `slack`, a missing `authoritativeContentMessageIds` becomes
 empty. A run that still cannot be parsed is **quarantined**, never fatal: it gets a
@@ -119,3 +119,28 @@ Verified with `jq` against `results/` rather than assumed:
 - `summary.json` on the oldest runs carries no round or ticket-delivery field. Rounds
   are read from an `r<n>` segment in the run id and fall back to ordinal position; a
   missing `ticketDelivery` is treated as `slack`.
+
+
+## Captured model calls
+
+The loader reads `context.jsonl` schema v1/v2 alongside trace v1–v5. V2 records are
+validated with the harness schema; old text-only captures stay explicitly partial.
+Duplicate records, mismatched decision IDs/counts, missing headers/outputs/audits, and
+truncated/redacted/omitted content prevent a “no gaps detected” label. A bad sidecar does
+not quarantine an otherwise readable behavioral run.
+
+The **Model call** inspector follows the cockpit cursor. **Input & output** separates the
+selected decision's input from its response, including structured messages and tool-call
+arguments. Environment markup is highlighted at its captured position. Tool results are
+paired by call ID and labeled with the later captured input containing them; trace previews
+are used when full results are unavailable. **System & tools** shows prompt provenance,
+the effective system prompt, settings and actual tool schemas. **Capture details** reports
+fidelity independently of the behavioral grade. **Inspect D…** scrolls directly to the panel.
+
+A shared string table interns identical message bodies, arguments, prompts and schemas.
+The source sidecars remain full snapshots because annotation rewrites previous messages;
+this is content deduplication at build time, not append-only reconstruction. The build is
+still a single static HTML file. There is no streaming terminal playback or inferred timing.
+
+The four-condition [v5 pilot](../docs/v5-pilot.md) provides real captured calls. Raw results
+remain local scratch artifacts; a manifest records their hashes and measured outcomes.

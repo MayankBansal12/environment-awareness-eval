@@ -1,3 +1,4 @@
+import { NO_CONTEXT } from '../src/derive/context.js';
 /**
  * Derivation against the real `results/` tree.
  *
@@ -34,11 +35,7 @@ import {
 } from '../src/derive/trace-compat.js';
 import { groupIntoBatches } from '../src/derive/batches.js';
 import { environmentEventOf, slackThreadOf } from '../src/derive/slack.js';
-import {
-  decisionRangeOf,
-  finalReportOf,
-  turnRowsOf,
-} from '../src/derive/turns.js';
+import { decisionRangeOf, finalReportOf, turnRowsOf } from '../src/derive/turns.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)), '..');
 const resultsDir = process.env['EAW_RESULTS_DIR'] ?? path.join(repoRoot, 'results');
@@ -90,6 +87,7 @@ async function loadCorpus(): Promise<RunBundle[]> {
     const { version } = runTraceVersion(versions);
     const summaryTicket = (summary as { ticketDelivery?: unknown }).ticketDelivery;
     runs.push({
+      context: NO_CONTEXT,
       runId,
       summary,
       trace,
@@ -99,9 +97,9 @@ async function loadCorpus(): Promise<RunBundle[]> {
       traceSchemaVersion: version,
       ticketDelivery:
         summaryTicket === undefined
-          ? (runStartDelivery !== undefined
-              ? coerceTicketDelivery(runStartDelivery)
-              : coerceTicketDelivery(undefined))
+          ? runStartDelivery !== undefined
+            ? coerceTicketDelivery(runStartDelivery)
+            : coerceTicketDelivery(undefined)
           : coerceTicketDelivery(summaryTicket),
     });
   }
@@ -228,9 +226,7 @@ describe('observations across generations', () => {
         }
         expect(row.testOutcome, `${run.runId} action ${row.actionIndex}`).not.toBeNull();
         if (recorded !== undefined) {
-          expect(row.testOutcome, `${run.runId} action ${row.actionIndex}`).toBe(
-            recorded,
-          );
+          expect(row.testOutcome, `${run.runId} action ${row.actionIndex}`).toBe(recorded);
         }
       }
     }
@@ -360,13 +356,17 @@ describe('turn rows across the corpus', () => {
     }
   });
 
-  it('collapses the activity view well below the raw action count', () => {
-    // One row per decision is the point: if this stopped holding, the pane would be the
-    // action timeline again and the narrative altitude would be lost.
+  it('groups tool actions without losing tool-free provider error turns', () => {
+    // Provider errors and prose-only turns can outnumber tool actions. Every action
+    // still belongs to exactly one turn, without dropping those tool-free decisions.
     for (const run of corpus) {
       const actions = actionRowsOf(run);
       const turns = turnRowsOf(run, actions);
-      expect(turns.length, run.runId).toBeLessThanOrEqual(actions.length + 1);
+      expect(
+        turns.filter((turn) => turn.actions.length > 0).length,
+        run.runId,
+      ).toBeLessThanOrEqual(actions.length);
+      expect(turns.flatMap((turn) => turn.actions).length, run.runId).toBe(actions.length);
     }
   });
 

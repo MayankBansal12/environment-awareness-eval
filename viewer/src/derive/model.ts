@@ -6,6 +6,7 @@
 
 import type { EvalSummary } from '../../../src/runner.js';
 import type { TraceEvent } from '../../../src/trace/schema.js';
+import type { ContextBundle } from './context.js';
 import type { SupportedTraceSchemaVersion, TicketDelivery } from './trace-compat.js';
 
 /** A note the build step could not resolve but that must not be silently swallowed. */
@@ -15,7 +16,8 @@ export interface LoadWarning {
     | 'summary_schema_version'
     | 'missing_artifact'
     | 'summary_unreadable'
-    | 'mixed_trace_versions';
+    | 'mixed_trace_versions'
+    | 'context_unreadable';
   message: string;
 }
 
@@ -37,6 +39,12 @@ export interface RunBundle {
    * else `slack` for runs that predate the field entirely.
    */
   ticketDelivery: TicketDelivery;
+  /**
+   * The captured model context, keyed by decision. Always present; a run with no
+   * `context.jsonl` carries a bundle whose fidelity level is `none` and which says so.
+   * Bodies are interned into `ViewerData.blobs` rather than inlined here.
+   */
+  context: ContextBundle;
 }
 
 /**
@@ -60,6 +68,15 @@ export interface ViewerData {
   /** Runs that could not be parsed. Listed in the index, excluded from aggregates. */
   quarantined: QuarantinedRun[];
   warnings: LoadWarning[];
+  /**
+   * Every captured-context body, content-addressed and shared across all runs.
+   *
+   * Captured context is quadratic in a run's length and near-identical between adjacent
+   * decisions, so inlining it would multiply the bundle. One shared table keyed by content
+   * turns that back into roughly linear, and makes the identical system prompt across a
+   * whole sweep cost one copy.
+   */
+  blobs: Record<string, string>;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -67,13 +84,7 @@ export interface ViewerData {
 /* -------------------------------------------------------------------------- */
 
 export type PhaseKind =
-  | 'explore'
-  | 'modify'
-  | 'inspect'
-  | 'report'
-  | 'test'
-  | 'commit'
-  | 'shell';
+  'explore' | 'modify' | 'inspect' | 'report' | 'test' | 'commit' | 'shell';
 
 export type TestOutcomeLabel = 'passed' | 'failed' | 'unknown';
 
@@ -116,12 +127,7 @@ export interface PhaseBand {
 }
 
 export type MarkerKind =
-  | 'trigger'
-  | 'indicator'
-  | 'content'
-  | 'steer'
-  | 'termination'
-  | 'event_created';
+  'trigger' | 'indicator' | 'content' | 'steer' | 'termination' | 'event_created';
 
 export interface MarkerRow {
   kind: 'marker';

@@ -31,6 +31,7 @@ import type {
   RunBundle,
   ViewerData,
 } from '../src/derive/model.js';
+import { BlobInterner, loadContextBundle } from '../src/derive/context-load.js';
 import {
   coerceTicketDelivery,
   normalizeTraceEvent,
@@ -115,10 +116,7 @@ function parseTrace(runId: string, raw: string): ParsedTrace {
     // one corpus without any generation being rejected outright.
     const normalized = normalizeTraceEvent(json, TRACE_SCHEMA_VERSION);
     if (!normalized.ok) {
-      throw new RunUnreadable(
-        `${where}: ${normalized.reason}`,
-        claimedVersionOf(text),
-      );
+      throw new RunUnreadable(`${where}: ${normalized.reason}`, claimedVersionOf(text));
     }
     versions.push(normalized.value.sourceVersion);
     if (normalized.value.ticketDelivery !== null) {
@@ -147,6 +145,7 @@ async function loadRun(
   resultsDir: string,
   runId: string,
   warnings: LoadWarning[],
+  interner: BlobInterner,
 ): Promise<RunBundle> {
   const runDir = path.join(resultsDir, runId);
 
@@ -183,7 +182,37 @@ async function loadRun(
   const fixture = events.find((event) => event.type === 'fixture_prepared');
   const summaryTicket = (summary as { ticketDelivery?: unknown }).ticketDelivery;
 
+  // Read against the trace's own decision count, so a sidecar that is short can say how
+  // short rather than merely ending early. A missing or unreadable sidecar is never fatal:
+  // 56 runs in the corpus predate the capture entirely and must keep rendering.
+  const context = loadContextBundle(
+    await readIfPresent(path.join(runDir, 'context.jsonl')),
+    {
+      expectedRunId: runId,
+      traceDecisions: events
+        .filter((event) => event.type === 'decision_boundary')
+        .map((event) => ({
+          decisionIndex: event.decisionIndex,
+          contextMessageCount: event.contextMessageCount,
+        })),
+      traceDecisionCount: new Set(
+        events
+          .filter((event) => event.type === 'decision_boundary')
+          .map((event) => event.decisionIndex),
+      ).size,
+      interner,
+    },
+  );
+  if (context.fidelity.level === 'unreadable') {
+    warnings.push({
+      runId,
+      kind: 'context_unreadable',
+      message: `context.jsonl: ${context.fidelity.limitations.join(' ')}`,
+    });
+  }
+
   return {
+    context,
     runId,
     summary,
     trace: events,
@@ -218,10 +247,14 @@ async function main(): Promise<void> {
   const warnings: LoadWarning[] = [];
   const runs: RunBundle[] = [];
   const quarantined: QuarantinedRun[] = [];
+  // One table for the whole corpus. A sweep runs the same system prompt, the same tool
+  // schemas and the same opening user message through every run, so sharing across runs is
+  // where most of the saving is.
+  const interner = new BlobInterner();
 
   for (const runId of entries) {
     try {
-      runs.push(await loadRun(resultsDir, runId, warnings));
+      runs.push(await loadRun(resultsDir, runId, warnings, interner));
     } catch (error) {
       if (error instanceof RunUnreadable) {
         quarantined.push({
@@ -242,6 +275,7 @@ async function main(): Promise<void> {
     runs,
     quarantined,
     warnings,
+    blobs: interner.table(),
   };
 
   await mkdir(path.dirname(outputPath), { recursive: true });
@@ -249,6 +283,8 @@ async function main(): Promise<void> {
 
   const bytes = (await stat(outputPath)).size;
   const events = runs.reduce((sum, run) => sum + run.trace.length, 0);
+  const captured = runs.filter((run) => run.context.fidelity.level !== 'none');
+  const capturedCalls = captured.reduce((sum, run) => sum + run.context.calls.length, 0);
   const byVersion = new Map<string, number>();
   for (const run of runs) {
     const key = `v${String(run.traceSchemaVersion ?? '?')}`;
@@ -262,6 +298,18 @@ async function main(): Promise<void> {
       `(reads v${SUPPORTED_TRACE_SCHEMA_VERSIONS.join('/v')}) → ` +
       `${(bytes / 1_048_576).toFixed(2)} MB inlined`,
   );
+  console.log(
+    `[viz] captured context: ${captured.length}/${runs.length} run(s), ` +
+      `${capturedCalls} model call(s), interned into ${interner.size} unique ` +
+      `bodies (${(interner.chars / 1_048_576).toFixed(2)} MB of text)`,
+  );
+  for (const run of captured) {
+    if (run.context.fidelity.level === 'full') continue;
+    console.log(
+      `[viz]   ${run.runId}: ${run.context.fidelity.level} — ` +
+        run.context.fidelity.limitations.join(' | '),
+    );
+  }
   if (byVersion.size > 0) {
     console.log(
       `[viz] traces by version: ` +

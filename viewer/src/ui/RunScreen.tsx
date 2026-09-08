@@ -85,7 +85,12 @@ export function RunScreen({ run, onBack, onSelectRun }: Props): JSX.Element {
 
       {mode === 'cockpit' ? (
         <>
-          <Cockpit run={run} siblings={siblings} onSelectRun={onSelectRun} />
+          <Cockpit
+            blobs={data.blobs ?? {}}
+            run={run}
+            siblings={siblings}
+            onSelectRun={onSelectRun}
+          />
         </>
       ) : (
         <RunDetail run={run} />

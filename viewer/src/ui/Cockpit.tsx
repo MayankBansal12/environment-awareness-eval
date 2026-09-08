@@ -12,7 +12,7 @@
  * than an empty one, and scrubbing back is what reveals history.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { environmentEventOf, slackThreadOf } from '../derive/slack.js';
 import type { RunBundle } from '../derive/model.js';
 import { actionRowsOf, markerRowsOf } from '../derive/timeline.js';
@@ -22,6 +22,7 @@ import {
   finalReportOf,
   turnRowsOf,
 } from '../derive/turns.js';
+import { ModelCallInspector } from './ModelCallInspector.js';
 import { RunHeader } from './RunHeader.js';
 import { ActivityPane } from './ActivityPane.js';
 import { CaseRail } from './CaseRail.js';
@@ -31,12 +32,17 @@ import { TerminalPane, type LogFilter } from './TerminalPane.js';
 
 interface Props {
   run: RunBundle;
+  /**
+   * The shared content-addressed body table for captured context. Optional so the cockpit
+   * can be rendered from a test with no corpus behind it.
+   */
+  blobs?: Record<string, string>;
   /** Every run for the current model, for the rail. */
   siblings: readonly RunBundle[];
   onSelectRun: (runId: string) => void;
 }
 
-export function Cockpit({ run, siblings, onSelectRun }: Props): JSX.Element {
+export function Cockpit({ run, siblings, onSelectRun, blobs = {} }: Props): JSX.Element {
   const actions = useMemo(() => actionRowsOf(run), [run]);
   const markers = useMemo(() => markerRowsOf(run.trace), [run]);
   const turns = useMemo(() => turnRowsOf(run, actions), [run, actions]);
@@ -47,6 +53,7 @@ export function Cockpit({ run, siblings, onSelectRun }: Props): JSX.Element {
 
   const [cursor, setCursor] = useState<number>(range.max);
   const [filter, setFilter] = useState<LogFilter>('shell');
+  const inspectorRef = useRef<HTMLElement>(null);
 
   // Switching runs must not leave the cursor pointing past the end of the new run.
   useEffect(() => {
@@ -98,10 +105,19 @@ export function Cockpit({ run, siblings, onSelectRun }: Props): JSX.Element {
           onJumpToDecision={(decisionIndex) => setCursor(clamp(decisionIndex))}
         />
         <details className="context-disclosure">
-          <summary>Agent context · D{cursor}</summary>
+          <summary>Environment blocks · D{cursor}</summary>
           <ContextPanel run={run} selected={selected} />
         </details>
       </div>
+
+      {/* Reads the same cursor as every other pane, so moving the clock once moves the
+          whole cockpit — including what the model was actually sent at that decision. */}
+      <ModelCallInspector
+        ref={inspectorRef}
+        run={run}
+        decisionIndex={cursor}
+        blobs={blobs}
+      />
 
       <details className="run-diagnostics">
         <summary>Run metadata & evaluation details</summary>
@@ -114,6 +130,7 @@ export function Cockpit({ run, siblings, onSelectRun }: Props): JSX.Element {
         indicatorAt={indicatorAt}
         contentAt={contentAt}
         onChange={(value) => setCursor(clamp(value))}
+        onInspect={() => inspectorRef.current?.scrollIntoView({ block: 'start' })}
       />
     </div>
   );
@@ -130,12 +147,15 @@ function Scrubber({
   indicatorAt,
   contentAt,
   onChange,
+  onInspect,
 }: {
   cursor: number;
   range: { min: number; max: number };
   indicatorAt: number | null;
   contentAt: number | null;
   onChange: (value: number) => void;
+  /** Scrolls to the model-call inspector for the decision the cursor is on. */
+  onInspect: () => void;
 }): JSX.Element {
   const span = Math.max(range.max - range.min, 1);
   const percent = (value: number): string =>
@@ -189,6 +209,7 @@ function Scrubber({
       <button onClick={() => onChange(range.max)} disabled={cursor === range.max}>
         End of run
       </button>
+      <button onClick={onInspect}>Inspect D{cursor}</button>
       <span className="scrub-label">
         D{cursor} / D{range.max}
       </span>

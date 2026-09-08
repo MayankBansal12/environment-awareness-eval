@@ -2105,3 +2105,35 @@ button:disabled:active {
     flex-basis: 45%;
   }
 }
+
+/* Captured call inspector shares the cockpit decision cursor. */
+.model-inspector { grid-column: 2 / -1; min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); margin-top: 16px; }
+.inspector-heading { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; }
+.inspector-heading h3 { margin: 0; font-size: 14px; }
+.model-inspector > .tabs { padding: 0 16px 10px; }
+.capture-badge { border: 1px solid var(--line); border-radius: 12px; padding: 2px 8px; font-size: 11px; }
+.capture-badge.full { color: var(--ok); }
+.capture-badge.partial, .capture-badge.unreadable { color: var(--modify); }
+.capture-note { color: var(--dim); font-size: 11px; line-height: 1.55; overflow-wrap: anywhere; }
+.capture-flags { color: var(--modify); font-size: 11px; }
+.call-columns { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+.call-column { min-width: 0; max-height: 560px; overflow: auto; padding: 14px 16px; }
+.call-column + .call-column { border-left: 1px solid var(--line); }
+.call-column h4 { position: sticky; top: -14px; background: var(--panel); padding: 8px 0; margin: -6px 0 10px; z-index: 1; }
+.call-body { white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.65 var(--mono); color: var(--text); margin: 8px 0; }
+.call-body mark { display: inline; background: var(--content-bg); color: var(--text); border-radius: 2px; }
+.call-message, .call-tool, .call-block { border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px; margin: 8px 0; min-width: 0; }
+.call-message summary, .call-tool summary, .call-block summary { cursor: pointer; overflow-wrap: anywhere; }
+.call-message.has-environment { border-color: var(--content); }
+.environment-label { color: var(--explore); font-size: 10px; margin-left: 10px; }
+.call-tool h5 { margin: 10px 0 4px; color: var(--dim); }
+.inspector-scroll { padding: 0 16px 16px; max-height: 560px; overflow: auto; }
+@media (max-width: 1100px) { .model-inspector { grid-column: 1 / -1; } }
+@media (max-width: 700px) { .call-columns { grid-template-columns: 1fr; } .call-column + .call-column { border-left: 0; border-top: 1px solid var(--line); } }
+@media (min-width: 1051px) {
+  .cockpit { height: auto; grid-template-rows: auto minmax(600px, calc(100dvh - 220px)) auto auto; grid-template-areas: 'scrub scrub scrub' 'rail centre right' 'inspector inspector inspector' 'diagnostics diagnostics diagnostics'; }
+}
+.model-inspector { grid-area: inspector; scroll-margin-top: 12px; }
+@media (min-width: 651px) and (max-width: 1050px) {
+  .cockpit { grid-template-rows: auto 740px auto auto auto; grid-template-areas: 'scrub scrub' 'rail centre' 'right right' 'inspector inspector' 'diagnostics diagnostics'; }
+}

@@ -1,3 +1,4 @@
+import { NO_CONTEXT } from '../src/derive/context.js';
 /**
  * Tests for the viewer's derivation logic only — phase labelling, batch grouping, path
  * stripping, metric extraction and trace-version normalisation. React rendering is
@@ -136,21 +137,28 @@ describe('action labels', () => {
   const ws = '/tmp/eaw-run-x-AbCdEf/workspace';
 
   it('renders each inputSummary shape found in the corpus', () => {
-    expect(actionLabel({ toolName: 'read', inputSummary: { path: 'src/x.ts' } }, ws).label).toBe(
-      'read src/x.ts',
+    expect(
+      actionLabel({ toolName: 'read', inputSummary: { path: 'src/x.ts' } }, ws).label,
+    ).toBe('read src/x.ts');
+    expect(actionLabel({ toolName: 'ls', inputSummary: { path: '.' } }, ws).label).toBe(
+      'ls .',
     );
-    expect(actionLabel({ toolName: 'ls', inputSummary: { path: '.' } }, ws).label).toBe('ls .');
     expect(
       actionLabel({ toolName: 'edit', inputSummary: { path: 'a.ts', editCount: 3 } }, ws),
     ).toEqual({ label: 'edit a.ts', detail: '3 edits' });
     expect(
-      actionLabel({ toolName: 'edit', inputSummary: { path: 'a.ts', editCount: 1 } }, ws).detail,
+      actionLabel({ toolName: 'edit', inputSummary: { path: 'a.ts', editCount: 1 } }, ws)
+        .detail,
     ).toBe('1 edit');
     expect(
-      actionLabel({ toolName: 'write', inputSummary: { path: 'a.ts', contentBytes: 12 } }, ws),
+      actionLabel(
+        { toolName: 'write', inputSummary: { path: 'a.ts', contentBytes: 12 } },
+        ws,
+      ),
     ).toEqual({ label: 'write a.ts', detail: '12 B' });
     expect(
-      actionLabel({ toolName: 'find', inputSummary: { path: '.', pattern: '*' } }, ws).label,
+      actionLabel({ toolName: 'find', inputSummary: { path: '.', pattern: '*' } }, ws)
+        .label,
     ).toBe('find . /*/');
     expect(
       actionLabel({ toolName: 'grep', inputSummary: { pattern: 'refund' } }, ws).label,
@@ -173,7 +181,9 @@ describe('action labels', () => {
   });
 
   it('returns null when the action has no path', () => {
-    expect(actionPath({ toolName: 'bash', inputSummary: { command: 'ls' } }, ws)).toBeNull();
+    expect(
+      actionPath({ toolName: 'bash', inputSummary: { command: 'ls' } }, ws),
+    ).toBeNull();
   });
 });
 
@@ -183,7 +193,9 @@ describe('test outcome', () => {
   const base = { toolName: 'bash', isError: false, outputPreview: '' };
 
   it('prefers the recorded observedTestOutcome when present', () => {
-    expect(testOutcomeFor({ ...base, observedTestOutcome: 'failed' }, 'test')).toBe('failed');
+    expect(testOutcomeFor({ ...base, observedTestOutcome: 'failed' }, 'test')).toBe(
+      'failed',
+    );
     // The recorded value wins even when the fallback classifier would say otherwise.
     expect(
       testOutcomeFor(
@@ -212,7 +224,9 @@ describe('test outcome', () => {
 
   it('reports no outcome for non-test actions', () => {
     expect(testOutcomeFor({ ...base, toolName: 'read' }, 'explore')).toBeNull();
-    expect(testOutcomeFor({ ...base, outputPreview: 'Tests 3 passed' }, 'commit')).toBeNull();
+    expect(
+      testOutcomeFor({ ...base, outputPreview: 'Tests 3 passed' }, 'commit'),
+    ).toBeNull();
   });
 });
 
@@ -408,7 +422,13 @@ describe('trace version normalisation', () => {
   it('accepts the supported schema generations', () => {
     for (const version of [1, 2, 3]) {
       const result = normalizeTraceEvent(
-        baseEvent({ schemaVersion: version, type: 'trigger_fired', trigger: 't', turnIndex: 0, evidence: {} }),
+        baseEvent({
+          schemaVersion: version,
+          type: 'trigger_fired',
+          trigger: 't',
+          turnIndex: 0,
+          evidence: {},
+        }),
         TRACE_SCHEMA_VERSION,
       );
       expect(result.ok, `v${version}`).toBe(true);
@@ -417,7 +437,13 @@ describe('trace version normalisation', () => {
 
   it('rejects an unknown schema generation with a reason, not a throw', () => {
     const result = normalizeTraceEvent(
-      baseEvent({ schemaVersion: 99, type: 'trigger_fired', trigger: 't', turnIndex: 0, evidence: {} }),
+      baseEvent({
+        schemaVersion: 99,
+        type: 'trigger_fired',
+        trigger: 't',
+        turnIndex: 0,
+        evidence: {},
+      }),
       TRACE_SCHEMA_VERSION,
     );
     expect(result.ok).toBe(false);
@@ -493,6 +519,7 @@ function bundle(overrides: {
   traceSchemaVersion?: 1 | 2 | 3;
 }): RunBundle {
   return {
+    context: NO_CONTEXT,
     runId: overrides.runId,
     trace: [],
     reportMd: '',
@@ -516,7 +543,9 @@ function bundle(overrides: {
 describe('metric extraction', () => {
   it('reads the load-time ticketDelivery off the bundle', () => {
     expect(ticketDeliveryOf(bundle({ runId: 'x' }))).toBe('slack');
-    expect(ticketDeliveryOf(bundle({ runId: 'x', ticketDelivery: 'direct' }))).toBe('direct');
+    expect(ticketDeliveryOf(bundle({ runId: 'x', ticketDelivery: 'direct' }))).toBe(
+      'direct',
+    );
     expect(DEFAULT_TICKET_DELIVERY).toBe('slack');
   });
 
@@ -850,10 +879,10 @@ function actionRow(overrides: Partial<ActionRow> = {}): ActionRow {
  */
 function bundleWith(
   events: Array<Record<string, unknown>>,
-  traceSchemaVersion: RunBundle['traceSchemaVersion'] = TRACE_SCHEMA_VERSION as
-    RunBundle['traceSchemaVersion'],
+  traceSchemaVersion: RunBundle['traceSchemaVersion'] = TRACE_SCHEMA_VERSION as RunBundle['traceSchemaVersion'],
 ): RunBundle {
   return {
+    context: NO_CONTEXT,
     runId: 'r',
     summary: {} as RunBundle['summary'],
     trace: slackTrace(events),
@@ -964,7 +993,10 @@ describe('reasoning capture', () => {
     bundleWith([turnEvent(0, overrides)], 3);
 
   it('shows reasoning when a v4 trace recorded some', () => {
-    const rows = turnRowsOf(v4({ reasoningText: 'The channel has an unread mention.' }), []);
+    const rows = turnRowsOf(
+      v4({ reasoningText: 'The channel has an unread mention.' }),
+      [],
+    );
     expect(rows[0]?.reasoningState).toBe('present');
     expect(rows[0]?.reasoning).toBe('The channel has an unread mention.');
   });

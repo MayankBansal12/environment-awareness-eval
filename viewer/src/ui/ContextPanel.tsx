@@ -16,13 +16,11 @@ type Tab = 'status' | 'events' | 'io' | 'raw';
 
 /**
  * What the panel is describing. The timeline selects a concrete row; the cockpit only has
- * a cursor, and a bare decision is a complete answer to "what was in context" on its own —
+ * a cursor, and a bare decision is a complete answer to "environment at this decision" on its own —
  * the status and event blocks are properties of the decision, not of any row inside it.
  */
 export type ContextSelection =
-  | ActionRow
-  | MarkerRow
-  | { kind: 'decision'; decisionIndex: number };
+  ActionRow | MarkerRow | { kind: 'decision'; decisionIndex: number };
 
 interface Props {
   run: RunBundle;
@@ -35,10 +33,9 @@ export function ContextPanel({ run, selected }: Props): JSX.Element {
   if (selected === null) {
     return (
       <div className="panel">
-        <h3>what was in context</h3>
+        <h3>environment at this decision</h3>
         <pre className="block empty">
-          Select any timeline row to see the exact status block, event blocks and tool
-          output that were present at that decision.
+          Select a timeline row to inspect its environment blocks and recorded tool preview.
         </pre>
       </div>
     );
@@ -52,9 +49,7 @@ export function ContextPanel({ run, selected }: Props): JSX.Element {
 
   return (
     <div className="panel">
-      <h3>
-        D{decisionIndex} · what was in context
-      </h3>
+      <h3>D{decisionIndex} · environment at this decision</h3>
       <div className="tabs">
         <TabButton id="status" tab={tab} setTab={setTab} label="status block" />
         <TabButton id="events" tab={tab} setTab={setTab} label="event blocks" />
@@ -116,7 +111,9 @@ export function ContextPanel({ run, selected }: Props): JSX.Element {
 
 function ToolIo({ run, selected }: Props): JSX.Element {
   if (selected === null || selected.kind !== 'action') {
-    return <pre className="block empty">Select a tool action to see its input and output.</pre>;
+    return (
+      <pre className="block empty">Select a tool action to see its input and output.</pre>
+    );
   }
   const truncation = truncationOfAction(
     selected.event.type === 'tool_action' ? selected.event : selected,
@@ -132,7 +129,10 @@ function ToolIo({ run, selected }: Props): JSX.Element {
           {selected.outputBytes} bytes
           {truncation.truncated && ` · ${describeTruncation(truncation)}`}
         </div>
-        <div>tool call id: {selected.event.type === 'tool_action' ? selected.event.toolCallId : ''}</div>
+        <div>
+          tool call id:{' '}
+          {selected.event.type === 'tool_action' ? selected.event.toolCallId : ''}
+        </div>
         {selected.inParallelBatch && (
           <div>
             issued in parallel batch {selected.batchId} (sibling #{selected.siblingOrdinal})
