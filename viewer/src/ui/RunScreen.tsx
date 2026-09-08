@@ -9,7 +9,7 @@
 
 import { useMemo, useState } from 'react';
 import { data } from '../data.js';
-import { classificationTone, isValid, ticketDeliveryOf } from '../derive/metrics.js';
+import { ticketDeliveryOf } from '../derive/metrics.js';
 import type { RunBundle } from '../derive/model.js';
 import { Cockpit } from './Cockpit.js';
 import { RunDetail } from './RunDetail.js';
@@ -40,13 +40,13 @@ export function RunScreen({ run, onBack, onSelectRun }: Props): JSX.Element {
   const switchModel = (next: string): void => {
     const pool = data.runs.filter((entry) => entry.summary.runtime.model === next);
     const sameScenario = pool.find(
-      (entry) => entry.summary.scenarioId === run.summary.scenarioId,
+      (entry) =>
+        entry.summary.scenarioId === run.summary.scenarioId &&
+        ticketDeliveryOf(entry) === ticketDeliveryOf(run),
     );
     const target = sameScenario ?? pool[0];
     if (target !== undefined) onSelectRun(target.runId);
   };
-
-  const tone = classificationTone(run);
 
   return (
     <>
@@ -68,11 +68,6 @@ export function RunScreen({ run, onBack, onSelectRun }: Props): JSX.Element {
           <b>{run.runId}</b> · {run.summary.scenarioId} · ticket {ticketDeliveryOf(run)}
         </span>
 
-        <span className={isValid(run) ? 'pill valid' : 'pill invalid'}>
-          {isValid(run) ? 'VALID ✓' : 'INVALID ✗'}
-        </span>
-        <span className={`classification ${tone}`}>{run.summary.grade.classification}</span>
-
         <div className="spacer" />
 
         <span className="nav">
@@ -82,15 +77,16 @@ export function RunScreen({ run, onBack, onSelectRun }: Props): JSX.Element {
               className={mode === entry ? 'active' : ''}
               onClick={() => setMode(entry)}
             >
-              {mode === entry ? '● ' : '○ '}
-              {entry}
+              {entry === 'cockpit' ? 'Behavior' : 'Evidence'}
             </button>
           ))}
         </span>
       </div>
 
       {mode === 'cockpit' ? (
-        <Cockpit run={run} siblings={siblings} onSelectRun={onSelectRun} />
+        <>
+          <Cockpit run={run} siblings={siblings} onSelectRun={onSelectRun} />
+        </>
       ) : (
         <RunDetail run={run} />
       )}

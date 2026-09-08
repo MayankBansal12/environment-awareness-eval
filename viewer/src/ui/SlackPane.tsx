@@ -37,18 +37,20 @@ export function SlackPane({ run, messages, cursor, onJumpToDecision }: Props): J
   );
 
   const channel = messages[0]?.channel ?? 'engineering';
-  const visible = messages.filter(
-    (message) => visibilityAt(message, cursor) !== 'unsent',
-  );
+  const visible = messages.filter((message) => visibilityAt(message, cursor) !== 'unsent');
   const pending = messages.length - visible.length;
 
   return (
     <section className="pane slackpane">
       <h3>
-        #{channel}
+        Slack workspace
         <span className="pane-note">as of D{cursor}</span>
       </h3>
 
+      <div className="slack-channel">
+        #{channel}
+        <span>Environment messages</span>
+      </div>
       <div className="pane-body">
         {visible.length === 0 && (
           <p className="empty-note">No messages in the channel at D{cursor}.</p>

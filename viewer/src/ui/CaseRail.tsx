@@ -11,6 +11,7 @@
  */
 
 import { classificationTone, groupRuns, TONE_GLYPH } from '../derive/metrics.js';
+import { humanize, outcomeLabel } from './labels.js';
 import type { RunBundle } from '../derive/model.js';
 
 interface Props {
@@ -36,24 +37,25 @@ export function CaseRail({ runs, selectedRunId, onSelect }: Props): JSX.Element 
         {cells.map((cell) => (
           <div className="railrow" key={`${cell.scenarioId}|${cell.ticketDelivery}`}>
             <div className="rail-scenario">
-              {cell.scenarioId}
+              {humanize(cell.scenarioId)}
               {showTicket && <span className="rail-ticket">{cell.ticketDelivery}</span>}
             </div>
             <div className="rail-dots">
               {cell.runs.map(({ round, run }) => {
                 const tone = classificationTone(run);
-                const selected = run.runId === selectedRunId;
                 return (
                   <button
                     key={run.runId}
-                    className={`raildot ${tone}${selected ? ' selected' : ''}`}
-                    title={`${run.runId}\n${run.summary.grade.classification}${
-                      classificationTone(run) === 'invalid' ? '\n(invalid run)' : ''
-                    }`}
+                    className={`raildot ${tone}${run.runId === selectedRunId ? ' selected' : ''}`}
+                    aria-current={run.runId === selectedRunId ? 'true' : undefined}
+                    title={run.runId}
                     onClick={() => onSelect(run.runId)}
                   >
                     <span className="dot">{TONE_GLYPH[tone]}</span>
-                    <span className="round-n">r{round}</span>
+                    <span className="round-n">Run {round}</span>
+                    <span className="rail-outcome">
+                      {outcomeLabel(run.summary.grade.classification)}
+                    </span>
                   </button>
                 );
               })}

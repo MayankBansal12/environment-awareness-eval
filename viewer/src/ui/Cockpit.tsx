@@ -22,6 +22,7 @@ import {
   finalReportOf,
   turnRowsOf,
 } from '../derive/turns.js';
+import { RunHeader } from './RunHeader.js';
 import { ActivityPane } from './ActivityPane.js';
 import { CaseRail } from './CaseRail.js';
 import { ContextPanel, type ContextSelection } from './ContextPanel.js';
@@ -52,8 +53,7 @@ export function Cockpit({ run, siblings, onSelectRun }: Props): JSX.Element {
     setCursor(range.max);
   }, [run.runId, range.max]);
 
-  const clamp = (value: number): number =>
-    Math.min(range.max, Math.max(range.min, value));
+  const clamp = (value: number): number => Math.min(range.max, Math.max(range.min, value));
 
   const event = environmentEventOf(messages);
   const indicatorAt = event?.indicatedAtDecision ?? null;
@@ -78,6 +78,7 @@ export function Cockpit({ run, siblings, onSelectRun }: Props): JSX.Element {
           gapTo={contentAt}
           onSelect={(decisionIndex) => setCursor(clamp(decisionIndex))}
           finalReport={finalReport}
+          run={run}
         />
         <TerminalPane
           run={run}
@@ -96,8 +97,16 @@ export function Cockpit({ run, siblings, onSelectRun }: Props): JSX.Element {
           cursor={cursor}
           onJumpToDecision={(decisionIndex) => setCursor(clamp(decisionIndex))}
         />
-        <ContextPanel run={run} selected={selected} />
+        <details className="context-disclosure">
+          <summary>Agent context · D{cursor}</summary>
+          <ContextPanel run={run} selected={selected} />
+        </details>
       </div>
+
+      <details className="run-diagnostics">
+        <summary>Run metadata & evaluation details</summary>
+        <RunHeader run={run} />
+      </details>
 
       <Scrubber
         cursor={cursor}
@@ -134,12 +143,18 @@ function Scrubber({
 
   return (
     <div className="scrubber">
-      <button onClick={() => onChange(cursor - 1)} title="previous decision">
+      <button
+        disabled={cursor <= range.min}
+        onClick={() => onChange(cursor - 1)}
+        aria-label="Previous decision"
+        title="previous decision"
+      >
         ◀
       </button>
 
       <div className="scrub-track">
         <input
+          aria-label="Decision in run"
           type="range"
           min={range.min}
           max={range.max}
@@ -162,10 +177,18 @@ function Scrubber({
         )}
       </div>
 
-      <button onClick={() => onChange(cursor + 1)} title="next decision">
+      <button
+        disabled={cursor >= range.max}
+        onClick={() => onChange(cursor + 1)}
+        aria-label="Next decision"
+        title="next decision"
+      >
         ▶
       </button>
 
+      <button onClick={() => onChange(range.max)} disabled={cursor === range.max}>
+        End of run
+      </button>
       <span className="scrub-label">
         D{cursor} / D{range.max}
       </span>

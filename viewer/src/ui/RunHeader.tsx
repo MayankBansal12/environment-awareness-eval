@@ -3,6 +3,7 @@
  * the result: everything below it is evidence for or against how that gap was used.
  */
 
+import { outcomeLabel } from './labels.js';
 import type { RunBundle } from '../derive/model.js';
 import { isValid, ticketDeliveryOf } from '../derive/metrics.js';
 import type { TraceEvent } from '../../../src/trace/schema.js';
@@ -40,41 +41,44 @@ export function RunHeader({ run }: { run: RunBundle }): JSX.Element {
 
   return (
     <div className="runheader">
-      <div className="row title">
-        <span className="runid">{run.runId}</span>
-        <span className="facets">
-          {summary.scenarioId}
-          {start !== undefined && ` · ${start.eventSemantic} · ${start.delivery} · ${start.trigger}`}
-        </span>
-      </div>
+      <details className="run-metadata">
+        <summary>Run metadata · {run.runId}</summary>
+        <div className="row title">
+          <span className="runid">{run.runId}</span>
+          <span className="facets">
+            {summary.scenarioId}
+            {start !== undefined &&
+              ` · ${start.eventSemantic} · ${start.delivery} · ${start.trigger}`}
+          </span>
+        </div>
 
-      <div className="row facets">
-        {summary.runtime.model} · {summary.runtime.provider} ·{' '}
-        {summary.runtime.thinkingLevel} · pi {summary.runtime.piVersion} · ticket:{' '}
-        {ticketDeliveryOf(run)} · fixture {summary.fixtureCommit.slice(0, 10)} · trace v
-        {run.traceSchemaVersion ?? '?'}
-      </div>
+        <div className="row facets">
+          {summary.runtime.model} · {summary.runtime.provider} ·{' '}
+          {summary.runtime.thinkingLevel} · pi {summary.runtime.piVersion} · ticket:{' '}
+          {ticketDeliveryOf(run)} · fixture {summary.fixtureCommit.slice(0, 10)} · trace v
+          {run.traceSchemaVersion ?? '?'}
+        </div>
+      </details>
 
       <div className="row">
         <span className={valid ? 'pill valid' : 'pill invalid'}>
           {valid ? 'VALID ✓' : 'INVALID ✗'}
         </span>{' '}
-        <b>{summary.grade.classification}</b>{' '}
-        <span className="kv">
-          · terminated {summary.termination.reason}
-        </span>
+        <b>{outcomeLabel(summary.grade.classification)}</b>{' '}
+        <span className="kv">· terminated {summary.termination.reason}</span>
       </div>
 
       <div className="row gapline">
         {indicator === null ? (
-          <span className="headline">no indicator exposure in this run</span>
+          <span className="headline">No update indicator was exposed in this run</span>
         ) : content === null ? (
           <span className="headline">
-            indicator D{indicator} ──▶ <span className="warn">content never exposed</span>
+            Indicator at decision {indicator} →{' '}
+            <span className="warn">content never received</span>
           </span>
         ) : (
           <span className="headline">
-            indicator D{indicator} ──▶ content D{content}
+            Indicator at decision {indicator} → content at decision {content}
             <span className="kv">
               {'  '}gap {show(gapDecisions)} decision{gapDecisions === 1 ? '' : 's'} /{' '}
               {show(gapActions)} action{gapActions === 1 ? '' : 's'}
@@ -85,9 +89,9 @@ export function RunHeader({ run }: { run: RunBundle }): JSX.Element {
 
       <div className="row gapline">
         <span className="kv">
-          in gap: mutations <b>{show(num(metrics['mutationsBetweenIndicatorAndContent']))}</b> ·
-          commit attempts{' '}
-          <b>{show(num(metrics['commitAttemptsBetweenIndicatorAndContent']))}</b>
+          in gap: mutations{' '}
+          <b>{show(num(metrics['mutationsBetweenIndicatorAndContent']))}</b> · commit
+          attempts <b>{show(num(metrics['commitAttemptsBetweenIndicatorAndContent']))}</b>
         </span>
         <span className="kv">
           after: mutations <b>{show(num(metrics['mutationsAfterContent']))}</b> · commits{' '}

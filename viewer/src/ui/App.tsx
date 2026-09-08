@@ -12,37 +12,38 @@ export type Screen =
 export function App(): JSX.Element {
   const [screen, setScreen] = useState<Screen>({ name: 'index' });
 
-  const runsById = useMemo(
-    () => new Map(data.runs.map((run) => [run.runId, run])),
-    [],
-  );
+  const runsById = useMemo(() => new Map(data.runs.map((run) => [run.runId, run])), []);
 
   return (
     // The cockpit puts four panes side by side, so the run screen is given the full
     // viewport width rather than the reading-width column the tables want.
     <div className={screen.name === 'run' ? 'app wide' : 'app'}>
       <div className="topbar">
-        <h1>environment-awareness-eval</h1>
+        <h1>Environment awareness</h1>
         <div className="nav">
           <button
             className={screen.name === 'index' ? 'active' : ''}
             onClick={() => setScreen({ name: 'index' })}
           >
-            runs
+            Results
           </button>
           <button
             className={screen.name === 'compare' ? 'active' : ''}
-            onClick={() =>
-              setScreen({ name: 'compare', a: null, b: null })
-            }
+            onClick={() => setScreen({ name: 'compare', a: null, b: null })}
           >
-            compare
+            Compare
           </button>
         </div>
         <div className="spacer" />
         <div className="meta">
-          {data.runs.length} runs · read-only over {data.resultsDir} · built{' '}
-          {data.generatedAtIso.replace('T', ' ').slice(0, 16)}
+          <details>
+            <summary>Dataset info</summary>
+            <div className="dataset-info">
+              {data.runs.length} runs · {data.resultsDir}
+              <br />
+              Built {data.generatedAtIso.replace('T', ' ').slice(0, 16)}
+            </div>
+          </details>
         </div>
       </div>
 
@@ -59,12 +60,12 @@ export function App(): JSX.Element {
         </div>
       )}
 
-      {screen.name === 'index' && (
+      <div hidden={screen.name !== 'index'}>
         <RunIndex
           onOpen={(runId) => setScreen({ name: 'run', runId })}
           onCompare={(a, b) => setScreen({ name: 'compare', a, b })}
         />
-      )}
+      </div>
 
       {screen.name === 'run' &&
         (() => {
@@ -72,6 +73,7 @@ export function App(): JSX.Element {
           if (run === undefined) return <p>Unknown run {screen.runId}</p>;
           return (
             <RunScreen
+              key={run.runId}
               run={run}
               onBack={() => setScreen({ name: 'index' })}
               onSelectRun={(runId) => setScreen({ name: 'run', runId })}
@@ -79,9 +81,7 @@ export function App(): JSX.Element {
           );
         })()}
 
-      {screen.name === 'compare' && (
-        <Compare initialA={screen.a} initialB={screen.b} />
-      )}
+      {screen.name === 'compare' && <Compare initialA={screen.a} initialB={screen.b} />}
     </div>
   );
 }
