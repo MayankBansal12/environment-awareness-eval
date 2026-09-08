@@ -8,6 +8,7 @@ import { useState } from 'react';
 import type { TraceEvent } from '../../../src/trace/schema.js';
 import type { ActionRow, MarkerRow, RunBundle } from '../derive/model.js';
 import { stripWorkspacePrefixEverywhere } from '../derive/paths.js';
+import { describeTruncation, truncationOfAction } from '../derive/truncation.js';
 
 type Boundary = Extract<TraceEvent, { type: 'decision_boundary' }>;
 
@@ -117,7 +118,9 @@ function ToolIo({ run, selected }: Props): JSX.Element {
   if (selected === null || selected.kind !== 'action') {
     return <pre className="block empty">Select a tool action to see its input and output.</pre>;
   }
-  const truncated = selected.outputBytes > selected.outputPreview.length;
+  const truncation = truncationOfAction(
+    selected.event.type === 'tool_action' ? selected.event : selected,
+  );
   return (
     <>
       <pre className="block">
@@ -127,7 +130,7 @@ function ToolIo({ run, selected }: Props): JSX.Element {
       <div className="facts">
         <div>
           {selected.outputBytes} bytes
-          {truncated && ' · preview capped by the trace writer at 4000 chars'}
+          {truncation.truncated && ` · ${describeTruncation(truncation)}`}
         </div>
         <div>tool call id: {selected.event.type === 'tool_action' ? selected.event.toolCallId : ''}</div>
         {selected.inParallelBatch && (

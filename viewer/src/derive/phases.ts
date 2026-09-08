@@ -10,6 +10,7 @@ import { classifyTestOutcome } from '../../../src/engine/triggers.js';
 import { COMMIT_PATTERN, TEST_PATTERN } from '../../../src/grading/grader.js';
 import type { TraceEvent } from '../../../src/trace/schema.js';
 import type { ActionRow, PhaseKind, TestOutcomeLabel } from './model.js';
+import { batchKey } from './batches.js';
 import { stripWorkspacePrefix } from './paths.js';
 
 type ToolAction = Extract<TraceEvent, { type: 'tool_action' }>;
@@ -178,7 +179,7 @@ export function toActionRow(
     testOutcome: testOutcomeFor(action, phase),
     batchId,
     siblingOrdinal: action.siblingOrdinal ?? null,
-    inParallelBatch: batchId !== null && (batchSizes.get(batchId) ?? 0) > 1,
+    inParallelBatch: (batchSizes.get(batchKey(action) ?? '') ?? 0) > 1,
     outputPreview: action.outputPreview,
     outputBytes: action.outputBytes,
     event: action,

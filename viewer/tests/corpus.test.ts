@@ -43,6 +43,22 @@ import {
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)), '..');
 const resultsDir = process.env['EAW_RESULTS_DIR'] ?? path.join(repoRoot, 'results');
 
+/**
+ * Reads a run's trace only when the run finished writing.
+ *
+ * `summary.json` is written last, so its absence marks a run that is mid-flight or was
+ * killed. Returning null skips it, matching how `build-data.ts` quarantines such runs
+ * instead of aborting the whole corpus.
+ */
+async function readIfComplete(runDir: string): Promise<string | null> {
+  try {
+    await readFile(path.join(runDir, 'summary.json'), 'utf8');
+    return await readFile(path.join(runDir, 'trace.jsonl'), 'utf8');
+  } catch {
+    return null;
+  }
+}
+
 async function loadCorpus(): Promise<RunBundle[]> {
   const entries = await readdir(resultsDir, { withFileTypes: true });
   const runs: RunBundle[] = [];
@@ -50,7 +66,11 @@ async function loadCorpus(): Promise<RunBundle[]> {
     if (!entry.isDirectory()) continue;
     const runId = entry.name;
     const runDir = path.join(resultsDir, runId);
-    const raw = await readFile(path.join(runDir, 'trace.jsonl'), 'utf8');
+    // A run still being written has a trace but no summary yet. The production loader
+    // quarantines those rather than failing; these helpers must be at least as tolerant,
+    // or the suite goes red whenever it runs while a sweep is in flight.
+    const raw = await readIfComplete(runDir);
+    if (raw === null) continue;
     const trace: TraceEvent[] = [];
     const versions: SupportedTraceSchemaVersion[] = [];
     let runStartDelivery: string | undefined;
@@ -350,8 +370,24 @@ describe('turn rows across the corpus', () => {
     }
   });
 
-  it('recovers a final report for every run', () => {
+  it('recovers the closing prose exactly when the trace recorded any', () => {
+    // Not "every run has a final report": a run whose provider errored out can end with
+    // `agent_finished` and no prose at all — `v4-m13-cancel-exposed` did, after three
+    // error turns in five, and is graded invalid_run. Asserting a report there would be
+    // asserting a fact about the corpus rather than about `finalReportOf`.
     for (const run of corpus) {
+      const report = finalReportOf(turnRowsOf(run, actionRowsOf(run)));
+      const hasProse = run.trace.some(
+        (event) => event.type === 'assistant_turn' && event.text.trim() !== '',
+      );
+      expect(report.trim() !== '', run.runId).toBe(hasProse);
+    }
+  });
+
+  it('still recovers closing prose for every run that completed its task', () => {
+    const completed = corpus.filter((run) => run.summary.grade.valid);
+    expect(completed.length).toBeGreaterThan(0);
+    for (const run of completed) {
       const report = finalReportOf(turnRowsOf(run, actionRowsOf(run)));
       expect(report.trim(), run.runId).not.toBe('');
     }

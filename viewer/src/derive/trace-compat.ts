@@ -28,12 +28,21 @@
  * provider returned none. The UI relies on that distinction, so it must stay recoverable
  * from the trace's own version rather than inferred from an empty string.
  *
+ * v5 adds `outputTruncated` / `outputChars` to `tool_action` and moves turn identity onto
+ * the engine's own monotonic counter. Both matter to a reader. The truncation fields are
+ * optional and nothing is injected when normalizing up: a v1–v4 trace genuinely did not
+ * record whether an output was cut, and `truncationOf` recovers it from the writer's own
+ * note instead. `turnIndex` is the sharper change — before v5 it came from the runtime and
+ * restarted at 0 whenever a provider error restarted the session, so it is **not unique
+ * within a run** in an older trace. Anything keying on it must scope by `decisionIndex`,
+ * which is monotonic in every generation. See `batchKey` in `batches.ts`.
+ *
  * Normalizing *down* stays supported deliberately: the viewer is read-only over an
  * artifact tree that outlives any one schema bump, so it must open a corpus written by a
  * newer runner than the `src/` it was built against.
  */
 
-export const SUPPORTED_TRACE_SCHEMA_VERSIONS = [1, 2, 3, 4] as const;
+export const SUPPORTED_TRACE_SCHEMA_VERSIONS = [1, 2, 3, 4, 5] as const;
 
 export type SupportedTraceSchemaVersion =
   (typeof SUPPORTED_TRACE_SCHEMA_VERSIONS)[number];

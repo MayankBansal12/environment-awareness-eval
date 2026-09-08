@@ -18,14 +18,33 @@ export interface ActionBatch {
   isParallel: boolean;
 }
 
-/** Counts members per `batchId`, so a row can tell whether it had siblings. */
+/**
+ * A batch key is scoped to its decision, never the bare `batchId`.
+ *
+ * A batch is the tool calls issued by one assistant message, so it cannot span decisions
+ * by definition. Counting on `batchId` alone trusted the id to be unique within a run,
+ * which it was not: the harness named batches after the runtime's turn index, and that
+ * index restarts at 0 when a provider error restarts the session. Traces written before
+ * that fix carry `turn-0` several times over, and counting them together rendered calls
+ * minutes apart as one parallel batch. Scoping by decision is correct for every trace and
+ * repairs the old ones on read.
+ */
+export function batchKey(action: {
+  batchId?: string | undefined;
+  decisionIndex: number;
+}): string | null {
+  return action.batchId === undefined ? null : `${action.decisionIndex}|${action.batchId}`;
+}
+
+/** Counts members per batch, so a row can tell whether it had siblings. */
 export function batchSizes(
-  actions: ReadonlyArray<{ batchId?: string | undefined }>,
+  actions: ReadonlyArray<{ batchId?: string | undefined; decisionIndex: number }>,
 ): Map<string, number> {
   const sizes = new Map<string, number>();
   for (const action of actions) {
-    if (action.batchId === undefined) continue;
-    sizes.set(action.batchId, (sizes.get(action.batchId) ?? 0) + 1);
+    const key = batchKey(action);
+    if (key === null) continue;
+    sizes.set(key, (sizes.get(key) ?? 0) + 1);
   }
   return sizes;
 }

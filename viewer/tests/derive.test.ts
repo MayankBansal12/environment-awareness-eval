@@ -245,13 +245,26 @@ function action(overrides: Partial<ActionRow>): ActionRow {
 describe('batch grouping', () => {
   it('counts batch members', () => {
     const sizes = batchSizes([
-      { batchId: 'turn-1' },
-      { batchId: 'turn-1' },
-      { batchId: 'turn-2' },
-      {},
+      { batchId: 'turn-1', decisionIndex: 1 },
+      { batchId: 'turn-1', decisionIndex: 1 },
+      { batchId: 'turn-2', decisionIndex: 2 },
+      { decisionIndex: 3 },
     ]);
-    expect(sizes.get('turn-1')).toBe(2);
-    expect(sizes.get('turn-2')).toBe(1);
+    expect(sizes.get('1|turn-1')).toBe(2);
+    expect(sizes.get('2|turn-2')).toBe(1);
+  });
+
+  it('never merges a reused batch id across decisions', () => {
+    // A provider error restarts the runtime's turn counter, so traces written before the
+    // harness fix carry `turn-0` more than once in a single run. Those calls are minutes
+    // apart and are not siblings; counting them together made them read as one parallel
+    // batch. Observed in 8 of 18 runs on the free tier.
+    const sizes = batchSizes([
+      { batchId: 'turn-0', decisionIndex: 0 },
+      { batchId: 'turn-0', decisionIndex: 7 },
+    ]);
+    expect(sizes.get('0|turn-0')).toBe(1);
+    expect(sizes.get('7|turn-0')).toBe(1);
   });
 
   it('groups consecutive siblings and marks a real batch as parallel', () => {

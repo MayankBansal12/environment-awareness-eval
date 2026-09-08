@@ -35,6 +35,11 @@ anything the harness already defines:
 | Test pass/fail | `classifyTestOutcome` from `src/engine/triggers.ts` |
 | bash = test vs commit | `TEST_PATTERN` / `COMMIT_PATTERN`, imported from `src/grading/grader.ts` |
 
+Tool output is capped at `MAX_TOOL_OUTPUT_PREVIEW` (1500 UTF-16 code units), **not** the
+4000 of `MAX_TRACE_TEXT`, and `outputBytes` is a byte count — comparing the two mixes
+units. A v5 trace records `outputTruncated`/`outputChars` outright; older traces are read
+via the note the writer appended. Both go through `truncationOfAction`.
+
 `TEST_PATTERN` and `COMMIT_PATTERN` are exported from the grader precisely so the
 viewer can label a `bash` action exactly the way the grader counts it. The import is
 direct — no regex copies, no source-text scraping — so a combined
@@ -42,7 +47,7 @@ direct — no regex copies, no source-text scraping — so a combined
 counts it as one.
 
 A mixed-generation corpus is the normal case, not drift: the loader accepts trace
-schema v1/v2/v3/v4 and summary v1/v2/v3. Each event is normalised onto the local schema
+schema v1/v2/v3/v4/v5 and summary v1/v2/v3. Each event is normalised onto the local schema
 version before validation (`viewer/src/derive/trace-compat.ts`); a missing
 `ticketDelivery` becomes `slack`, a missing `authoritativeContentMessageIds` becomes
 empty. A run that still cannot be parsed is **quarantined**, never fatal: it gets a
@@ -51,15 +56,16 @@ everything else still renders.
 
 ## Screens
 
-- **Run index** — repeats as columns, so run-to-run variance in one condition is visible
-  without clicking. Invalid runs are struck through and excluded from every aggregate.
+- **Run index** — one clickable row per run, with model, outcome, inspection delay and
+  post-update actions. Search and filters persist when returning from a run. Invalid runs
+  are labeled and excluded from every outcome aggregate.
   Unparseable runs are quarantined with a badge and their reason, likewise excluded
   from aggregates without stopping the rest from rendering.
 - **Run cockpit** (the default run screen) — test cases, agent activity, terminal logs and
   the Slack workspace on one screen, all slaved to a single `decisionIndex` cursor. Moving
   the cursor once answers the question the eval exists to ask: at this model call, what was
   in the channel, what did the agent know about it, and what did it do next. The rail shows
-  repeats of a condition as dots so run-to-run variance is visible without navigating; the
+  repeats of a condition as labeled buttons so run-to-run variance is visible without navigating; the
   scrubber marks the indicator and content decisions so the gap is a distance rather than a
   number to subtract. Slack messages are stamped with what the agent knew at the cursor —
   `unread`, `indicated` (a status-block count and nothing more), `read`, or `exposed`.
@@ -82,8 +88,10 @@ Verified with `jq` against `results/` rather than assumed:
   carries prose. The activity view is therefore derived from tool actions plus whatever
   reasoning the trace recorded, and the final report tab renders the run's final prose in
   full.
-- **No run in the current corpus carries reasoning.** Every trace here predates v4, which
-  is when the harness started reading Pi's `thinking` blocks, so the cockpit says the
+- **Reasoning is captured on the v4 runs and absent from everything older.** Across 439
+  v4 turns, 19% carry reasoning text (median 173 characters — these are short summaries,
+  not raw chain-of-thought), a further 47% report reasoning tokens with no text, and 34%
+  carry nothing. Every pre-v4 trace predates capture entirely, so the cockpit says the
   trace predates capture rather than implying the model reasoned about nothing. The three
   cases are kept apart deliberately — `not_captured` (trace < v4), `none_returned` (the
   provider sent no thinking blocks) and `redacted` (a safety filter withheld the
@@ -95,11 +103,17 @@ Verified with `jq` against `results/` rather than assumed:
 - `inputSummary.path` is **absolute** across most of the corpus
   (`/tmp/eaw-run-<id>-XXXX/workspace/…`) and repo-relative in the two oldest live runs.
   The workspace prefix is stripped before rendering, so both shapes read as repo paths.
-- Every `tool_action` carries a `batchId` of the form `turn-<n>`, so batching is per turn;
-  a batch of one is the common case and is not bracketed.
+- Every `tool_action` carries a `batchId` of the form `turn-<n>`, and a batch of one is
+  the common case and is not bracketed. **`batchId` is not unique within a run before trace
+  v5**: it was named after the runtime's turn index, which restarts at 0 when a provider
+  error restarts the session, so an older trace can carry `turn-0` several times. Batches
+  are therefore keyed on `decisionIndex|batchId` (`batchKey` in `batches.ts`) — a batch is
+  the calls from one assistant message and cannot span decisions, so this is correct for
+  every generation and repairs the older ones on read.
 - `summary.json` `schemaVersion` is mixed 1/2/3 across the corpus, as is the trace
   `schemaVersion` (v3 adds a required `ticketDelivery` to `run_start`; v4 adds optional
-  reasoning fields to `assistant_turn`). Mixed versions are accepted and normalised, not
+  reasoning fields to `assistant_turn`; v5 adds `outputTruncated`/`outputChars` to
+  `tool_action` and moves turn identity onto the engine's own monotonic counter). Mixed versions are accepted and normalised, not
   warned about — except a trace that mixes versions *within itself*, which indicates a
   concatenated or corrupted artifact.
 - `summary.json` on the oldest runs carries no round or ticket-delivery field. Rounds

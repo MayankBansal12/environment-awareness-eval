@@ -6,14 +6,15 @@
  * here would bury the handful of `pnpm test` and `git commit` invocations that actually
  * decide the grade. `all` is one click away for when the file reads matter.
  *
- * Output is `outputPreview`, which the trace writer caps at 4000 characters. Where it hit
- * that cap the row says so, so a truncated log is never mistaken for a short one.
+ * Output is `outputPreview`, which the trace writer caps at `MAX_TOOL_OUTPUT_PREVIEW`
+ * characters. Where it hit that cap the row says so, so a truncated log is never mistaken
+ * for a short one.
  */
 
 import { useMemo } from 'react';
-import { MAX_TRACE_TEXT } from '../../../src/trace/schema.js';
 import type { ActionRow, RunBundle } from '../derive/model.js';
 import { stripWorkspacePrefixEverywhere } from '../derive/paths.js';
+import { describeTruncation, truncationOfAction } from '../derive/truncation.js';
 
 export type LogFilter = 'shell' | 'all';
 
@@ -59,7 +60,8 @@ export function TerminalPane({
   return (
     <section className="pane terminalpane">
       <h3>
-        terminal events and logs
+        Terminal & tool logs
+        <span className="pane-note">through D{cursor}</span>
         <span className="spacer" />
         <span className="nav">
           {(['shell', 'all'] as const).map((level) => (
@@ -92,8 +94,8 @@ export function TerminalPane({
 
         {hiddenAhead > 0 && (
           <p className="empty-note">
-            {hiddenAhead} later action{hiddenAhead === 1 ? '' : 's'} after D{cursor} —
-            scrub forward to include them.
+            {hiddenAhead} later action{hiddenAhead === 1 ? '' : 's'} after D{cursor} — scrub
+            forward to include them.
           </p>
         )}
       </div>
@@ -110,7 +112,9 @@ function LogEntry({
   workspacePath: string | null;
   onSelect: (decisionIndex: number) => void;
 }): JSX.Element {
-  const truncated = action.outputBytes > MAX_TRACE_TEXT;
+  const truncation = truncationOfAction(
+    action.event.type === 'tool_action' ? action.event : action,
+  );
   const body = stripWorkspacePrefixEverywhere(action.outputPreview, workspacePath);
 
   return (
@@ -136,7 +140,7 @@ function LogEntry({
 
       <div className="log-foot">
         {action.outputBytes} bytes
-        {truncated && ` · preview capped at ${MAX_TRACE_TEXT} chars by the trace writer`}
+        {truncation.truncated && ` · ${describeTruncation(truncation)}`}
         {action.inParallelBatch && ` · parallel batch ${action.batchId ?? ''}`}
       </div>
     </div>

@@ -34,13 +34,30 @@ import { Cockpit } from '../src/ui/Cockpit.js';
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)), '..');
 const resultsDir = process.env['EAW_RESULTS_DIR'] ?? path.join(repoRoot, 'results');
 
+/**
+ * Reads a run's trace only when the run finished writing.
+ *
+ * `summary.json` is written last, so its absence marks a run that is mid-flight or was
+ * killed. Returning null skips it, matching how `build-data.ts` quarantines such runs
+ * instead of aborting the whole corpus.
+ */
+async function readIfComplete(runDir: string): Promise<string | null> {
+  try {
+    await readFile(path.join(runDir, 'summary.json'), 'utf8');
+    return await readFile(path.join(runDir, 'trace.jsonl'), 'utf8');
+  } catch {
+    return null;
+  }
+}
+
 async function loadCorpus(): Promise<RunBundle[]> {
   const entries = await readdir(resultsDir, { withFileTypes: true });
   const runs: RunBundle[] = [];
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
     const runDir = path.join(resultsDir, entry.name);
-    const raw = await readFile(path.join(runDir, 'trace.jsonl'), 'utf8');
+    const raw = await readIfComplete(runDir);
+    if (raw === null) continue;
     const trace: TraceEvent[] = [];
     const versions: SupportedTraceSchemaVersion[] = [];
     for (const line of raw.split('\n')) {
@@ -92,8 +109,10 @@ describe('cockpit rendering', () => {
     expect(run).toBeDefined();
     const html = render(run!, corpus);
     expect(html).toContain('test cases');
-    expect(html).toContain('agent activity');
-    expect(html).toContain('terminal events and logs');
+    expect(html).toContain('Agent overview');
+    expect(html).toContain('Terminal &amp; tool logs');
+    expect(html).toContain('Slack workspace');
+    expect(html).toContain('Whole-run summary');
     expect(html).toContain('what was in context');
   });
 
