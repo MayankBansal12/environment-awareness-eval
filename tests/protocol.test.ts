@@ -129,7 +129,6 @@ describe('parallel tool batches', () => {
     ).toHaveLength(0);
 
     await setup.engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       stopReason: 'toolUse',
       toolCallNames: ['edit', 'read', 'bash'],
@@ -170,7 +169,6 @@ describe('indicator persistence', () => {
     });
     setup.setSnapshot(snap('changed', true));
     await setup.engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       stopReason: 'toolUse',
       toolCallNames: ['edit'],
@@ -198,7 +196,6 @@ describe('indicator persistence', () => {
         isError: false,
       });
       await setup.engine.settleTurn({
-        turnIndex: turn,
         assistantText: '',
         stopReason: 'toolUse',
         toolCallNames: ['edit'],
@@ -228,7 +225,6 @@ describe('indicator persistence', () => {
       setup.slack.readCursor,
     );
     await setup.engine.settleTurn({
-      turnIndex: 4,
       assistantText: '',
       stopReason: 'toolUse',
       toolCallNames: ['read_slack_messages'],
@@ -254,7 +250,6 @@ describe('exposed delivery', () => {
     });
     setup.setSnapshot(snap('changed', true));
     await setup.engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       stopReason: 'toolUse',
       toolCallNames: ['edit'],
@@ -298,7 +293,6 @@ describe('steer delivery', () => {
     });
     setup.setSnapshot(snap('changed', true));
     await setup.engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       stopReason: 'toolUse',
       toolCallNames: ['edit'],
@@ -390,7 +384,6 @@ describe('reasoning passthrough at turn settlement', () => {
   it('records reasoning on the assistant_turn event when the adapter supplied it', async () => {
     const setup = harness('baseline');
     await setup.engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       reasoningText: 'An unread mention arrived; read it before editing further.',
       reasoningTokens: 256,
@@ -410,7 +403,6 @@ describe('reasoning passthrough at turn settlement', () => {
     // indistinguishable from a model that reasoned about nothing.
     const setup = harness('baseline');
     await setup.engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       stopReason: 'toolUse',
       toolCallNames: ['read'],
@@ -426,7 +418,6 @@ describe('reasoning passthrough at turn settlement', () => {
   it('carries the redaction flag for a turn whose reasoning was filtered', async () => {
     const setup = harness('baseline');
     await setup.engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       reasoningText: '',
       reasoningRedacted: true,
@@ -441,7 +432,6 @@ describe('reasoning passthrough at turn settlement', () => {
   it('bounds long reasoning the way it bounds every other persisted text', async () => {
     const setup = harness('baseline');
     await setup.engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       reasoningText: 'x'.repeat(20_000),
       stopReason: 'toolUse',

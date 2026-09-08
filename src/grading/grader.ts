@@ -627,7 +627,10 @@ export function gradeRunWithPolicy(
     gate(
       'complete_trace',
       terminations.length === 1 &&
-        !terminations.some((event) => event.reason === 'harness_error') &&
+        !terminations.some(
+          (event) =>
+            event.reason === 'harness_error' || event.reason === 'provider_error',
+        ) &&
         harnessErrors.length === 0,
       `termination=${terminations[0]?.reason ?? 'missing'}`,
     ),

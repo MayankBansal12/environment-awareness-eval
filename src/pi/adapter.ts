@@ -34,13 +34,22 @@ export interface PiRunOptions {
   onSessionReady?: (steer: (text: string) => Promise<void>) => void;
 }
 
+export interface ToolDefinitionRecord {
+  name: string;
+  description: string;
+  parameters?: unknown;
+}
+
 export interface PiRunResult {
+  /** The tool surface advertised to the model, for the captured context. */
+  toolDefinitions: ToolDefinitionRecord[];
   termination:
     | 'agent_finished'
     | 'max_turns'
     | 'max_actions'
     | 'timeout'
     | 'harness_error'
+    | 'provider_error'
     | 'aborted';
   detail: string;
   finalAssistantText: string;
@@ -82,6 +91,8 @@ export interface AssistantInfo {
   reasoningRedacted: boolean;
   /** `usage.reasoning`, when the provider reports a reasoning token breakdown. */
   reasoningTokens: number | undefined;
+  /** The whole numeric usage breakdown, for the captured context. */
+  usage: Record<string, number> | undefined;
   stopReason: string;
   calls: Array<{ id: string; name: string; input: Record<string, unknown> }>;
 }
@@ -108,6 +119,7 @@ export function assistantInfo(message: unknown): AssistantInfo {
     reasoningRedacted: false,
     reasoningTokens: undefined,
     stopReason: 'unknown',
+    usage: undefined,
     calls: [],
   };
   if (typeof message !== 'object' || message === null) return empty;
@@ -165,6 +177,18 @@ export function assistantInfo(message: unknown): AssistantInfo {
     typeof usage?.reasoning === 'number' && Number.isFinite(usage.reasoning)
       ? usage.reasoning
       : undefined;
+  // Every finite numeric field the provider reported, whatever it called them. Providers
+  // disagree on the names (input/prompt, output/completion, cache reads), so the shape is
+  // recorded as given rather than normalised into a guess.
+  const usageNumbers =
+    usage === undefined
+      ? undefined
+      : Object.fromEntries(
+          Object.entries(usage as Record<string, unknown>).filter(
+            (entry): entry is [string, number] =>
+              typeof entry[1] === 'number' && Number.isFinite(entry[1]),
+          ),
+        );
 
   return {
     text: text.join('\n'),
@@ -174,6 +198,9 @@ export function assistantInfo(message: unknown): AssistantInfo {
       reasoning.length > 0 ? reasoning.join('\n') : reasoningRedacted ? '' : undefined,
     reasoningRedacted,
     reasoningTokens,
+    ...(usageNumbers === undefined || Object.keys(usageNumbers).length === 0
+      ? { usage: undefined }
+      : { usage: usageNumbers }),
     stopReason: typeof record.stopReason === 'string' ? record.stopReason : 'unknown',
     calls,
   };
@@ -192,6 +219,10 @@ export async function runPiAgentWithSlack(
   let session: AgentSession | undefined;
   let forced: { reason: PiRunResult['termination']; detail: string } | undefined;
   let finalAssistantText = '';
+  // The stop reason of the most recently settled turn. A session that runs out of provider
+  // retries simply stops without throwing, so this is the only evidence that the run ended
+  // because the provider quit rather than because the agent was done.
+  let lastStopReason = 'none';
 
   const customTools = createSlackTools({
     state: options.slack,
@@ -232,13 +263,17 @@ export async function runPiAgentWithSlack(
       pi.on('turn_end', async (event) => {
         const info = assistantInfo(event.message);
         finalAssistantText = info.text;
+        lastStopReason = info.stopReason;
         for (const [siblingOrdinal, call] of info.calls.entries()) {
           const end = ends.get(call.id);
           const outputText = redactSecrets(textFromContent(end?.result));
           const actionIndex = options.engine.observeTool({
             toolCallId: call.id,
             toolName: call.name,
-            batchId: 'turn-' + event.turnIndex,
+            // Named from the engine's ordinal, not `event.turnIndex`: Pi restarts its turn
+            // index at 0 after a provider error, which would make two turns in one run
+            // share a batch id and read as one parallel batch.
+            batchId: 'turn-' + options.engine.turnOrdinal,
             siblingOrdinal,
             input: call.input,
             outputText,
@@ -266,7 +301,6 @@ export async function runPiAgentWithSlack(
         }
 
         const stop = await options.engine.settleTurn({
-          turnIndex: event.turnIndex,
           assistantText: info.text,
           ...(info.reasoning === undefined ? {} : { reasoningText: info.reasoning }),
           ...(info.reasoningRedacted ? { reasoningRedacted: true } : {}),
@@ -275,6 +309,12 @@ export async function runPiAgentWithSlack(
             : { reasoningTokens: info.reasoningTokens }),
           stopReason: info.stopReason,
           toolCallNames: info.calls.map((call) => call.name),
+          toolCalls: info.calls.map((call) => ({
+            id: call.id,
+            name: call.name,
+            arguments: call.input,
+          })),
+          ...(info.usage === undefined ? {} : { usage: info.usage }),
         });
         if (stop !== undefined) {
           forced = { reason: stop.reason, detail: stop.detail };
@@ -348,6 +388,21 @@ export async function runPiAgentWithSlack(
   session = created.session;
   options.onSessionReady?.((text) => session!.steer(text));
 
+  // The exact tool surface advertised to the model, read from the session rather than
+  // restated here. `parameters` is TypeBox, which is already JSON-schema shaped; it is
+  // recorded as-is so the captured context shows what the model was actually offered
+  // rather than a name list that has to be trusted.
+  const toolDefinitions = activeTools.map((name) => {
+    const definition = session?.getToolDefinition(name);
+    return {
+      name,
+      description: definition?.description ?? '',
+      ...(definition?.parameters === undefined
+        ? {}
+        : { parameters: definition.parameters as unknown }),
+    };
+  });
+
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     const timeout = new Promise<never>((_resolve, reject) => {
@@ -376,9 +431,19 @@ export async function runPiAgentWithSlack(
     session.dispose();
   }
 
+  // A run that ends on an error turn did not finish, whatever the absence of a forced
+  // reason implies. Checked only when nothing else forced termination, so a timeout or a
+  // turn-limit stop keeps its own more specific reason.
+  const endedOnProviderError = forced === undefined && lastStopReason === 'error';
+
   return {
-    termination: forced?.reason ?? 'agent_finished',
-    detail: forced?.detail ?? 'agent completed the focal task',
+    toolDefinitions,
+    termination: endedOnProviderError
+      ? 'provider_error'
+      : (forced?.reason ?? 'agent_finished'),
+    detail: endedOnProviderError
+      ? 'provider returned an error on the final turn and the session ended'
+      : (forced?.detail ?? 'agent completed the focal task'),
     finalAssistantText,
     piVersion: VERSION,
     activeTools,

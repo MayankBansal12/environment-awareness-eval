@@ -22,16 +22,23 @@
 import type { Scenario } from '../config/scenario-schema.js';
 import {
   boundText,
+  MAX_TOOL_OUTPUT_PREVIEW,
   traceEventSchema,
   TRACE_SCHEMA_VERSION,
   type TraceEvent,
   type TraceEventInput,
 } from '../trace/schema.js';
+import {
+  captureText,
+  MAX_ARGUMENT_TEXT,
+  type CapturedMessage,
+} from '../trace/model-call.js';
 import type { WorkspaceSnapshot } from '../workspace/snapshot.js';
 import {
   annotateMessages,
   anchorKeyFor,
   contextText,
+  messageText,
   renderEventBlock,
   type AnchoredAnnotation,
   type AnnotatableMessage,
@@ -59,7 +66,6 @@ export interface ToolObservation {
 }
 
 export interface TurnSettlement {
-  turnIndex: number;
   assistantText: string;
   /** Concatenated thinking blocks, when the provider returned any. */
   reasoningText?: string;
@@ -69,6 +75,14 @@ export interface TurnSettlement {
   reasoningTokens?: number;
   stopReason: string;
   toolCallNames: string[];
+  /**
+   * Tool calls with their full arguments, for the captured context only. `toolCallNames`
+   * stays the trace's record; this is what makes the output side of a call readable, since
+   * `inputSummary` reduces a `write` to a byte count.
+   */
+  toolCalls?: Array<{ id: string; name: string; arguments: Record<string, unknown> }>;
+  /** Token usage as the provider reported it. */
+  usage?: Record<string, number>;
 }
 
 export interface StopDecision {
@@ -87,9 +101,42 @@ export interface EngineDeps {
   /** Hand text to the runtime's own steering channel. Only used by `steer` delivery. */
   steer: (text: string) => Promise<void>;
   limits: { maxTurns: number; maxActions: number };
+  /**
+   * Receives the captured model context, when the run is capturing one. Optional because
+   * the engine is driven by fakes in tests that have no interest in it, and because a
+   * capture failure must never be able to fail a run.
+   */
+  captureSink?: (record: CaptureRecord) => void;
   /** Injected for determinism in tests. */
   now?: () => Date;
 }
+
+/** What the engine hands its capture sink. The writer stamps the schema version. */
+export type CaptureRecord =
+  | {
+      type: 'call_input';
+      decisionIndex: number;
+      wallClockIso: string;
+      capturedModelContext: CapturedMessage[];
+      messageCount: number;
+    }
+  | {
+      type: 'call_output';
+      decisionIndex: number;
+      turnIndex: number;
+      wallClockIso: string;
+      text: string;
+      reasoningText?: string;
+      reasoningRedacted?: boolean;
+      stopReason: string;
+      toolCalls: Array<{
+        id: string;
+        name: string;
+        arguments: Record<string, unknown>;
+        truncatedArguments: string[];
+      }>;
+      usage?: Record<string, number>;
+    };
 
 /** Per-turn accounting used by the awareness metrics. */
 export interface TurnRecord {
@@ -180,9 +227,39 @@ export class ExperimentEngine {
     return this.#actionIndex;
   }
 
+  /**
+   * The ordinal of the turn currently settling. Monotonic across session restarts, unlike
+   * the runtime's own turn index — see `settleTurn`. Read by the adapter to name tool
+   * batches, so siblings in one assistant message share an id that no later turn reuses.
+   */
+  get turnOrdinal(): number {
+    return this.#state.turns.length;
+  }
+
   // ---------------------------------------------------------------------------
   // Tracing
   // ---------------------------------------------------------------------------
+
+  #nowIso(): string {
+    return (this.#deps.now ?? (() => new Date()))().toISOString();
+  }
+
+  /**
+   * Hands one record to the capture sink, swallowing anything it throws.
+   *
+   * The captured context is a diagnostic artifact. A run that produced a valid trace and a
+   * gradeable result must not be failed retroactively because serializing its context
+   * failed, so this is the one place in the engine that deliberately absorbs an error.
+   */
+  #capture(build: () => CaptureRecord): void {
+    const sink = this.#deps.captureSink;
+    if (sink === undefined) return;
+    try {
+      sink(build());
+    } catch {
+      // Intentionally ignored; see above.
+    }
+  }
 
   emit(event: TraceEventInput): void {
     const now = (this.#deps.now ?? (() => new Date()))();
@@ -251,6 +328,17 @@ export class ExperimentEngine {
       slackMentions: counts.mentions,
       authoritativeContentMessageIds,
     });
+
+    // Captured after annotation, so it is the array the runtime actually receives — the
+    // status and event blocks are already appended to their anchors here. Guarded because
+    // a capture failure must never take down a run that is otherwise fine.
+    this.#capture(() => ({
+      type: 'call_input',
+      decisionIndex: this.#decisionIndex,
+      wallClockIso: this.#nowIso(),
+      capturedModelContext: result.messages.map(toCapturedMessage),
+      messageCount: result.messages.length,
+    }));
 
     this.#checkAmbientLeak(authoritativeContentMessageIds);
     this.#recordIndicatorExposure(counts.unread, counts.mentions, result.statusBlock);
@@ -373,7 +461,9 @@ export class ExperimentEngine {
       inputSummary: summarizeToolInput(observation.toolName, observation.input),
       isError: observation.isError,
       outputBytes: Buffer.byteLength(observation.outputText, 'utf8'),
-      outputPreview: boundText(observation.outputText, 1_500),
+      outputPreview: boundText(observation.outputText, MAX_TOOL_OUTPUT_PREVIEW),
+      outputTruncated: observation.outputText.length > MAX_TOOL_OUTPUT_PREVIEW,
+      outputChars: observation.outputText.length,
       ...(testOutcome === undefined ? {} : { observedTestOutcome: testOutcome }),
       blockedByHarness: observation.blockedByHarness === true,
       ...(observation.blockReason === undefined
@@ -458,12 +548,22 @@ export class ExperimentEngine {
   // ---------------------------------------------------------------------------
 
   async settleTurn(turn: TurnSettlement): Promise<StopDecision | undefined> {
+    // The engine's own turn ordinal, never the runtime's.
+    //
+    // Pi restarts `AssistantMessage.turnIndex` at 0 whenever a provider error forces a new
+    // session, so two different turns in one run can carry the same runtime index. Turn
+    // identity is load-bearing here — the trigger matches an observed test run to the turn
+    // it ran in, the turn limit counts them, and the batch id names them — so it has to
+    // come from a counter that only ever moves forward. `turns.length` is that counter,
+    // and it reads as the ordinal of the turn now settling because the record for this
+    // turn is pushed below.
+    const turnIndex = this.#state.turns.length;
     this.#state.finalAssistantText = turn.assistantText;
     // Reasoning is omitted rather than emitted empty when the provider returned none, so
     // "this provider withheld it" stays distinguishable from "the model reasoned briefly".
     this.emit({
       type: 'assistant_turn',
-      turnIndex: turn.turnIndex,
+      turnIndex,
       text: boundText(turn.assistantText, 4_000),
       ...(turn.reasoningText === undefined
         ? {}
@@ -478,12 +578,27 @@ export class ExperimentEngine {
       stopReason: turn.stopReason,
     });
 
+    this.#capture(() => ({
+      type: 'call_output',
+      decisionIndex: this.#decisionIndex,
+      turnIndex,
+      wallClockIso: this.#nowIso(),
+      text: turn.assistantText,
+      ...(turn.reasoningText === undefined ? {} : { reasoningText: turn.reasoningText }),
+      ...(turn.reasoningRedacted === undefined
+        ? {}
+        : { reasoningRedacted: turn.reasoningRedacted }),
+      stopReason: turn.stopReason,
+      toolCalls: (turn.toolCalls ?? []).map(captureToolCall),
+      ...(turn.usage === undefined ? {} : { usage: turn.usage }),
+    }));
+
     const snapshot = await this.#deps.snapshot();
     this.#state.snapshots.push(snapshot);
     this.emit({
       type: 'workspace_snapshot',
       label: 'turn_end',
-      turnIndex: turn.turnIndex,
+      turnIndex,
       headCommit: snapshot.headCommit,
       commitsAheadOfFixture: snapshot.commitsAheadOfFixture,
       sourceMutated: snapshot.sourceMutated,
@@ -499,7 +614,7 @@ export class ExperimentEngine {
 
     const previous = this.#previousSnapshot;
     const record: TurnRecord = {
-      turnIndex: turn.turnIndex,
+      turnIndex,
       decisionIndex: this.#decisionIndex,
       mutatedSource:
         previous === undefined
@@ -518,9 +633,9 @@ export class ExperimentEngine {
     this.#previousSnapshot = snapshot;
     this.#currentTurnActionIndices = [];
 
-    await this.#maybeFireTrigger(snapshot, turn.turnIndex);
+    await this.#maybeFireTrigger(snapshot, turnIndex);
 
-    return this.#stopDecision(turn.turnIndex);
+    return this.#stopDecision(turnIndex);
   }
 
   async #maybeFireTrigger(snapshot: WorkspaceSnapshot, turnIndex: number): Promise<void> {
@@ -644,6 +759,48 @@ export class ExperimentEngine {
 }
 
 /** Keep only path/command metadata in the trace; never file bodies. */
+/** Flattens one runtime message into the captured form, bounding its text. */
+function toCapturedMessage(message: AnnotatableMessage): CapturedMessage {
+  const captured = captureText(messageText(message));
+  return {
+    role: message.role,
+    text: captured.text,
+    ...(message.toolCallId === undefined ? {} : { toolCallId: message.toolCallId }),
+    truncated: captured.truncated,
+    chars: captured.chars,
+  };
+}
+
+/**
+ * Bounds each string argument of a tool call, naming the ones that were cut.
+ *
+ * Non-string arguments pass through untouched: they are structural (edit ranges, flags)
+ * and small, and rewriting them would change their type.
+ */
+function captureToolCall(call: {
+  id: string;
+  name: string;
+  arguments: Record<string, unknown>;
+}): {
+  id: string;
+  name: string;
+  arguments: Record<string, unknown>;
+  truncatedArguments: string[];
+} {
+  const bounded: Record<string, unknown> = {};
+  const truncatedArguments: string[] = [];
+  for (const [key, value] of Object.entries(call.arguments)) {
+    if (typeof value !== 'string') {
+      bounded[key] = value;
+      continue;
+    }
+    const captured = captureText(value, MAX_ARGUMENT_TEXT);
+    bounded[key] = captured.text;
+    if (captured.truncated) truncatedArguments.push(key);
+  }
+  return { id: call.id, name: call.name, arguments: bounded, truncatedArguments };
+}
+
 export function summarizeToolInput(
   toolName: string,
   input: Record<string, unknown>,

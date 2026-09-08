@@ -15,17 +15,30 @@
 
 import { z } from 'zod';
 
-export const TRACE_SCHEMA_VERSION = 4;
+export const TRACE_SCHEMA_VERSION = 5;
 
 /** Bounded text: raw command output is truncated before it reaches an artifact. */
 export const MAX_TRACE_TEXT = 4_000;
 
+/**
+ * The cap applied to `tool_action.outputPreview` specifically, which is tighter than
+ * `MAX_TRACE_TEXT` because a run issues hundreds of tool calls and the trace has to stay
+ * readable. Exported so a reader of the artifact can state the limit it was actually
+ * written at instead of assuming the general one.
+ *
+ * It counts UTF-16 code units, because `boundText` slices on `String.length`. Comparing it
+ * against `outputBytes` (which is `Buffer.byteLength`) mixes units and is wrong for any
+ * non-ASCII output; use `outputPreview.length` for that test.
+ */
+export const MAX_TOOL_OUTPUT_PREVIEW = 1_500;
+
+/** The suffix `boundText` appends when it truncates. */
+export const TRUNCATION_NOTE = ' characters omitted by the trace writer]';
+
 export function boundText(value: string, limit: number = MAX_TRACE_TEXT): string {
   if (value.length <= limit) return value;
   const omitted = value.length - limit;
-  return (
-    value.slice(0, limit) + '\n… [' + omitted + ' characters omitted by the trace writer]'
-  );
+  return value.slice(0, limit) + '\n… [' + omitted + TRUNCATION_NOTE;
 }
 
 const baseFields = {
@@ -140,6 +153,18 @@ export const traceEventSchema = z.discriminatedUnion('type', [
     isError: z.boolean(),
     outputBytes: z.number().int(),
     outputPreview: z.string(),
+    /**
+     * Whether `outputPreview` was cut, recorded rather than inferred.
+     *
+     * Inferring it needs the writer's cap and the writer's unit, and readers got both
+     * wrong: the viewer compared `outputBytes` (from `Buffer.byteLength`) against
+     * `MAX_TRACE_TEXT` (4000) when the cap is `MAX_TOOL_OUTPUT_PREVIEW` (1500) counted in
+     * UTF-16 code units, and so reported 24 truncations across a corpus that held 527.
+     * A reader should never have to reconstruct this.
+     */
+    outputTruncated: z.boolean().optional(),
+    /** Length of the untruncated output in UTF-16 code units, the unit the cap uses. */
+    outputChars: z.number().int().nonnegative().optional(),
     /** Normalized from the full output before trace truncation. Present for test commands. */
     observedTestOutcome: z.enum(['passed', 'failed', 'unknown']).optional(),
     blockedByHarness: z.boolean(),
@@ -236,6 +261,14 @@ export const traceEventSchema = z.discriminatedUnion('type', [
       'max_actions',
       'timeout',
       'harness_error',
+      /**
+       * The provider gave up: the run ended on an unrecovered error turn rather than a
+       * finished one. Distinct from `harness_error`, which is the harness's own fault, and
+       * emphatically distinct from `agent_finished` — three runs on the free tier ended
+       * after two consecutive error turns and were recorded as "agent completed the focal
+       * task", which is the artifact asserting the opposite of what happened.
+       */
+      'provider_error',
       'aborted',
     ]),
     detail: z.string(),

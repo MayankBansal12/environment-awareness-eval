@@ -2,6 +2,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { appendFileSync } from 'node:fs';
 import path from 'node:path';
 
+import {
+  MODEL_CALL_SCHEMA_VERSION,
+  modelCallRecordSchema,
+  type ModelCallRecordInput,
+} from './model-call.js';
 import { traceEventSchema, type TraceEvent } from './schema.js';
 
 const SECRET_PATTERNS = [
@@ -50,4 +55,41 @@ export class TraceWriter {
 
 export async function writeJson(filePath: string, value: unknown): Promise<void> {
   await writeFile(filePath, JSON.stringify(value, null, 2) + '\n', 'utf8');
+}
+
+/**
+ * Writes `context.jsonl` — the captured model context, beside the trace.
+ *
+ * Kept separate from `TraceWriter` because the two artifacts have different consumers and
+ * very different volume: the grader reads every trace event, and nothing in the grading
+ * path reads a captured context. Same append-on-write discipline, so a run killed midway
+ * still leaves every call it completed.
+ */
+export class ModelCallWriter {
+  readonly path: string;
+  #count = 0;
+
+  private constructor(contextPath: string) {
+    this.path = contextPath;
+  }
+
+  static async create(runDir: string): Promise<ModelCallWriter> {
+    await mkdir(runDir, { recursive: true });
+    const contextPath = path.join(runDir, 'context.jsonl');
+    await writeFile(contextPath, '', 'utf8');
+    return new ModelCallWriter(contextPath);
+  }
+
+  append(input: ModelCallRecordInput): void {
+    const record = modelCallRecordSchema.parse({
+      ...input,
+      schemaVersion: MODEL_CALL_SCHEMA_VERSION,
+    });
+    this.#count += 1;
+    appendFileSync(this.path, JSON.stringify(record) + '\n', 'utf8');
+  }
+
+  get count(): number {
+    return this.#count;
+  }
 }

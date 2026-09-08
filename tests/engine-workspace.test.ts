@@ -62,7 +62,6 @@ describe('ExperimentEngine boundary protocol', () => {
     });
     current = snap('changed', true);
     await engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       stopReason: 'toolUse',
       toolCallNames: ['edit'],
@@ -92,7 +91,6 @@ describe('ExperimentEngine boundary protocol', () => {
       slack.readCursor,
     );
     await engine.settleTurn({
-      turnIndex: 1,
       assistantText: '',
       stopReason: 'toolUse',
       toolCallNames: ['read_slack_messages'],
@@ -146,7 +144,6 @@ describe('ExperimentEngine boundary protocol', () => {
     });
     current = snap('changed', true);
     await engine.settleTurn({
-      turnIndex: 0,
       assistantText: '',
       stopReason: 'toolUse',
       toolCallNames: ['edit'],

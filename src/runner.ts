@@ -16,7 +16,7 @@ import { buildInitialUserPrompt, buildSystemPrompt } from './prompt/system-promp
 import { getScenario, isScenarioSupported } from './scenarios/catalog.js';
 import { TICKET_MESSAGE } from './scenarios/messages.js';
 import { TRACE_SCHEMA_VERSION } from './trace/schema.js';
-import { TraceWriter, redactSecrets, writeJson } from './trace/writer.js';
+import { ModelCallWriter, TraceWriter, redactSecrets, writeJson } from './trace/writer.js';
 import { runCommand } from './workspace/git.js';
 import {
   disposeWorkspace,
@@ -32,6 +32,8 @@ export const HARNESS_VERSION = '0.2.0';
 export interface RunArtifacts {
   runDir: string;
   tracePath: string;
+  /** `context.jsonl` — the captured model context, written beside the trace. */
+  contextPath: string;
   summaryPath: string;
   reportPath: string;
   diffPath: string;
@@ -130,12 +132,14 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
   const runDir = path.join(config.resultsDir, config.runId);
   await mkdir(runDir, { recursive: true });
   const trace = await TraceWriter.create(runDir);
+  const capture = await ModelCallWriter.create(runDir);
   const artifacts: RunArtifacts = {
     runDir,
     tracePath: trace.path,
     summaryPath: path.join(runDir, 'summary.json'),
     reportPath: path.join(runDir, 'report.md'),
     diffPath: path.join(runDir, 'workspace.diff'),
+    contextPath: capture.path,
   };
   const prepared = await prepareWorkspace({
     sourcePath: config.fixturePath,
@@ -169,6 +173,7 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     scenario,
     slack,
     sink: (event) => trace.append(event),
+    captureSink: (record) => capture.append(record),
     snapshot: () => takeSnapshot(prepared.path, config.fixtureCommit),
     steer: async (text) => {
       if (steer === undefined) throw new Error('Pi steering channel is not ready');
@@ -259,6 +264,29 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
       steer = send;
     },
   });
+  // Written once the run is over, because the tool parameter schemas come from the live
+  // session. Nothing here is uniquely at risk if a run dies first: `run_start` carries the
+  // provider, model and thinking level, and `system_prompt` carries the prompt, both in
+  // trace.jsonl. Writing it twice to hedge would leave readers guessing which one counts.
+  capture.append({
+    type: 'capture_header',
+    runId: config.runId,
+    provider: config.provider,
+    model: config.model,
+    thinkingLevel: config.thinkingLevel,
+    systemPrompt: buildSystemPrompt(config.ticketDelivery),
+    toolDefinitions: runtime.toolDefinitions,
+    settings: {
+      ticketDelivery: config.ticketDelivery,
+      maxTurns: config.maxTurns,
+      maxActions: config.maxActions,
+      timeoutMs: config.timeoutMs,
+      compactionDisabled: true,
+      retryMaxRetries: 1,
+      steeringMode: 'one-at-a-time',
+    },
+  });
+
   const finalSnapshot = await takeSnapshot(prepared.path, config.fixtureCommit);
   engine.emit({
     type: 'workspace_snapshot',

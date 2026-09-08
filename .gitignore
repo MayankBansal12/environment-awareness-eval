@@ -4,6 +4,9 @@ coverage/
 # Run artifacts are scratch output. The two reference live smoke runs under
 # results/live-* are force-added so a reviewer can read a real trace.
 results/
+# Likewise scratch, with one run force-added: quarantine-turnindex-bug holds runs
+# corrupted by the turn-index collision, kept as the only recorded evidence of it.
+quarantine-turnindex-bug/
 *.log
 *.tsbuildinfo
 .DS_Store
