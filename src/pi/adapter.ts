@@ -31,7 +31,28 @@ export interface PiRunOptions {
   ticketDelivery: RunConfig['ticketDelivery'];
   engine: ExperimentEngine;
   guard: GuardOptions;
-  onSessionReady?: (steer: (text: string) => Promise<void>) => void;
+  /**
+   * Called once, as soon as the session exists and before the first model call.
+   *
+   * Carries everything that is constant for the run but only knowable from the live
+   * session: the steering channel, the tool surface as advertised, and the *effective*
+   * system prompt. The caller writes its capture header here rather than after the run,
+   * so a run that times out or loses its provider still leaves an interpretable sidecar.
+   */
+  onSessionReady?: (ready: SessionReady) => void;
+}
+
+export interface SessionReady {
+  steer: (text: string) => Promise<void>;
+  toolDefinitions: ToolDefinitionRecord[];
+  /**
+   * `AgentSession.systemPrompt` — the prompt as the runtime will actually send it,
+   * including the lines Pi appends below the configured one (`Current working
+   * directory:`) and any per-turn extension modification. Undefined when the installed
+   * runtime does not expose the getter, in which case the caller must say so rather than
+   * present the configured prompt as the effective one.
+   */
+  effectiveSystemPrompt: string | undefined;
 }
 
 export interface ToolDefinitionRecord {
@@ -94,6 +115,8 @@ export interface AssistantInfo {
   /** The whole numeric usage breakdown, for the captured context. */
   usage: Record<string, number> | undefined;
   stopReason: string;
+  /** `AssistantMessage.errorMessage`, when the provider failed this turn. */
+  errorMessage: string | undefined;
   calls: Array<{ id: string; name: string; input: Record<string, unknown> }>;
 }
 
@@ -120,6 +143,7 @@ export function assistantInfo(message: unknown): AssistantInfo {
     reasoningTokens: undefined,
     stopReason: 'unknown',
     usage: undefined,
+    errorMessage: undefined,
     calls: [],
   };
   if (typeof message !== 'object' || message === null) return empty;
@@ -128,6 +152,7 @@ export function assistantInfo(message: unknown): AssistantInfo {
     content?: unknown;
     stopReason?: unknown;
     usage?: unknown;
+    errorMessage?: unknown;
   };
   const blocks = Array.isArray(record.content) ? record.content : [];
   const calls: Array<{ id: string; name: string; input: Record<string, unknown> }> = [];
@@ -202,8 +227,29 @@ export function assistantInfo(message: unknown): AssistantInfo {
       ? { usage: undefined }
       : { usage: usageNumbers }),
     stopReason: typeof record.stopReason === 'string' ? record.stopReason : 'unknown',
+    errorMessage:
+      typeof record.errorMessage === 'string' && record.errorMessage !== ''
+        ? record.errorMessage
+        : undefined,
     calls,
   };
+}
+
+/**
+ * Reads the session's own effective system prompt.
+ *
+ * Guarded rather than asserted: the getter is public API on the pinned Pi version, but the
+ * harness must not crash a run because a future runtime removed or renamed it, and it must
+ * not quietly substitute the configured prompt either. `undefined` means "not readable",
+ * which the header records as such.
+ */
+export function readEffectiveSystemPrompt(session: unknown): string | undefined {
+  try {
+    const value = (session as { systemPrompt?: unknown } | undefined)?.systemPrompt;
+    return typeof value === 'string' ? value : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export interface PiRunWithSlackOptions extends PiRunOptions {
@@ -223,6 +269,9 @@ export async function runPiAgentWithSlack(
   // retries simply stops without throwing, so this is the only evidence that the run ended
   // because the provider quit rather than because the agent was done.
   let lastStopReason = 'none';
+  // Kept alongside it so the termination detail can name the failure rather than just
+  // assert that one happened.
+  let lastErrorMessage: string | undefined;
 
   const customTools = createSlackTools({
     state: options.slack,
@@ -264,6 +313,7 @@ export async function runPiAgentWithSlack(
         const info = assistantInfo(event.message);
         finalAssistantText = info.text;
         lastStopReason = info.stopReason;
+        lastErrorMessage = info.errorMessage;
         for (const [siblingOrdinal, call] of info.calls.entries()) {
           const end = ends.get(call.id);
           const outputText = redactSecrets(textFromContent(end?.result));
@@ -308,6 +358,9 @@ export async function runPiAgentWithSlack(
             ? {}
             : { reasoningTokens: info.reasoningTokens }),
           stopReason: info.stopReason,
+          ...(info.errorMessage === undefined
+            ? {}
+            : { providerErrorMessage: info.errorMessage }),
           toolCallNames: info.calls.map((call) => call.name),
           toolCalls: info.calls.map((call) => ({
             id: call.id,
@@ -386,7 +439,6 @@ export async function runPiAgentWithSlack(
     settingsManager,
   });
   session = created.session;
-  options.onSessionReady?.((text) => session!.steer(text));
 
   // The exact tool surface advertised to the model, read from the session rather than
   // restated here. `parameters` is TypeBox, which is already JSON-schema shaped; it is
@@ -401,6 +453,12 @@ export async function runPiAgentWithSlack(
         ? {}
         : { parameters: definition.parameters as unknown }),
     };
+  });
+
+  options.onSessionReady?.({
+    steer: (text) => session!.steer(text),
+    toolDefinitions,
+    effectiveSystemPrompt: readEffectiveSystemPrompt(session),
   });
 
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -442,7 +500,10 @@ export async function runPiAgentWithSlack(
       ? 'provider_error'
       : (forced?.reason ?? 'agent_finished'),
     detail: endedOnProviderError
-      ? 'provider returned an error on the final turn and the session ended'
+      ? 'provider returned an error on the final turn and the session ended' +
+        (lastErrorMessage === undefined
+          ? ''
+          : `: ${redactSecrets(lastErrorMessage).slice(0, 500)}`)
       : (forced?.detail ?? 'agent completed the focal task'),
     finalAssistantText,
     piVersion: VERSION,

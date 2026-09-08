@@ -9,23 +9,10 @@ import {
 } from './model-call.js';
 import { traceEventSchema, type TraceEvent } from './schema.js';
 
-const SECRET_PATTERNS = [
-  /\b(sk-[A-Za-z0-9_-]{12,})\b/g,
-  /\b(Bearer\s+)[A-Za-z0-9._~+\/-]{12,}/gi,
-  /\b(api[_-]?key|token|password|secret)\s*[:=]\s*[^\s,;]+/gi,
-];
-
-export function redactSecrets(text: string): string {
-  return SECRET_PATTERNS.reduce(
-    (value, pattern) =>
-      value.replace(pattern, (_match, prefix?: string) =>
-        typeof prefix === 'string' && prefix.toLowerCase().startsWith('bearer')
-          ? `${prefix}[REDACTED]`
-          : '[REDACTED]',
-      ),
-    text,
-  );
-}
+// Redaction lives in its own module so the engine can scrub captured context without
+// importing `node:fs`. Re-exported here because every existing caller imports it from the
+// writer, and the two artifacts must never diverge on what counts as a secret.
+export { redactSecrets } from './redact.js';
 
 export class TraceWriter {
   readonly path: string;
@@ -68,6 +55,9 @@ export async function writeJson(filePath: string, value: unknown): Promise<void>
 export class ModelCallWriter {
   readonly path: string;
   #count = 0;
+  #headerWritten = false;
+  readonly #inputDecisions: number[] = [];
+  readonly #outputDecisions: number[] = [];
 
   private constructor(contextPath: string) {
     this.path = contextPath;
@@ -80,16 +70,39 @@ export class ModelCallWriter {
     return new ModelCallWriter(contextPath);
   }
 
+  /**
+   * Validates and appends one record. Throws on a record that does not match the schema,
+   * so a malformed capture is reported by the caller's audit rather than written.
+   */
   append(input: ModelCallRecordInput): void {
     const record = modelCallRecordSchema.parse({
       ...input,
       schemaVersion: MODEL_CALL_SCHEMA_VERSION,
     });
-    this.#count += 1;
     appendFileSync(this.path, JSON.stringify(record) + '\n', 'utf8');
+    // Counted after the write, so the stats describe the file rather than the intent.
+    this.#count += 1;
+    if (record.type === 'capture_header') this.#headerWritten = true;
+    if (record.type === 'call_input') this.#inputDecisions.push(record.decisionIndex);
+    if (record.type === 'call_output') this.#outputDecisions.push(record.decisionIndex);
   }
 
   get count(): number {
     return this.#count;
+  }
+
+  /** What actually reached `context.jsonl`, for the run-level `capture_audit` record. */
+  stats(): {
+    headerWritten: boolean;
+    inputDecisions: readonly number[];
+    outputDecisions: readonly number[];
+    count: number;
+  } {
+    return {
+      headerWritten: this.#headerWritten,
+      inputDecisions: [...this.#inputDecisions],
+      outputDecisions: [...this.#outputDecisions],
+      count: this.#count,
+    };
   }
 }

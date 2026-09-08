@@ -130,3 +130,19 @@ require no inference.
 
 Not deterministic: the model. Live runs are behaviour samples. Graders are never adjusted to
 make a live run pass.
+
+
+## Capture fidelity
+
+The context sidecar records structured runtime message blocks after environment annotation,
+not the provider wire payload. It does not retain provider signatures or image bytes;
+unknown block kinds are described, not reconstructed. Text is capped per block at 24,000
+UTF-16 code units; nested string arguments use the same cap, with deep structures explicitly
+omitted. Provider reasoning is optional and is not a direct measure of internal awareness.
+
+The run's capture audit measures record coverage and serialization failures independently
+of grading. `complete: true` can coexist with content truncation or a final unanswered model
+call. The viewer recomputes fidelity from the actual records and labels any missing,
+truncated, redacted, or omitted evidence as partial. Redaction is best-effort pattern/key
+matching, not a guarantee that arbitrary secrets can be recognized. Historical artifacts
+are not retroactively rewritten.

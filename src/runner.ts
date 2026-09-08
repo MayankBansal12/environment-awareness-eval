@@ -15,6 +15,13 @@ import { runPiAgentWithSlack } from './pi/adapter.js';
 import { buildInitialUserPrompt, buildSystemPrompt } from './prompt/system-prompt.js';
 import { getScenario, isScenarioSupported } from './scenarios/catalog.js';
 import { TICKET_MESSAGE } from './scenarios/messages.js';
+import {
+  MAX_RECORDED_FAILURES,
+  MODEL_CALL_SCHEMA_VERSION,
+  type CaptureFailure,
+  type SystemPromptSource,
+} from './trace/model-call.js';
+import { redactMetadata } from './trace/redact.js';
 import { TRACE_SCHEMA_VERSION } from './trace/schema.js';
 import { ModelCallWriter, TraceWriter, redactSecrets, writeJson } from './trace/writer.js';
 import { runCommand } from './workspace/git.js';
@@ -38,8 +45,35 @@ export interface RunArtifacts {
   reportPath: string;
   diffPath: string;
 }
+/**
+ * How complete this run's `context.jsonl` is.
+ *
+ * Carried in the summary so the completeness of the diagnostic artifact is inspectable
+ * without opening the sidecar, and kept strictly beside `grade` rather than inside it: a
+ * capture failure says something about the harness, never about the agent, and must not be
+ * able to move a behavioural result in either direction.
+ */
+export interface CaptureAudit {
+  schemaVersion: number;
+  contextPath: string;
+  headerWritten: boolean;
+  inputCount: number;
+  outputCount: number;
+  traceDecisionCount: number;
+  decisionsMissingInput: number[];
+  decisionsMissingOutput: number[];
+  failures: CaptureFailure[];
+  failureCount: number;
+  truncatedMessageCount: number;
+  redactedMessageCount: number;
+  omittedBlockMessageCount: number;
+  systemPromptSource: SystemPromptSource | null;
+  complete: boolean;
+  note: string;
+}
+
 export interface EvalSummary {
-  schemaVersion: 3;
+  schemaVersion: 4;
   runId: string;
   scenarioId: string;
   ticketDelivery: RunConfig['ticketDelivery'];
@@ -52,6 +86,8 @@ export interface EvalSummary {
   hiddenChecks: PersistedRunEvidence['hiddenChecks'];
   artifacts: RunArtifacts;
   retainedWorkspace: string | null;
+  /** Diagnostic completeness of the captured model context. Never an input to grading. */
+  capture: CaptureAudit;
 }
 function overlaps(a: string, b: string): boolean {
   const x = path.resolve(a),
@@ -96,6 +132,12 @@ ${section(summary.grade.outcome)}
 ${JSON.stringify(summary.grade.metrics, null, 2)}
 \`\`\`
 
+## Context capture (diagnostic — not part of the grade)
+- Complete: \`${summary.capture.complete}\` (schema v${summary.capture.schemaVersion})
+- Calls: ${summary.capture.inputCount} input / ${summary.capture.outputCount} output over ${summary.capture.traceDecisionCount} decision boundaries
+- System prompt: \`${summary.capture.systemPromptSource ?? 'not captured'}\`
+- ${line(summary.capture.note)}
+
 This is a model + Pi + prompt + tools trajectory, not a claim about internal cognition.
 `;
 }
@@ -124,6 +166,126 @@ export async function validateDryRun(
     workspacePrepared: true,
   };
 }
+/**
+ * States what the capture achieved, in the terms a reader needs to trust or discount it.
+ *
+ * `complete` is deliberately strict. It is false whenever the header is missing, anything
+ * failed, or a decision the trace recorded has no captured input — the cases where the
+ * sidecar cannot answer "what did the model see at Dn" for some n. A *missing output* does
+ * not by itself make the capture incomplete: an aborted, timed-out or provider-failed run
+ * genuinely has a last decision the model never answered, and calling the artifact broken
+ * for faithfully recording that would be the wrong signal.
+ */
+export function buildCaptureAudit(input: {
+  contextPath: string;
+  stats: {
+    headerWritten: boolean;
+    inputDecisions: readonly number[];
+    outputDecisions: readonly number[];
+  };
+  engine: {
+    failures: readonly CaptureFailure[];
+    failureCount: number;
+    truncatedMessageCount: number;
+    redactedMessageCount: number;
+    omittedBlockMessageCount: number;
+  };
+  runnerFailures: readonly CaptureFailure[];
+  traceDecisionCount: number;
+  traceDecisions?: readonly number[];
+  traceOutputDecisions?: readonly number[];
+  systemPromptSource: SystemPromptSource | null;
+}): CaptureAudit {
+  const inputs = new Set(input.stats.inputDecisions);
+  const outputs = new Set(input.stats.outputDecisions);
+  const expectedInputs = new Set(
+    input.traceDecisions ?? Array.from({ length: input.traceDecisionCount }, (_, i) => i),
+  );
+  const decisionsMissingInput = [...new Set([...expectedInputs, ...outputs])]
+    .filter((d) => !inputs.has(d))
+    .sort((a, b) => a - b);
+  const decisionsMissingOutput = [...inputs]
+    .filter((d) => !outputs.has(d))
+    .sort((a, b) => a - b);
+
+  const failureCount = input.engine.failureCount + input.runnerFailures.length;
+  const failures = [...input.runnerFailures, ...input.engine.failures].slice(
+    0,
+    MAX_RECORDED_FAILURES,
+  );
+
+  const missingBoundaries = [...expectedInputs].filter((d) => !inputs.has(d)).length;
+  const unexpectedInputs = [...inputs].filter((d) => !expectedInputs.has(d));
+  const missingSettledOutputs = (input.traceOutputDecisions ?? []).filter(
+    (d) => !outputs.has(d),
+  );
+  const duplicateRecords =
+    inputs.size !== input.stats.inputDecisions.length ||
+    outputs.size !== input.stats.outputDecisions.length;
+  const complete =
+    input.stats.headerWritten &&
+    failureCount === 0 &&
+    decisionsMissingInput.length === 0 &&
+    missingBoundaries === 0 &&
+    unexpectedInputs.length === 0 &&
+    missingSettledOutputs.length === 0 &&
+    !duplicateRecords;
+
+  const notes: string[] = [];
+  if (duplicateRecords) notes.push('duplicate captured decision records');
+  if (unexpectedInputs.length)
+    notes.push(`inputs without trace boundaries at D${unexpectedInputs.join(', D')}`);
+  if (missingSettledOutputs.length)
+    notes.push(
+      `settled turns missing captured output at D${missingSettledOutputs.join(', D')}`,
+    );
+  if (!input.stats.headerWritten) {
+    notes.push(
+      'no capture_header: capture failed or the run ended before its session existed',
+    );
+  }
+  if (missingBoundaries > 0) {
+    notes.push(
+      `${missingBoundaries} of ${input.traceDecisionCount} decision boundaries in the ` +
+        'trace have no captured input',
+    );
+  }
+  if (decisionsMissingInput.length > 0) {
+    notes.push(`captured an output with no input at D${decisionsMissingInput.join(', D')}`);
+  }
+  if (decisionsMissingOutput.length > 0) {
+    notes.push(
+      `no captured output at D${decisionsMissingOutput.join(', D')} — expected for the ` +
+        'final decision of a run that was aborted, timed out or lost its provider',
+    );
+  }
+  if (failureCount > 0) notes.push(`${failureCount} capture failure(s)`);
+  if (input.systemPromptSource === 'harness_configured') {
+    notes.push(
+      'system prompt is the harness-configured text, not the effective runtime prompt',
+    );
+  }
+
+  return {
+    schemaVersion: MODEL_CALL_SCHEMA_VERSION,
+    contextPath: input.contextPath,
+    headerWritten: input.stats.headerWritten,
+    inputCount: input.stats.inputDecisions.length,
+    outputCount: input.stats.outputDecisions.length,
+    traceDecisionCount: input.traceDecisionCount,
+    decisionsMissingInput,
+    decisionsMissingOutput,
+    failures,
+    failureCount,
+    truncatedMessageCount: input.engine.truncatedMessageCount,
+    redactedMessageCount: input.engine.redactedMessageCount,
+    omittedBlockMessageCount: input.engine.omittedBlockMessageCount,
+    systemPromptSource: input.systemPromptSource,
+    complete,
+    note: notes.length === 0 ? 'every decision boundary captured' : notes.join('; '),
+  };
+}
+
 export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
   const scenario = getScenario(config.scenarioId);
   if (!isScenarioSupported(scenario))
@@ -132,14 +294,25 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
   const runDir = path.join(config.resultsDir, config.runId);
   await mkdir(runDir, { recursive: true });
   const trace = await TraceWriter.create(runDir);
-  const capture = await ModelCallWriter.create(runDir);
+  const captureFailures: CaptureFailure[] = [];
+  let capture: ModelCallWriter | undefined;
+  const contextPath = path.join(runDir, 'context.jsonl');
+  try {
+    capture = await ModelCallWriter.create(runDir);
+  } catch (error) {
+    captureFailures.push({
+      stage: 'capture_header',
+      decisionIndex: null,
+      message: redactSecrets(String(error)).slice(0, 1000),
+    });
+  }
   const artifacts: RunArtifacts = {
     runDir,
     tracePath: trace.path,
     summaryPath: path.join(runDir, 'summary.json'),
     reportPath: path.join(runDir, 'report.md'),
     diffPath: path.join(runDir, 'workspace.diff'),
-    contextPath: capture.path,
+    contextPath,
   };
   const prepared = await prepareWorkspace({
     sourcePath: config.fixturePath,
@@ -169,11 +342,22 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     slack.markMessageRead(initialMessage.id);
   }
   let steer: ((text: string) => Promise<void>) | undefined;
+  // Capture bookkeeping that lives outside the engine: the header and the audit are
+  // run-level records the runner writes, so their failures are collected here and merged
+  // with the engine's before the audit is written.
+  let captureSystemPromptSource: SystemPromptSource | null = null;
+  const harnessSystemPrompt = buildSystemPrompt(config.ticketDelivery);
+  const initialUserPrompt = buildInitialUserPrompt(config.ticketDelivery);
   const engine = new ExperimentEngine({
     scenario,
     slack,
     sink: (event) => trace.append(event),
-    captureSink: (record) => capture.append(record),
+    ...(capture === undefined
+      ? {}
+      : {
+          captureSink: (record: import('./engine/experiment.js').CaptureRecord) =>
+            capture!.append(record),
+        }),
     snapshot: () => takeSnapshot(prepared.path, config.fixtureCommit),
     steer: async (text) => {
       if (steer === undefined) throw new Error('Pi steering channel is not ready');
@@ -230,8 +414,8 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
   ];
   engine.emit({
     type: 'system_prompt',
-    systemPrompt: buildSystemPrompt(config.ticketDelivery),
-    initialUserPrompt: buildInitialUserPrompt(config.ticketDelivery),
+    systemPrompt: harnessSystemPrompt,
+    initialUserPrompt,
     tools: activeTools,
     resourceIsolation: {
       extensionsDisabledExceptOwned: true,
@@ -260,30 +444,62 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
       fixturePath: config.fixturePath,
       resultsDir: config.resultsDir,
     },
-    onSessionReady: (send) => {
-      steer = send;
-    },
-  });
-  // Written once the run is over, because the tool parameter schemas come from the live
-  // session. Nothing here is uniquely at risk if a run dies first: `run_start` carries the
-  // provider, model and thinking level, and `system_prompt` carries the prompt, both in
-  // trace.jsonl. Writing it twice to hedge would leave readers guessing which one counts.
-  capture.append({
-    type: 'capture_header',
-    runId: config.runId,
-    provider: config.provider,
-    model: config.model,
-    thinkingLevel: config.thinkingLevel,
-    systemPrompt: buildSystemPrompt(config.ticketDelivery),
-    toolDefinitions: runtime.toolDefinitions,
-    settings: {
-      ticketDelivery: config.ticketDelivery,
-      maxTurns: config.maxTurns,
-      maxActions: config.maxActions,
-      timeoutMs: config.timeoutMs,
-      compactionDisabled: true,
-      retryMaxRetries: 1,
-      steeringMode: 'one-at-a-time',
+    onSessionReady: (ready) => {
+      steer = ready.steer;
+      // Written here, before the first model call, rather than after the run.
+      //
+      // Everything in this record is knowable as soon as the session exists, and a run
+      // that times out or loses its provider is exactly the run whose context most needs
+      // reading. Writing it at the end meant those runs got a sidecar of call records
+      // with no system prompt, no tool schemas and no settings to interpret them against.
+      const effective = ready.effectiveSystemPrompt;
+      const systemPromptSource: SystemPromptSource =
+        effective === undefined ? 'harness_configured' : 'runtime_session';
+      captureSystemPromptSource = systemPromptSource;
+      try {
+        if (capture === undefined) return;
+        const header = {
+          type: 'capture_header' as const,
+          runId: config.runId,
+          provider: config.provider,
+          model: config.model,
+          thinkingLevel: config.thinkingLevel,
+          // The effective prompt Pi will send, which is the configured one plus the lines
+          // the runtime appends. Falls back to the configured text only when the runtime
+          // does not expose it, and `systemPromptSource` says which of the two this is.
+          systemPrompt: effective ?? harnessSystemPrompt,
+          systemPromptSource,
+          harnessSystemPrompt,
+          initialUserPrompt,
+          toolDefinitions: ready.toolDefinitions,
+          settings: {
+            ticketDelivery: config.ticketDelivery,
+            maxTurns: config.maxTurns,
+            maxActions: config.maxActions,
+            timeoutMs: config.timeoutMs,
+            compactionDisabled: true,
+            retryMaxRetries: 1,
+            steeringMode: 'one-at-a-time',
+            followUpMode: 'one-at-a-time',
+            dependencyMode: config.dependencyMode,
+            fixtureCommit: config.fixtureCommit,
+          },
+        };
+        const scrubbed = redactMetadata(header);
+        capture.append({
+          ...scrubbed,
+          redacted: JSON.stringify(scrubbed) !== JSON.stringify(header),
+        });
+      } catch (error) {
+        // Same rule as every other capture failure: recorded, never fatal.
+        captureFailures.push({
+          stage: 'capture_header',
+          decisionIndex: null,
+          message: redactSecrets(
+            error instanceof Error ? error.message : String(error),
+          ).slice(0, 1000),
+        });
+      }
     },
   });
 
@@ -368,8 +584,69 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     },
   });
   const grade = gradeRun(evidence, scenario, config.ticketDelivery);
+
+  // The capture audit is built from `trace.events()` and the writer's own record of what
+  // reached disk, and is deliberately computed *after* `gradeRun`. Nothing it contains is
+  // an input to the grade; a reader can check that by noting that `evidence` above was
+  // already sealed before this line runs.
+  const captureAudit = buildCaptureAudit({
+    contextPath,
+    stats: capture?.stats() ?? {
+      headerWritten: false,
+      inputDecisions: [],
+      outputDecisions: [],
+      count: 0,
+    },
+    traceDecisions: trace
+      .events()
+      .filter((e) => e.type === 'decision_boundary')
+      .map((e) => e.decisionIndex),
+    traceOutputDecisions: trace
+      .events()
+      .filter((e) => e.type === 'assistant_turn')
+      .map((e) => e.decisionIndex),
+    engine: engine.captureDiagnostics,
+    runnerFailures: captureFailures,
+    traceDecisionCount: new Set(
+      trace
+        .events()
+        .filter((event) => event.type === 'decision_boundary')
+        .map((event) => event.decisionIndex),
+    ).size,
+    systemPromptSource: captureSystemPromptSource,
+  });
+  try {
+    capture?.append({
+      type: 'capture_audit',
+      runId: config.runId,
+      headerWritten: captureAudit.headerWritten,
+      inputCount: captureAudit.inputCount,
+      outputCount: captureAudit.outputCount,
+      traceDecisionCount: captureAudit.traceDecisionCount,
+      decisionsMissingInput: captureAudit.decisionsMissingInput,
+      decisionsMissingOutput: captureAudit.decisionsMissingOutput,
+      failures: captureAudit.failures,
+      failureCount: captureAudit.failureCount,
+      truncatedMessageCount: captureAudit.truncatedMessageCount,
+      redactedMessageCount: captureAudit.redactedMessageCount,
+      omittedBlockMessageCount: captureAudit.omittedBlockMessageCount,
+      complete: captureAudit.complete,
+      note: captureAudit.note,
+    });
+  } catch (error) {
+    captureAudit.complete = false;
+    captureAudit.failureCount += 1;
+    captureAudit.failures.push({
+      stage: 'capture_audit',
+      decisionIndex: null,
+      message: redactSecrets(String(error)).slice(0, 1000),
+    });
+    captureAudit.note +=
+      '; capture_audit could not be written; diagnostic retained in summary';
+  }
+
   const summary: EvalSummary = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     runId: config.runId,
     scenarioId: scenario.id,
     ticketDelivery: config.ticketDelivery,
@@ -387,6 +664,7 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     hiddenChecks,
     artifacts,
     retainedWorkspace: config.keepWorkspace ? prepared.path : null,
+    capture: captureAudit,
   };
   await writeJson(artifacts.summaryPath, summary);
   await writeFile(artifacts.reportPath, report(summary), 'utf8');
