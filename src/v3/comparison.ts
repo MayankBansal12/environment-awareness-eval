@@ -8,6 +8,8 @@ export interface ComparisonTrial {
   delivery: Delivery;
   demand: Demand;
   replicate?: number | undefined;
+  model?: string;
+  thinking?: string;
   state: string;
   valid?: boolean;
   outcome?: string;
@@ -37,11 +39,13 @@ export function fraction(successes: number, n: number) {
 }
 
 export function aggregate(trials: ComparisonTrial[]) {
-  const keys = [
-    ...new Set(trials.map((t) => [t.sequence, t.delivery, t.demand].join('/'))),
-  ];
+  const cellKey = (t: ComparisonTrial) =>
+    [t.model, t.thinking, t.sequence, t.delivery, t.demand]
+      .filter((v) => v !== undefined)
+      .join('/');
+  const keys = [...new Set(trials.map(cellKey))];
   const cells = keys.map((key) => {
-    const all = trials.filter((t) => [t.sequence, t.delivery, t.demand].join('/') === key);
+    const all = trials.filter((t) => cellKey(t) === key);
     const completed = all.filter((t) => t.state === 'completed');
     const eligible = completed.filter((t) => t.valid);
     const assigned = eligible.filter((t) => numeric(t, 'assignmentDecision') !== null);
@@ -122,12 +126,16 @@ export function aggregate(trials: ComparisonTrial[]) {
       const higher = trials.find(
         (t) =>
           t.demand === 'higher' &&
+          t.model === lower.model &&
+          t.thinking === lower.thinking &&
           t.sequence === lower.sequence &&
           t.delivery === lower.delivery &&
           t.replicate === lower.replicate,
       );
       const comparable = Boolean(lower.valid && higher?.valid);
       return {
+        model: lower.model ?? null,
+        thinking: lower.thinking ?? null,
         sequence: lower.sequence,
         delivery: lower.delivery,
         replicate: lower.replicate ?? null,

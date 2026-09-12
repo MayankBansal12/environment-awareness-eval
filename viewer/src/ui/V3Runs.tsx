@@ -28,6 +28,7 @@ export function V3Runs({
           <thead>
             <tr>
               <th>Run</th>
+              <th>Model / reasoning</th>
               <th>Sequence / delivery</th>
               <th>Urgent demand</th>
               <th>Validity</th>
@@ -49,6 +50,10 @@ export function V3Runs({
                   >
                     {r.id}
                   </button>
+                </td>
+                <td>
+                  {String(r.summary.runtime?.model ?? 'unknown')} /{' '}
+                  {String(r.summary.runtime?.thinking ?? 'unknown')}
                 </td>
                 <td>
                   {r.summary.sequence} / {r.summary.delivery}
@@ -91,6 +96,11 @@ export function V3Runs({
     <section>
       <button onClick={() => setSelected(null)}>← All switching runs</button>
       <h2>{run.id}</h2>
+      <p>
+        {String(summary.runtime?.provider ?? 'unknown')}/
+        {String(summary.runtime?.model ?? 'unknown')} ·{' '}
+        {String(summary.runtime?.thinking ?? 'unknown')} reasoning
+      </p>
       <p>
         {summary.sequence} / {summary.delivery} / {summary.demand} urgent demand ·{' '}
         {grade.outcome.replaceAll('_', ' ')} · {summary.termination.reason}

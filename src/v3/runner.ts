@@ -13,7 +13,13 @@ import {
 import { assistantInfo } from '../pi/adapter.js';
 import { redactSecrets } from '../trace/redact.js';
 import { RunSandbox, AGENT_CWD } from '../v2/sandbox.js';
-import { freeRuntime, assertFreeModel } from '../v2/model.js';
+import {
+  createRuntime,
+  assertSelectedModel,
+  DEFAULT_SELECTION,
+  modelSelectionSchema,
+  type ModelSelection,
+} from './model.js';
 import { sourceIdentity } from '../v2/identity.js';
 import { ControlledTools } from '../v2/tools.js';
 import { sha256 } from '../v2/audit.js';
@@ -44,6 +50,7 @@ export interface Config {
   keepWorkspace: boolean;
   expectedSources?: Record<string, string>;
   manifestHash?: string;
+  modelConfig?: ModelSelection;
 }
 export async function run(config: Config): Promise<Summary> {
   if (!/^[A-Za-z0-9._-]+$/.test(config.runId)) throw Error('Invalid run ID');
@@ -83,14 +90,15 @@ export async function run(config: Config): Promise<Summary> {
         config.maxActions,
       ),
       defs = definitions(tools);
-    const { runtime, model, verification } = await freeRuntime();
+    const selection = modelSelectionSchema.parse(config.modelConfig ?? DEFAULT_SELECTION);
+    const { runtime, model, verification } = await createRuntime(selection);
     const identity: Record<string, unknown> = {
       ...verification,
       piVersion: VERSION,
-      thinking: 'high',
+      thinking: selection.thinking,
       nodeVersion: process.version,
       isolation: 'bubblewrap-unshare-all',
-      protocolVersion: '3.1',
+      protocolVersion: '3.2',
       fixtureVersion: FIXTURE_VERSION,
       fixtureDigest: fixture.digest,
       taskFamily: 'feature-interruption-refund-recovery',
@@ -232,8 +240,8 @@ export async function run(config: Config): Promise<Summary> {
       agentDir: path.join(sandbox.root, 'config'),
       modelRuntime: runtime,
       model,
-      scopedModels: [{ model, thinkingLevel: 'high' }],
-      thinkingLevel: 'high',
+      scopedModels: [{ model, thinkingLevel: selection.thinking }],
+      thinkingLevel: selection.thinking,
       tools: defs.map((d) => d.name),
       customTools: defs,
       resourceLoader: loader,
@@ -242,7 +250,10 @@ export async function run(config: Config): Promise<Summary> {
     });
     session = created.session;
     if (created.modelFallbackMessage) throw Error('Model fallback refused');
-    assertFreeModel(model);
+    if (!session.model) throw Error('Missing session model');
+    assertSelectedModel(session.model, selection);
+    if (session.thinkingLevel !== selection.thinking)
+      throw Error('Reasoning setting fallback refused');
     const actualTools = defs.map((d) => {
       const actual = session!.getToolDefinition(d.name);
       if (!actual || actual.description !== d.description)

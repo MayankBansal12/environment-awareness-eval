@@ -10,11 +10,13 @@ import { FIXTURE_VERSION, fixtureFiles } from './fixture.js';
 import { run, SYSTEM_PROMPT } from './runner.js';
 import type { Summary, DerivedAnalysis } from './schema.js';
 import { aggregate } from './comparison.js';
+import { DEFAULT_SELECTION, modelSelectionSchema, type ModelSelection } from './model.js';
 
 export const profileSchema = z.enum([
   'switching-pilot',
   'matched-revision',
   'demand-baseline',
+  'model-comparison',
 ]);
 export type Profile = z.infer<typeof profileSchema>;
 const trialSchema = z.object({
@@ -46,11 +48,13 @@ export function schedule(profile: Profile, seed: number): z.infer<typeof trialSc
       add(sequence, 'higher', 1);
   } else {
     const sequences =
-      profile === 'demand-baseline'
-        ? (['sequential', 'sequential', 'sequential'] as const)
-        : seed & 2
-          ? (['changed', 'interrupted'] as const)
-          : (['interrupted', 'changed'] as const);
+      profile === 'model-comparison'
+        ? (['sequential', 'interrupted', 'changed'] as const)
+        : profile === 'demand-baseline'
+          ? (['sequential', 'sequential', 'sequential'] as const)
+          : seed & 2
+            ? (['changed', 'interrupted'] as const)
+            : (['interrupted', 'changed'] as const);
     sequences.forEach((sequence, i) => {
       const order =
         (seed + i) % 2 ? (['higher', 'lower'] as const) : (['lower', 'higher'] as const);
@@ -71,7 +75,12 @@ export const manifestSchema = z
     sources: z.record(z.string(), z.string()),
     fixtureHashes: z.record(z.string(), z.string()),
     systemPromptHash: z.string(),
-    model: z.literal('opencode/muse-spark-1.3-contributor-free'),
+    model: z.enum([
+      'opencode/muse-spark-1.3-contributor-free',
+      'openai-codex/gpt-6-astra',
+      'openai-codex/gpt-5.6-sol',
+    ]),
+    modelConfig: modelSelectionSchema.optional(),
     design: z
       .object({
         profile: profileSchema,
@@ -90,6 +99,12 @@ export const manifestSchema = z
     trials: z.array(trialSchema).min(1).max(6),
   })
   .superRefine((m, ctx) => {
+    const selection = m.modelConfig ?? DEFAULT_SELECTION;
+    if (m.model !== `${selection.provider}/${selection.model}`)
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Model identity does not match explicit configuration',
+      });
     if (new Set(m.trials.map((t) => t.id)).size !== m.trials.length)
       ctx.addIssue({ code: 'custom', message: 'Duplicate trial IDs' });
     if (
@@ -104,6 +119,7 @@ export async function freeze(
   id: string,
   profile: Profile = 'switching-pilot',
   seed = 0,
+  modelConfig: ModelSelection = DEFAULT_SELECTION,
 ) {
   const sources = await sourceIdentity();
   const manifest = manifestSchema.parse({
@@ -120,16 +136,19 @@ export async function freeze(
       ]),
     ),
     systemPromptHash: sha256(SYSTEM_PROMPT),
-    model: 'opencode/muse-spark-1.3-contributor-free',
+    model: `${modelConfig.provider}/${modelConfig.model}`,
+    modelConfig,
     design: {
       profile,
       scheduleSeed: seed,
       repetitionsPerCell: profile === 'demand-baseline' ? 3 : 1,
       demandLocation: 'urgent-debugging-task-only',
       hypothesis:
-        profile === 'matched-revision'
-          ? 'Does more urgent debugging work change retrieval/adaptation to revised feature requirements and unaided return to the paused feature?'
-          : 'Does the higher variant create more sustained urgent debugging work while remaining solvable?',
+        profile === 'model-comparison'
+          ? 'How does the selected model retrieve urgent assignments, preserve unfinished work, resume, and adapt across matched demand variants?'
+          : profile === 'matched-revision'
+            ? 'Does more urgent debugging work change retrieval/adaptation to revised feature requirements and unaided return to the paused feature?'
+            : 'Does the higher variant create more sustained urgent debugging work while remaining solvable?',
       caveat:
         'Feature A is identical across demand variants. Initial assignment discovery does not test focal-demand blindness. Development samples cannot establish an effect or pin provider weights.',
     },
@@ -219,6 +238,7 @@ export async function execute(file: string, root: string, maxNew: number) {
         keepWorkspace: true,
         expectedSources: manifest.sources,
         manifestHash: sha256(JSON.stringify(manifest)),
+        modelConfig: manifest.modelConfig ?? DEFAULT_SELECTION,
       });
       await compare(file, root);
       if (!summary.grade.valid || summary.termination.reason !== 'agent_finished') break;
@@ -237,6 +257,8 @@ export async function execute(file: string, root: string, maxNew: number) {
 export async function compare(file: string, root: string) {
   const manifest = manifestSchema.parse(JSON.parse(await readFile(file, 'utf8'))),
     dir = path.resolve(root, manifest.id);
+  const selection = manifest.modelConfig ?? DEFAULT_SELECTION;
+  const trialIdentity = { model: manifest.model, thinking: selection.thinking };
   const trials = [];
   for (const trial of manifest.trials) {
     const p = path.join(dir, 'runs', trial.id);
@@ -251,6 +273,12 @@ export async function compare(file: string, root: string) {
         s.delivery !== trial.delivery
       )
         throw Error('Run does not match its manifest trial');
+      if (
+        s.runtime['provider'] !== selection.provider ||
+        s.runtime['model'] !== selection.model ||
+        s.runtime['thinking'] !== selection.thinking
+      )
+        throw Error('Run model/reasoning does not match its manifest');
       const receipt = JSON.parse(
         await readFile(path.join(p, 'result-receipt.json'), 'utf8'),
       ) as Record<string, string>;
@@ -277,6 +305,7 @@ export async function compare(file: string, root: string) {
       const grade = analysis?.grade ?? s.grade;
       trials.push({
         ...trial,
+        ...trialIdentity,
         state: 'completed',
         summaryHash: sha256(raw),
         outcome: grade.outcome,
@@ -303,13 +332,14 @@ export async function compare(file: string, root: string) {
           /* no run */
         }
       }
-      trials.push({ ...trial, state });
+      trials.push({ ...trial, ...trialIdentity, state });
     }
   }
   const report = {
     format: 'environment-v3-comparison',
     manifestHash: sha256(JSON.stringify(manifest)),
     phase: manifest.phase,
+    modelConfig: selection,
     design: manifest.design ?? null,
     note: 'Bounded development calibration. No heavy-load or blindness-effect claim. Initial feature work is identical across demand variants; demand changes urgent debugging only. No automatic retries or progression past failed attempts. Original grades and versioned analyses remain distinct.',
     trials,
@@ -337,7 +367,7 @@ export async function compare(file: string, root: string) {
   );
   await writeFile(
     path.join(dir, 'comparison.md'),
-    `# Switching development calibration\n\n${report.note}\n\n|Trial|Sequence|Demand|State|Outcome|Decisions|Discovery delay|Resumption delay|\n|---|---|---|---|---|---:|---:|---:|\n` +
+    `# Switching development calibration\n\nModel: ${manifest.model}; reasoning: ${selection.thinking}.\n\n${report.note}\n\n|Trial|Sequence|Demand|State|Outcome|Decisions|Discovery delay|Resumption delay|\n|---|---|---|---|---|---:|---:|---:|\n` +
       trials
         .map(
           (t) =>

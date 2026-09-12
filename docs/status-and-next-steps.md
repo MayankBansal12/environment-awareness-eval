@@ -29,6 +29,10 @@ load-induced blindness. See [the trace-backed report](v31-matched-results.md).
 
 ## Prerequisite for Astra and Sol
 
+**Subsequent September 12 implementation:** v3.2 now implements the model selection and
+identity checks described in this section; see [the authorized medium pilot](astra-sol-medium-pilot.md).
+The paragraphs below preserve the status at the checkpoint commit, before that work.
+
 The v2/v3 runtime, manifests, and identity audits explicitly permit only free Muse on ZEN.
 There is no working v3 `--model` flag. The old v0 Astra adapter does not make v3 selectable.
 Do not compare new v3 runs with historical v0 Astra results as if they share a protocol.

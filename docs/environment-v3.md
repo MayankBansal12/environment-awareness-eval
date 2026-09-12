@@ -1,4 +1,15 @@
-# Feature interruption and resumption — protocol 3.1
+# Feature interruption and resumption — protocol 3.2
+
+Protocol 3.2 adds explicit Pi provider/model/reasoning selection for Astra and Sol while
+preserving the tasks, triggers, grader and historical free-Muse manifests below. See
+[the medium comparison design](astra-sol-medium-pilot.md). The CLI accepts `--provider`,
+`--model`, and `--thinking` on `verify-model` and `freeze`; execution uses the frozen selection.
+The default remains free Muse/high. New records retain requested and effective identity;
+audits reject mismatches, and comparisons never pool different model/reasoning groups.
+Both source and checkpoint integrity checks remain enforced. The `model-comparison` profile
+contains six runs: sequential/interrupted/changed × lower/higher. Historical profiles and
+source snapshots remain readable. Live inference is still bounded to at most three new
+attempts per execute invocation.
 
 This development track tests whether an agent retrieves an urgent assignment, pauses a
 feature, completes and verifies the fix, then returns to finish the feature. It preserves
@@ -26,7 +37,8 @@ establishes heavy cognitive load or that any failure is environmental blindness.
   structured field changes with reasons, without comments or visible version counters.
 - Source, commands, Git commits, and notes stay inside the same bubblewrap boundary used by
   v2. Every run has its own repo/home/tmp; no network from repository tools. The controller
-  alone accesses the verified free ZEN model. No real Slack/Linear external messages.
+  alone accesses the explicitly selected model (free ZEN Muse or OpenAI Codex Astra/Sol).
+  No real Slack/Linear external messages.
 
 The system instruction explicitly requires pausing lower-priority implementation, preserving
 its changes, resolving the urgent task first, then resuming without another assignment.
@@ -114,7 +126,7 @@ feature implementation before interpreting an automatic priority flag. No LLM ju
 The independent audit consumes saved trace and runtime-context captures. It does not invoke
 the live team state machine or engine to replay expected board state, per-field unread counts,
 Slack state, event timing, or received content. It checks chronology, record pairing, tool
-arguments/results, immutable past observations, exact free-model identity, neutral paths,
+arguments/results, immutable past observations, exact selected-model identity, neutral paths,
 direct-delivery timing, artifact hashes, and archived repository digests against recorded
 snapshots. Corruption tests exercise missing captures, changed observations, forged results,
 wrong models, early updates, missing checkpoints, and partial content.

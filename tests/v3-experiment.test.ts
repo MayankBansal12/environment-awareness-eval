@@ -17,6 +17,97 @@ import type { Summary } from '../src/v3/schema.js';
 import { sha256 } from '../src/v2/audit.js';
 afterEach(() => vi.mocked(run).mockReset());
 describe('bounded switching experiments', () => {
+  it('freezes medium model selection and all six matched comparison cells', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'v3-model-freeze-'));
+    try {
+      for (const model of ['gpt-6-astra', 'gpt-5.6-sol'] as const) {
+        const selection = {
+          provider: 'openai-codex' as const,
+          model,
+          thinking: 'medium' as const,
+        };
+        const m = await freeze(
+          path.join(dir, model + '.json'),
+          model,
+          'model-comparison',
+          20260912,
+          selection,
+        );
+        expect(m.modelConfig).toEqual(selection);
+        expect(m.model).toBe('openai-codex/' + model);
+        expect(m.trials).toHaveLength(6);
+        expect(m.trials.slice(0, 2).every((t) => t.sequence === 'sequential')).toBe(true);
+        expect(new Set(m.trials.map((t) => `${t.sequence}/${t.demand}`)).size).toBe(6);
+        expect(manifestSchema.safeParse({ ...m, modelConfig: undefined }).success).toBe(
+          false,
+        );
+        expect(
+          manifestSchema.safeParse({
+            ...m,
+            model: 'opencode/muse-spark-1.3-contributor-free',
+          }).success,
+        ).toBe(false);
+      }
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+  it('refuses a completed result with the wrong model or reasoning even with matching receipts', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'v3-model-result-'));
+    try {
+      const file = path.join(dir, 'manifest.json');
+      const selection = {
+        provider: 'openai-codex' as const,
+        model: 'gpt-6-astra' as const,
+        thinking: 'medium' as const,
+      };
+      const m = await freeze(file, 'pilot', 'model-comparison', 0, selection);
+      const p = path.join(dir, 'pilot', 'runs', 't001');
+      await mkdir(p, { recursive: true });
+      for (const wrong of [{ model: 'gpt-5.6-sol' }, { thinking: 'high' }]) {
+        const summary = JSON.stringify({
+          runId: 't001',
+          ...m.trials[0],
+          runtime: { ...selection, ...wrong, manifestHash: sha256(JSON.stringify(m)) },
+        });
+        await writeFile(path.join(p, 'summary.json'), summary);
+        await writeFile(path.join(p, 'audit.json'), '{}');
+        await writeFile(path.join(p, 'integrity.json'), '{}');
+        await writeFile(
+          path.join(p, 'result-receipt.json'),
+          JSON.stringify({
+            'summary.json': sha256(summary),
+            'audit.json': sha256('{}'),
+            'integrity.json': sha256('{}'),
+          }),
+        );
+        await expect(compare(file, dir)).rejects.toThrow('model/reasoning');
+      }
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+  it('keeps model and reasoning groups separate and never pairs demand across them', () => {
+    const base = {
+      id: 'lower',
+      sequence: 'interrupted' as const,
+      delivery: 'linear' as const,
+      demand: 'lower' as const,
+      state: 'completed',
+      valid: true,
+      replicate: 1,
+      model: 'openai-codex/gpt-6-astra',
+      thinking: 'medium',
+    };
+    const result = aggregate([
+      base,
+      { ...base, id: 'sol', model: 'openai-codex/gpt-5.6-sol', demand: 'higher' },
+      { ...base, id: 'high', thinking: 'high', demand: 'higher' },
+    ]);
+    expect(result.cells).toHaveLength(3);
+    expect(result.contrasts[0]?.higher).toBeNull();
+    expect(result.contrasts[0]?.comparable).toBe(false);
+  });
   it('freezes exact source bytes and refuses changes before inference', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'v3-freeze-'));
     try {
@@ -47,7 +138,7 @@ describe('bounded switching experiments', () => {
           sequence: config.sequence,
           demand: config.demand,
           delivery: config.delivery,
-          runtime: { manifestHash: config.manifestHash },
+          runtime: { manifestHash: config.manifestHash, ...config.modelConfig },
           grade: { valid: false, outcome: 'invalid_run', metrics: {}, gates: [] },
           termination: { reason: 'provider_error', detail: 'rate limit' },
           evidence: { final: { A: [], B: [] } },

@@ -8,6 +8,8 @@ The [four-run matched calibration](docs/v31-matched-results.md) reports observed
 task-demand limits, and versioned metric corrections. See the [manual analysis guide](docs/manual-switching-analysis.md).
 See [current status and the proposed Astra–Sol comparison](docs/status-and-next-steps.md)
 for readiness, remaining model support, and the next bounded experiment.
+Protocol 3.2 now supports explicit Astra/Sol selection through Pi, including frozen reasoning
+settings and model-aware audits. See [the medium-reasoning pilot](docs/astra-sol-medium-pilot.md).
 
 The **v2** cancellation track adds simulated Linear state, paired task-demand fixtures, and
 enforced per-run repository isolation. Start with [the v2 protocol](docs/environment-v2.md).

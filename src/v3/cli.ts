@@ -1,16 +1,37 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { RunSandbox } from '../v2/sandbox.js';
-import { freeRuntime } from '../v2/model.js';
+import { createRuntime, DEFAULT_SELECTION, modelSelectionSchema } from './model.js';
+import { parseArgs } from 'node:util';
 import { prepareFixture, applyReference } from './fixture.js';
 import { functionalChecks } from './checks.js';
 import { freeze, execute, compare, profileSchema } from './experiment.js';
 import { auditRun } from './audit.js';
 
 async function main() {
-  const [command, file, arg, profile, seed] = process.argv.slice(2);
+  const { values, positionals } = parseArgs({
+    args: process.argv.slice(2),
+    allowPositionals: true,
+    options: {
+      provider: { type: 'string' },
+      model: { type: 'string' },
+      thinking: { type: 'string' },
+    },
+  });
+  const [command, file, arg, profile, seed] = positionals;
+  if (Object.keys(values).length && !['freeze', 'verify-model'].includes(command ?? ''))
+    throw Error(
+      'Model options apply only to freeze or verify-model; execution uses the frozen configuration',
+    );
+  if (Boolean(values.provider) !== Boolean(values.model))
+    throw Error('Provide both --provider and --model');
+  const selection = modelSelectionSchema.parse({
+    provider: values.provider ?? DEFAULT_SELECTION.provider,
+    model: values.model ?? DEFAULT_SELECTION.model,
+    thinking: values.thinking ?? DEFAULT_SELECTION.thinking,
+  });
   if (command === 'verify-model') {
-    console.log(JSON.stringify((await freeRuntime()).verification, null, 2));
+    console.log(JSON.stringify((await createRuntime(selection)).verification, null, 2));
     return;
   }
   if (command === 'reference') {
@@ -55,6 +76,7 @@ async function main() {
           arg,
           profileSchema.parse(profile ?? 'switching-pilot'),
           Number(seed ?? 0),
+          selection,
         ),
         null,
         2,
@@ -77,7 +99,7 @@ async function main() {
     return;
   }
   console.log(
-    'pnpm eval:v3 verify-model | reference <output.json> | freeze <manifest.json> <id> [switching-pilot|matched-revision|demand-baseline] [seed] | execute <manifest.json> [1..3] | compare <manifest.json> | audit <run-dir>',
+    'pnpm eval:v3 verify-model | reference <output.json> | freeze <manifest.json> <id> [switching-pilot|matched-revision|demand-baseline|model-comparison] [seed] [--provider P --model M --thinking medium|high] | execute <manifest.json> [1..3] | compare <manifest.json> | audit <run-dir>',
   );
 }
 main().catch((e) => {

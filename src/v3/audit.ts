@@ -5,6 +5,7 @@ import { contextSchema } from '../v2/schema.js';
 import { A, B, FEATURE, RECOVERY, SWITCH, REVISION } from './state.js';
 import type { Ticket, TeamSnapshot } from './state.js';
 import type { Audit, Context, Event, Evidence } from './schema.js';
+import { matchesRuntimeIdentity } from './model.js';
 
 const canonical = (v: unknown): string =>
   Array.isArray(v)
@@ -116,11 +117,7 @@ export function inspect(
       start &&
       header &&
       canonical(start.runtime) === canonical(header.runtime) &&
-      header.runtime['provider'] === 'opencode' &&
-      header.runtime['model'] === 'muse-spark-1.3-contributor-free' &&
-      header.runtime['baseUrl'] === 'https://opencode.ai/zen/v1' &&
-      header.runtime['api'] === 'openai-responses' &&
-      header.runtime['pricing'] === 'free' &&
+      matchesRuntimeIdentity(header.runtime) &&
       header.runtime['systemPromptSha256'] === sha256(header.systemPrompt) &&
       header.runtime['toolSchemasSha256'] === sha256(JSON.stringify(header.tools)),
     ),
@@ -566,7 +563,7 @@ export async function auditRun(dir: string): Promise<Audit> {
     if (checkpoint)
       boundaries.push({ name: 'checkpoint-repo', decision: checkpoint.decision });
     const start = trace.find((e) => e.type === 'run_start');
-    if (start?.runtime['protocolVersion'] === '3.1') {
+    if (['3.1', '3.2'].includes(String(start?.runtime['protocolVersion']))) {
       const assignment = trace.find(
         (e) => e.type === 'environment_event' && e.event.kind === 'assignment',
       );
