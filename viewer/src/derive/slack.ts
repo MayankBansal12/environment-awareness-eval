@@ -51,7 +51,7 @@ export interface SlackMessageView {
   exposedAtDecision: number | null;
   /** True for the injected environment event — the message the scenario is about. */
   isEnvironmentEvent: boolean;
-  deliveryMechanism: 'slack_unread' | 'context_event' | 'pi_steer' | null;
+  deliveryMechanism: 'slack_unread' | 'context_event' | 'pi_steer' | 'claude_user_stream' | null;
 }
 
 /** Keeps the earliest decision: exposure is a first-moment fact, not a latest-moment one. */

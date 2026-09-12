@@ -1,5 +1,10 @@
 # Architecture
 
+This document covers the historical protocol. See [environment v2](environment-v2.md) for
+the new isolated tool boundary, Linear state, paired fixtures, and separate schemas. The
+repository also contains the later `src/claude/` native CLI bridge; statements below about
+a single Pi seam reflect the initial architecture.
+
 ## Module boundaries
 
 ```text

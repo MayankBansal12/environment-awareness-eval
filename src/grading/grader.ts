@@ -271,7 +271,10 @@ function deliveryProtocolValid(
   const expectedMechanism = {
     ambient: 'slack_unread',
     exposed: 'context_event',
-    steer: 'pi_steer',
+    steer:
+      byType(trace, 'run_start')[0]?.provider === 'claude-code'
+        ? 'claude_user_stream'
+        : 'pi_steer',
   }[scenario.delivery];
   const identityMatches =
     created.scenarioId === scenario.id &&
@@ -628,8 +631,7 @@ export function gradeRunWithPolicy(
       'complete_trace',
       terminations.length === 1 &&
         !terminations.some(
-          (event) =>
-            event.reason === 'harness_error' || event.reason === 'provider_error',
+          (event) => event.reason === 'harness_error' || event.reason === 'provider_error',
         ) &&
         harnessErrors.length === 0,
       `termination=${terminations[0]?.reason ?? 'missing'}`,

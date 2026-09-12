@@ -221,7 +221,7 @@ export const traceEventSchema = z.discriminatedUnion('type', [
     eventSemantic: z.string(),
     delivery: z.string(),
     slackMessageId: z.string(),
-    mechanism: z.enum(['slack_unread', 'context_event', 'pi_steer']),
+    mechanism: z.enum(['slack_unread', 'context_event', 'pi_steer', 'claude_user_stream']),
     /** The decision at which the queued event is intended to become perceivable. */
     intendedDecisionIndex: z.number().int().nonnegative(),
     intendedLogicalActionIndex: z.number().int().nonnegative(),

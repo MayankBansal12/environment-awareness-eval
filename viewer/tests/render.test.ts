@@ -44,7 +44,10 @@ const resultsDir = process.env['EAW_RESULTS_DIR'] ?? path.join(repoRoot, 'result
  */
 async function readIfComplete(runDir: string): Promise<string | null> {
   try {
-    await readFile(path.join(runDir, 'summary.json'), 'utf8');
+    const metadata = JSON.parse(
+      await readFile(path.join(runDir, 'summary.json'), 'utf8'),
+    ) as { format?: string };
+    if (metadata.format === 'environment-v2') return null;
     return await readFile(path.join(runDir, 'trace.jsonl'), 'utf8');
   } catch {
     return null;
@@ -52,7 +55,7 @@ async function readIfComplete(runDir: string): Promise<string | null> {
 }
 
 async function loadCorpus(): Promise<RunBundle[]> {
-  const entries = await readdir(resultsDir, { withFileTypes: true });
+  const entries = await readdir(resultsDir, { withFileTypes: true }).catch(() => []);
   const runs: RunBundle[] = [];
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
@@ -96,7 +99,7 @@ function render(run: RunBundle, siblings: readonly RunBundle[]): string {
   );
 }
 
-describe('cockpit rendering', () => {
+describe.skipIf(corpus.length === 0)('cockpit rendering', () => {
   it('renders every run in the corpus without throwing', () => {
     for (const run of corpus) {
       const siblings = corpus.filter(

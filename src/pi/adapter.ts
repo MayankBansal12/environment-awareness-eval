@@ -75,6 +75,8 @@ export interface PiRunResult {
   detail: string;
   finalAssistantText: string;
   piVersion: string;
+  runtimeVersion?: string;
+  runtimeKind?: string;
   activeTools: string[];
   resourceIsolation: Record<string, boolean>;
 }

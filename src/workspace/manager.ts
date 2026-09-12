@@ -80,7 +80,8 @@ export async function prepareWorkspace(options: {
   }
 
   const parent = options.rootDir ?? os.tmpdir();
-  const base = await mkdtemp(path.join(parent, 'eaw-run-' + options.runId + '-'));
+  // Run identifiers often name the intervention. Never expose them in the agent's cwd.
+  const base = await mkdtemp(path.join(parent, 'eaw-run-'));
   const workspacePath = path.join(base, 'workspace');
 
   const clone = await runCommand(

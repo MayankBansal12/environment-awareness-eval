@@ -25,6 +25,12 @@ import { fileURLToPath } from 'node:url';
 import { traceEventSchema, TRACE_SCHEMA_VERSION } from '../../src/trace/schema.js';
 import type { TraceEvent } from '../../src/trace/schema.js';
 import type { EvalSummary } from '../../src/runner.js';
+import {
+  summarySchema as v2SummarySchema,
+  eventSchema as v2EventSchema,
+  contextSchema as v2ContextSchema,
+  type V2Bundle,
+} from '../../src/v2/schema.js';
 import type {
   LoadWarning,
   QuarantinedRun,
@@ -32,6 +38,15 @@ import type {
   ViewerData,
 } from '../src/derive/model.js';
 import { BlobInterner, loadContextBundle } from '../src/derive/context-load.js';
+import { loadManifest } from '../../src/v2/experiment.js';
+import { compareExperiment, type Comparison } from '../../src/v2/comparison.js';
+import { sha256 } from '../../src/v2/audit.js';
+import type {
+  Bundle as V3Bundle,
+  Event as V3Event,
+  Summary as V3Summary,
+  DerivedAnalysis,
+} from '../../src/v3/schema.js';
 import {
   coerceTicketDelivery,
   normalizeTraceEvent,
@@ -234,9 +249,47 @@ async function main(): Promise<void> {
   const resultsDir = resolveResultsDir(process.argv.slice(2));
 
   let entries: string[] = [];
+  const experiments: Comparison[] = [];
   try {
     const dirents = await readdir(resultsDir, { withFileTypes: true });
-    entries = dirents.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    for (const entry of dirents.filter((e) => e.isDirectory())) {
+      if (
+        (await readIfPresent(path.join(resultsDir, entry.name, 'manifest.json'))) !== null
+      ) {
+        try {
+          const rawManifest = JSON.parse(
+            await readFile(path.join(resultsDir, entry.name, 'manifest.json'), 'utf8'),
+          ) as { version?: string };
+          if (rawManifest.version === '3.0') {
+            const children = await readdir(path.join(resultsDir, entry.name, 'runs'), {
+              withFileTypes: true,
+            });
+            entries.push(
+              ...children
+                .filter((e) => e.isDirectory())
+                .map((e) => path.join(entry.name, 'runs', e.name)),
+            );
+            continue;
+          }
+          const manifest = await loadManifest(
+            path.join(resultsDir, entry.name, 'manifest.json'),
+          );
+          if (manifest.id !== entry.name)
+            throw Error('Experiment directory/manifest mismatch');
+          experiments.push(await compareExperiment(manifest, resultsDir));
+          const children = await readdir(path.join(resultsDir, entry.name, 'runs'), {
+            withFileTypes: true,
+          });
+          entries.push(
+            ...children
+              .filter((e) => e.isDirectory())
+              .map((e) => path.join(entry.name, 'runs', e.name)),
+          );
+        } catch (error) {
+          console.warn(`[viz] experiment ${entry.name}: ${String(error)}`);
+        }
+      } else entries.push(entry.name);
+    }
   } catch {
     // An absent or unreadable results directory is an empty corpus, not a crash: the
     // viewer still builds and renders an empty state explaining where it looked.
@@ -246,6 +299,8 @@ async function main(): Promise<void> {
 
   const warnings: LoadWarning[] = [];
   const runs: RunBundle[] = [];
+  const v2Runs: V2Bundle[] = [];
+  const v3Runs: V3Bundle[] = [];
   const quarantined: QuarantinedRun[] = [];
   // One table for the whole corpus. A sweep runs the same system prompt, the same tool
   // schemas and the same opening user message through every run, so sharing across runs is
@@ -254,6 +309,85 @@ async function main(): Promise<void> {
 
   for (const runId of entries) {
     try {
+      const summaryText = await readIfPresent(path.join(resultsDir, runId, 'summary.json'));
+      let format: string | undefined;
+      try {
+        format = summaryText
+          ? (JSON.parse(summaryText) as { format?: string }).format
+          : undefined;
+      } catch {
+        throw new RunUnreadable('Summary is not valid JSON', null);
+      }
+      if (format === 'environment-v2' && summaryText) {
+        try {
+          const summary = v2SummarySchema.parse(JSON.parse(summaryText));
+          const traceText = await readFile(
+            path.join(resultsDir, runId, 'trace.jsonl'),
+            'utf8',
+          );
+          const contextText = await readFile(
+            path.join(resultsDir, runId, 'context.jsonl'),
+            'utf8',
+          );
+          v2Runs.push({
+            summary,
+            trace: traceText
+              .trim()
+              .split('\n')
+              .map((line) => v2EventSchema.parse(JSON.parse(line))),
+            context: contextText
+              .trim()
+              .split('\n')
+              .map((line) => v2ContextSchema.parse(JSON.parse(line))),
+          });
+        } catch (error) {
+          throw new RunUnreadable(`Environment v2: ${String(error)}`, 1);
+        }
+        continue;
+      }
+      if (format === 'environment-v3' && summaryText) {
+        try {
+          const summary = JSON.parse(summaryText) as V3Summary;
+          if (
+            summary.schemaVersion !== 3 ||
+            !Array.isArray(summary.grade.gates) ||
+            !Array.isArray(summary.team.tickets)
+          )
+            throw Error('Malformed v3 summary');
+          const trace = (
+            await readFile(path.join(resultsDir, runId, 'trace.jsonl'), 'utf8')
+          )
+            .trim()
+            .split('\n')
+            .map((l) => JSON.parse(l) as V3Event);
+          if (trace.some((e) => e.format !== 'environment-v3' || !Number.isInteger(e.seq)))
+            throw Error('Malformed v3 trace');
+          const context = (
+            await readFile(path.join(resultsDir, runId, 'context.jsonl'), 'utf8')
+          )
+            .trim()
+            .split('\n')
+            .map((l) => v2ContextSchema.parse(JSON.parse(l)));
+          const analysisText =
+            (await readIfPresent(path.join(resultsDir, runId, 'analysis-v311.json'))) ??
+            (await readIfPresent(path.join(resultsDir, runId, 'analysis-v301.json')));
+          const analysis = analysisText
+            ? (JSON.parse(analysisText) as DerivedAnalysis)
+            : undefined;
+          if (analysis && analysis.originalSummarySha256 !== sha256(summaryText))
+            throw Error('Derived analysis/summary hash mismatch');
+          v3Runs.push({
+            id: runId,
+            summary,
+            trace,
+            context,
+            ...(analysis ? { analysis } : {}),
+          });
+        } catch (error) {
+          throw new RunUnreadable(`Environment v3: ${String(error)}`, 3);
+        }
+        continue;
+      }
       runs.push(await loadRun(resultsDir, runId, warnings, interner));
     } catch (error) {
       if (error instanceof RunUnreadable) {
@@ -273,6 +407,9 @@ async function main(): Promise<void> {
     resultsDir,
     localTraceSchemaVersion: TRACE_SCHEMA_VERSION,
     runs,
+    v2Runs,
+    v3Runs,
+    experiments,
     quarantined,
     warnings,
     blobs: interner.table(),
@@ -292,14 +429,18 @@ async function main(): Promise<void> {
   }
 
   console.log(`[viz] results dir: ${resultsDir}`);
+  console.log(`[viz] ${v3Runs.length} switching/resumption run(s)`);
   console.log(
-    `[viz] ${runs.length} run(s), ${events} trace events validated against ` +
+    `[viz] ${v2Runs.length} isolated Linear + Slack run(s), ${v2Runs.reduce((n, r) => n + r.trace.length, 0)} trace events, ${v2Runs.reduce((n, r) => n + r.summary.capture.inputs, 0)} captured model inputs`,
+  );
+  console.log(
+    `[viz] ${runs.length} historical run(s), ${events} trace events validated against ` +
       `traceEventSchema v${TRACE_SCHEMA_VERSION} ` +
       `(reads v${SUPPORTED_TRACE_SCHEMA_VERSIONS.join('/v')}) → ` +
       `${(bytes / 1_048_576).toFixed(2)} MB inlined`,
   );
   console.log(
-    `[viz] captured context: ${captured.length}/${runs.length} run(s), ` +
+    `[viz] historical captured context: ${captured.length}/${runs.length} run(s), ` +
       `${capturedCalls} model call(s), interned into ${interner.size} unique ` +
       `bodies (${(interner.chars / 1_048_576).toFixed(2)} MB of text)`,
   );
@@ -319,7 +460,7 @@ async function main(): Promise<void> {
           .join(', '),
     );
   }
-  if (runs.length === 0) {
+  if (runs.length === 0 && v2Runs.length === 0 && v3Runs.length === 0) {
     console.warn(
       `[viz] no runs loaded — the viewer will render an empty state. Point it at the ` +
         `full corpus with: pnpm viz --results <dir>`,

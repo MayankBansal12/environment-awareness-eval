@@ -1,8 +1,23 @@
 # viewer
 
-A local, read-only results viewer for the eval harness. It reads `results/`, validates
-every trace against the harness's own Zod schema, and emits one self-contained
+A local, read-only results viewer for the eval harness. It reads `results/`, checks
+the supported artifact formats, and emits one self-contained
 `viewer/dist/index.html` with the data inlined.
+
+Protocol 3.0 has a separate switching/resumption view with per-task checks at completion
+boundaries, priority and resumption metrics, independent audit results, final board state,
+and actual decision inputs/outputs. V3 summaries/traces receive structural checks at load;
+the persisted independent audit governs evidence eligibility. See
+[the v3 protocol](../docs/environment-v3.md).
+
+The isolated Linear + Slack protocol uses a separate `environment-v2` format, validated
+against `src/v2/schema.ts`. Its view includes current ticket state, validity and outcome
+gates, the event timeline, and captured inputs and outputs for each model decision.
+Historical runs retain their existing views. The active results directory currently starts
+with the v2 smoke; historical corpus assertions run only when those runs are supplied.
+See [the v2 protocol](../docs/environment-v2.md) and
+[the smoke observations](../docs/v2-smoke-results.md).
+Manifest-backed experiment directories are discovered beneath `results/`. The index shows each experiment separately, with opportunities, never-retrieved updates, censored observation windows, functional outcomes, and work remaining at the checkpoint. Protocol 2.1 exposes independent audit checks and all content sources in run details.
 
 ```bash
 pnpm viz                              # build from repo-root results/, print the output path
@@ -80,7 +95,7 @@ everything else still renders.
   logical clock across runs. A decision present on one side only renders as a hatched
   blank, so trajectory divergence stays visible.
 
-## Notes on the current corpus
+## Notes on the archived historical corpus
 
 Verified with `jq` against `results/` rather than assumed:
 

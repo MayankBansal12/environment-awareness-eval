@@ -2137,3 +2137,7 @@ button:disabled:active {
 @media (min-width: 651px) and (max-width: 1050px) {
   .cockpit { grid-template-rows: auto 740px auto auto auto; grid-template-areas: 'scrub scrub' 'rail centre' 'right right' 'inspector inspector' 'diagnostics diagnostics'; }
 }
+.v2-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 16px 0; }
+.v2-grid pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 600px; overflow: auto; }
+.v2-decisions { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 900px) { .v2-grid { grid-template-columns: 1fr; } }

@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "id": "muse13-calibration-v21",
+  "phase": "calibration",
+  "seed": "2026-09-11-v21",
+  "repetitions": 3,
+  "family": "refund-accounting",
+  "fixtureVersion": "refund-recovery-2",
+  "triggerVersion": "first-settled-implementation-change-1",
+  "graderVersion": "2.1",
+  "auditVersion": "2.1",
+  "fixtureHashes": {
+    "lower": "6c021b13159837f274eb6474d1a9ad06fb685adf4551036cc4f4148d1f6c8ab2",
+    "higher": "7a49531b47e4ad45772c25decdf3980ac17d5d7654b1adf6184e4c049890db4e"
+  },
+  "sourceHashes": {
+    "package.json": "9af23e54cd916f171863ce9e8f2d1466d5176efe3d10ba730efa57bba7cb6873",
+    "pnpm-lock.yaml": "7e7bd88c62a33c1c0b70ec8efcb8d37c6cf8241d425ee3b21deac52c90a5503a",
+    "src/claude/adapter.ts": "9dcf93bb8231a9a04224f7e1c32f2bab24161bda260d6d4db719734eb2cb4ef9",
+    "src/claude/protocol.ts": "78265d1a957b51b04db989eeebb635eb4e9c7a3692e5f3eb6b872175b977d92d",
+    "src/cli.ts": "a149d397d4f6558e62418128dc330d01d3641e1b95332bb25db55b489f0026f7",
+    "src/config/run-config.ts": "8fc42b477ec82f85728335265e00ca3f85aa3a09d599589f19505e6282725399",
+    "src/config/scenario-schema.ts": "ca794b2b45f4b38a711d94ed4f4e3af2ddad287f0b87513042199f941fc1e695",
+    "src/engine/environment.ts": "18155964bdbb0fefb0e189bed0b16023f93419e2338e82189085e52d270cfa05",
+    "src/engine/experiment.ts": "42d697c60214816ebacc89bde59148d12cfdf4ea56bc49b4c2ee34a58a14f92c",
+    "src/engine/slack.ts": "220acd6bda8d43716a50488f32360f7dac11b8e7386522b0f38e99dc68e5060d",
+    "src/engine/triggers.ts": "fc035dddea6f6920988497ea839b10b0a5e14783e27f9cbb5bf1abdc7e1a0971",
+    "src/grading/artifact-evidence.ts": "af4965c100664636c8380a01ad7ce4ffa804567a0dfe6165a6e6af2351d7bf45",
+    "src/grading/grader.ts": "6e5c7eed526d5b4a24123e7f4bff5bc131b118e64fbab3647d5ca479e30dc556",
+    "src/grading/hidden-checks.ts": "9901690ae13774532a8522e96c44f4ed4cb8b57848708e20b35494a1c63d1647",
+    "src/pi/adapter.ts": "3667447af376d6d2c4c90c1aa325911c159ad59ad90d941850a01c692d6abdb7",
+    "src/prompt/system-prompt.ts": "048e352616c44b61c23cf4b79e8c311e6c9231f9c7241f77cce106af46339d5a",
+    "src/runner.ts": "06cf10742ff6b559ba06db7801efae37b960b26f86671c0f514e9a7a09ce32d1",
+    "src/scenarios/catalog.ts": "80c14af12ea49f0b181b02abbf52b63f9449f43ebd2e026805facb53f16fc873",
+    "src/scenarios/messages.ts": "9557e4027e4b179d8bc425b60ea891f27b46d7e045bab3d10b5ad681bb58b164",
+    "src/tools/path-guard.ts": "4248f1498f623ce56e880f38ccd410133cb4b4cd80137b31ca12b291886dbf35",
+    "src/tools/slack-tools.ts": "8ff0d446c4c98fb2d4711debe6297257ec96197555f4159f3d0239c6241a1048",
+    "src/trace/model-call.ts": "9533d56cbc91a6b9675fbbb663ac071355d6ea91d368b068d26f023716f71629",
+    "src/trace/redact.ts": "2a749790614908b4500f58673ca0ab39133ba0c4bb0f0770852c87f233546e10",
+    "src/trace/schema.ts": "f5e732eac7f3141f0874848dc291d12d91d686df91375632ec1a41f295214472",
+    "src/trace/writer.ts": "e5a661d60108e31734b4ce8f344c182ecb6c4fe362b975ed85cfc516779db447",
+    "src/v2/audit.ts": "90d3a1516e2c1a484a1a23093efbcdc0a183c9af8d663c7c9ae73f31d7e4948d",
+    "src/v2/checks.ts": "8ec4067e7f4cefa1ad986dbd5aac48821c6ba8a6def1be50422ef817a1bf7747",
+    "src/v2/cli.ts": "111018311a817ff4ac99719972e784c0ed4276bcf326274bcc153ab62a72ed57",
+    "src/v2/comparison.ts": "853888626f793b3e332e2068f466dc8aafa8c41fcc6f8ce4578535f6901f4685",
+    "src/v2/engine.ts": "3f35836bb21b7a44d9ab456e42abb61bbc996ece0b0685a206c725c02dd91d1b",
+    "src/v2/experiment-cli.ts": "73c4391ea1da6e029779c4ac6a609ce76bbcc2a2a26a5004a9bbd82d18da58fc",
+    "src/v2/experiment.ts": "32237547988c4f45a5978e580a191872a012321e1c593c656c064b685d7df405",
+    "src/v2/fixture.ts": "d5634096147c25f6c73eae9c03e5d89fca0df42e1608361bbad5c890ee92cfb9",
+    "src/v2/grader.ts": "4ad78f97f1bf839ca3a3cb9c571e88800c408ece2421ce6a782389ed89baf80a",
+    "src/v2/identity.ts": "f040b0a47365bf3e5c96cbdf9d37c906847a423696224afeb9ff07e3eba932d9",
+    "src/v2/model.ts": "9e0b3619512f9bd1f0a950d41712b295ad287eaac958240816c15103f2e585f1",
+    "src/v2/reference.ts": "9d3d9aa73745194ce1ba032108e649f9d98d55b6e8fe337ea207a2e0ed963776",
+    "src/v2/review.ts": "fcd259f19c50d605e88d207ff4f40281c118aa2752ff64604a0a1dd7b3434415",
+    "src/v2/runner.ts": "80d6339a37bba51daf16e4de19f497558d66de97e2d91a5ccc2e9fc45afbdccd",
+    "src/v2/sandbox.ts": "ba3de6f969a16951dcb6e01ac8fc0fb56136d3374a9f5ed23ec5fde95b9c1092",
+    "src/v2/schema.ts": "a19bef51fec65a97ae5a84e15ed0209c6d32ad24681a5675665c6a63e07cda75",
+    "src/v2/state.ts": "4286f1382ee023c55361702977a8c35298566b9d67b7efdbb1c92bb0397adad0",
+    "src/v2/tools.ts": "f4806bc72f449edd145ae4229c1932cc88926915fa2f5ee1fd191c7df161b550",
+    "src/workspace/git.ts": "83f0a799ff8c985b367256ca971f779fa1abd24aca0e4f52a881949e98b71477",
+    "src/workspace/manager.ts": "62eb708da0749a1fc654623b71c848a02c88da9c80261dbe14e472517f52c3f0",
+    "src/workspace/snapshot.ts": "bd998d99185df80a959a2abada8546ea2989a7f4c1d61940c7c9064333a0ccd8"
+  },
+  "systemPromptHash": "a36da01254c0e4cdb6d782192535c4983da870ff95e5a527328dd4beeb7ea302",
+  "runtime": {
+    "provider": "opencode",
+    "model": "muse-spark-1.3-contributor-free",
+    "baseUrl": "https://opencode.ai/zen/v1",
+    "api": "openai-responses",
+    "thinking": "high",
+    "maxOutputTokens": 8192,
+    "contextWindow": 131072,
+    "piVersion": "0.84.4",
+    "providerWeightsPinned": false
+  },
+  "budgets": {
+    "maxTurns": 60,
+    "maxActions": 150,
+    "timeoutMs": 900000
+  },
+  "observationWindow": 5,
+  "schedule": [
+    {
+      "id": "t001",
+      "repetition": 1,
+      "demand": "higher",
+      "condition": "baseline"
+    },
+    {
+      "id": "t002",
+      "repetition": 1,
+      "demand": "lower",
+      "condition": "baseline"
+    },
+    {
+      "id": "t003",
+      "repetition": 2,
+      "demand": "lower",
+      "condition": "baseline"
+    },
+    {
+      "id": "t004",
+      "repetition": 2,
+      "demand": "higher",
+      "condition": "baseline"
+    },
+    {
+      "id": "t005",
+      "repetition": 3,
+      "demand": "lower",
+      "condition": "baseline"
+    },
+    {
+      "id": "t006",
+      "repetition": 3,
+      "demand": "higher",
+      "condition": "baseline"
+    }
+  ],
+  "hash": "6e7b413d5fee02e5b9410cfe5b921d4842ad836c9dd4ae72a86055ccbdbfb086"
+}

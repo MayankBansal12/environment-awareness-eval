@@ -1,8 +1,8 @@
 node_modules/
 dist/
 coverage/
-# Run artifacts are scratch output. The two reference live smoke runs under
-# results/live-* are force-added so a reviewer can read a real trace.
+# Run artifacts are local output. Historical reference runs were archived before
+# the v2 reset; see docs/status-and-next-steps.md for provenance and current scope.
 results/
 # Likewise scratch, with one run force-added: quarantine-turnindex-bug holds runs
 # corrupted by the turn-index collision, kept as the only recorded evidence of it.

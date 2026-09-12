@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [react(), viteSingleFile()],
   // The viewer imports schemas and helpers straight out of ../src, so Vite has to be
   // allowed to resolve above the package root.
-  server: { fs: { allow: [repoRoot] } },
+  server: { allowedHosts: ['fedora--5173.getbb.app'], fs: { allow: [repoRoot] } },
   build: {
     // A single self-contained file, openable over file://.
     assetsInlineLimit: Number.MAX_SAFE_INTEGER,

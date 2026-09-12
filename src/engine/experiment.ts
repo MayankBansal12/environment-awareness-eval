@@ -105,6 +105,7 @@ export interface EngineDeps {
   snapshot: () => Promise<WorkspaceSnapshot>;
   /** Hand text to the runtime's own steering channel. Only used by `steer` delivery. */
   steer: (text: string) => Promise<void>;
+  steeringMechanism?: 'pi_steer' | 'claude_user_stream';
   limits: { maxTurns: number; maxActions: number };
   /**
    * Receives the captured model context, when the run is capturing one. Optional because
@@ -805,14 +806,15 @@ export class ExperimentEngine {
       origin: 'scenario',
     });
 
-    let mechanism: 'slack_unread' | 'context_event' | 'pi_steer' = 'slack_unread';
+    let mechanism: 'slack_unread' | 'context_event' | 'pi_steer' | 'claude_user_stream' =
+      'slack_unread';
     if (scenario.delivery === 'exposed') {
       mechanism = 'context_event';
       this.#pendingExposedText = renderEventBlock(toView(message));
       this.#pendingExposureKind = 'content';
       this.#pendingExposureSlackId = message.id;
     } else if (scenario.delivery === 'steer') {
-      mechanism = 'pi_steer';
+      mechanism = this.#deps.steeringMechanism ?? 'pi_steer';
       // Steering is queued here and picked up by the runtime immediately after this turn
       // settles, so it lands before the next model call: the same boundary the other
       // delivery modes use.

@@ -1,5 +1,22 @@
 # environment-awareness-eval
 
+The new **v3** development track tests feature interruption and resumption: multiple Linear
+tickets, an urgent gateway-recovery fix, and a return to the original feature, optionally
+with revised requirements. See [the switching protocol](docs/environment-v3.md).
+`pnpm eval:v3` lists its reference, freeze, bounded execution, comparison, and audit commands.
+The [four-run matched calibration](docs/v31-matched-results.md) reports observed switching,
+task-demand limits, and versioned metric corrections. See the [manual analysis guide](docs/manual-switching-analysis.md).
+See [current status and the proposed Astra–Sol comparison](docs/status-and-next-steps.md)
+for readiness, remaining model support, and the next bounded experiment.
+
+The **v2** cancellation track adds simulated Linear state, paired task-demand fixtures, and
+enforced per-run repository isolation. Start with [the v2 protocol](docs/environment-v2.md).
+`pnpm eval:v2 --list-scenarios` lists the ten conditions; `pnpm eval:v2 --verify-model`
+checks the authorized free OpenCode ZEN Muse Spark 1.3 mapping without inference.
+Protocol 2.1 adds automatic evidence audits, stronger recovery fixtures, and frozen calibration/experiment schedules: see [experiment controls](docs/eval-experiments.md).
+`pnpm viz` reads v3, v2, and historical artifacts. The material below documents the
+historical v0 track, which remains available through `pnpm eval` and is not sandboxed.
+
 An exploratory evaluation harness for **behavioural environment-change blindness** in coding
 agents.
 
@@ -62,6 +79,8 @@ its instructions live; see [docs/scenarios.md](docs/scenarios.md) for the claim 
 ## Setup
 
 Requires Node.js ≥ 22.19, pnpm, and a Pi installation with an authenticated provider.
+For `--provider claude-code` runs, an authenticated `claude` CLI on `PATH` is used
+instead of Pi (no Pi provider needed for those runs).
 
 ```bash
 pnpm install
@@ -82,7 +101,18 @@ pnpm eval --scenario cancel-ambient --dry-run
 pnpm eval --scenario cancel-ambient \
   --fixture /home/mayank/code/environment-awareness-ledger-service \
   --provider openai-codex --model gpt-5.6-luna --thinking high
+
+# Against the native Claude Code CLI instead of Pi
+pnpm eval --scenario cancel-ambient --provider claude-code --model claude-opus-5 \
+  --thinking high --ticket-delivery direct
 ```
+
+`--provider claude-code` drives the real `claude` CLI in stream-json mode; the harness
+serves the nine tools over an in-process MCP server (no `execute_batch` wrapper) and
+reconstructs the observed context from the native stream. The captured `context.jsonl` is
+marked incomplete for these runs — the CLI's own system prompt, wire payload and internal
+retries are not exposed. Steering (`cancel-steer`) is delivered as a native user-stream
+message. See [docs/sept10-claude-results.md](docs/sept10-claude-results.md).
 
 Useful flags: `--results <dir>`, `--run-id <id>`, `--max-turns`, `--max-actions`,
 `--timeout-ms`, `--keep-workspace`, `--skip-hidden-checks`, `--workspace-root`,

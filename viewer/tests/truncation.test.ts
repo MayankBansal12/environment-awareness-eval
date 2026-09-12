@@ -47,7 +47,7 @@ describe('truncation detection', () => {
   });
 });
 
-describe('the corpus on disk', () => {
+describe.skipIf(data.runs.length === 0)('the optional historical corpus on disk', () => {
   const actions = data.runs.flatMap((run) =>
     run.trace.filter(
       (event): event is Extract<typeof event, { type: 'tool_action' }> =>
@@ -70,15 +70,11 @@ describe('the corpus on disk', () => {
       }
     }
   });
+});
 
-  it('finds the truncation the old MAX_TRACE_TEXT test missed', () => {
-    const detected = actions.filter(
-      (action) => truncationOf(action.outputPreview).truncated,
-    ).length;
-    const oldTest = actions.filter(
-      (action) => action.outputBytes > MAX_TRACE_TEXT,
-    ).length;
-    // Measured on this corpus: the writer truncated far more than the old test admitted.
-    expect(detected).toBeGreaterThan(oldTest * 10);
-  });
+// This regression must run even when saved inference results have been archived.
+it('detects output truncated below the old MAX_TRACE_TEXT threshold', () => {
+  const original = 'x'.repeat(MAX_TOOL_OUTPUT_PREVIEW + 500);
+  expect(Buffer.byteLength(original)).toBeLessThan(MAX_TRACE_TEXT);
+  expect(truncationOf(boundText(original, MAX_TOOL_OUTPUT_PREVIEW)).truncated).toBe(true);
 });

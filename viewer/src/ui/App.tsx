@@ -3,6 +3,9 @@ import { data } from '../data.js';
 import { Compare } from './Compare.js';
 import { RunIndex } from './RunIndex.js';
 import { RunScreen } from './RunScreen.js';
+import { V2Runs } from './V2Runs.js';
+import { V3Runs } from './V3Runs.js';
+import { Experiments } from './Experiments.js';
 
 export type Screen =
   | { name: 'index' }
@@ -39,7 +42,8 @@ export function App(): JSX.Element {
           <details>
             <summary>Dataset info</summary>
             <div className="dataset-info">
-              {data.runs.length} runs · {data.resultsDir}
+              {data.runs.length + (data.v2Runs?.length ?? 0) + (data.v3Runs?.length ?? 0)}{' '}
+              runs · {data.resultsDir}
               <br />
               Built {data.generatedAtIso.replace('T', ' ').slice(0, 16)}
             </div>
@@ -61,10 +65,15 @@ export function App(): JSX.Element {
       )}
 
       <div hidden={screen.name !== 'index'}>
-        <RunIndex
-          onOpen={(runId) => setScreen({ name: 'run', runId })}
-          onCompare={(a, b) => setScreen({ name: 'compare', a, b })}
-        />
+        <Experiments experiments={data.experiments ?? []} />
+        {(data.v3Runs?.length ?? 0) > 0 && <V3Runs runs={data.v3Runs!} />}
+        {(data.v2Runs?.length ?? 0) > 0 && <V2Runs runs={data.v2Runs!} />}
+        {(data.runs.length > 0 || (!data.v2Runs?.length && !data.v3Runs?.length)) && (
+          <RunIndex
+            onOpen={(runId) => setScreen({ name: 'run', runId })}
+            onCompare={(a, b) => setScreen({ name: 'compare', a, b })}
+          />
+        )}
       </div>
 
       {screen.name === 'run' &&

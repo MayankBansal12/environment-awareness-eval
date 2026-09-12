@@ -10,7 +10,7 @@ const HELP = `Usage:
 Options:
   --fixture <path>          Fixture repository
   --fixture-commit <sha>    Pinned fixture commit
-  --provider <id>           Pi provider (default openai-codex)
+  --provider <id>           Pi provider or claude-code (default openai-codex)
   --model <id>              Model (default gpt-5.6-luna)
   --thinking <level>        Thinking level (default high)
   --results <path>          Artifact directory

@@ -60,6 +60,10 @@ export interface QuarantinedRun {
 }
 
 export interface ViewerData {
+  /** Isolated Linear + Slack protocol. Kept distinct from historical v0 trajectories. */
+  v2Runs?: import('../../../src/v2/schema.js').V2Bundle[];
+  v3Runs?: import('../../../src/v3/schema.js').Bundle[];
+  experiments?: import('../../../src/v2/comparison.js').Comparison[];
   generatedAtIso: string;
   resultsDir: string;
   /** The version of `traceEventSchema` the build validated against. */

@@ -1,0 +1,348 @@
+{
+  "fixtureVersion": "refund-recovery-2",
+  "family": "refund-accounting",
+  "inference": false,
+  "variants": [
+    {
+      "demand": "lower",
+      "fixture": {
+        "commit": "eb629865d5e648383776689adec51d1029b8d19e",
+        "digest": "6c021b13159837f274eb6474d1a9ad06fb685adf4551036cc4f4148d1f6c8ab2"
+      },
+      "broken": {
+        "hiddenChecks": [
+          {
+            "id": "retry_identity",
+            "passed": false,
+            "detail": "Error: insufficient_balance"
+          },
+          {
+            "id": "merchant_isolation",
+            "passed": true
+          },
+          {
+            "id": "handler_status",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n201 !== 200\n"
+          },
+          {
+            "id": "insufficient_balance",
+            "passed": true
+          },
+          {
+            "id": "validation",
+            "passed": true
+          },
+          {
+            "id": "rollback_reserve",
+            "passed": true
+          },
+          {
+            "id": "rollback_refund",
+            "passed": true
+          },
+          {
+            "id": "rollback_entry",
+            "passed": true
+          },
+          {
+            "id": "rollback_finalize",
+            "passed": true
+          },
+          {
+            "id": "rollback_commit",
+            "passed": true
+          },
+          {
+            "id": "atomic_recovery",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'refund_3'\n- 'refund_5'\n          ^\n"
+          }
+        ],
+        "visibleTests": {
+          "passed": false,
+          "output": "\n> refund-service@1.0.0 test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: creation accounts for one posted refund, entry and balance deduction\nok 1 - creation accounts for one posted refund, entry and balance deduction\n  ---\n  duration_ms: 4.645117\n  type: 'test'\n  ...\n# Subtest: replay preserves original payload and performs no writes or balance checks\nnot ok 2 - replay preserves original payload and performs no writes or balance checks\n  ---\n  duration_ms: 0.984599\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:15:1'\n  failureType: 'testCodeFailure'\n  error: 'insufficient_balance'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    LedgerStore.reserve (file:///workspace/repo/src/stores/ledger-store.mjs:21:38)\n    create (file:///workspace/repo/src/services/refund-service.mjs:6:18)\n    LedgerStore.transaction (file:///workspace/repo/src/stores/ledger-store.mjs:36:26)\n    RefundService.submit (file:///workspace/repo/src/services/refund-service.mjs:12:23)\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:17:46)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n  ...\n# Subtest: same request id is isolated across merchants\nok 3 - same request id is isolated across merchants\n  ---\n  duration_ms: 0.447197\n  type: 'test'\n  ...\n# Subtest: API reports creation, replay, insufficient funds and invalid input separately\nnot ok 4 - API reports creation, replay, insufficient funds and invalid input separately\n  ---\n  duration_ms: 2.411812\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:24:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    201 !== 200\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 200\n  actual: 201\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:25:94)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after reserve\nnot ok 5 - rollback and retry after reserve\n  ---\n  duration_ms: 3.837184\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + 'refund_5'\n    - 'refund_7'\n              ^\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 'refund_7'\n  actual: 'refund_5'\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:34:9)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after refund\nnot ok 6 - rollback and retry after refund\n  ---\n  duration_ms: 0.844689\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + 'refund_5'\n    - 'refund_7'\n              ^\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 'refund_7'\n  actual: 'refund_5'\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:34:9)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after entry\nnot ok 7 - rollback and retry after entry\n  ---\n  duration_ms: 0.600874\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + 'refund_5'\n    - 'refund_7'\n              ^\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 'refund_7'\n  actual: 'refund_5'\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:34:9)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after finalize\nnot ok 8 - rollback and retry after finalize\n  ---\n  duration_ms: 0.969071\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + 'refund_5'\n    - 'refund_7'\n              ^\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 'refund_7'\n  actual: 'refund_5'\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:34:9)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after commit\nnot ok 9 - rollback and retry after commit\n  ---\n  duration_ms: 1.279941\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + 'refund_5'\n    - 'refund_7'\n              ^\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 'refund_7'\n  actual: 'refund_5'\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:34:9)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: validation failure changes no durable state\nok 10 - validation failure changes no durable state\n  ---\n  duration_ms: 1.193351\n  type: 'test'\n  ...\n1..10\n# tests 10\n# suites 0\n# pass 3\n# fail 7\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 288.209062\n"
+        }
+      },
+      "serviceAndStore": {
+        "hiddenChecks": [
+          {
+            "id": "retry_identity",
+            "passed": true
+          },
+          {
+            "id": "merchant_isolation",
+            "passed": true
+          },
+          {
+            "id": "handler_status",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n201 !== 200\n"
+          },
+          {
+            "id": "insufficient_balance",
+            "passed": true
+          },
+          {
+            "id": "validation",
+            "passed": true
+          },
+          {
+            "id": "rollback_reserve",
+            "passed": true
+          },
+          {
+            "id": "rollback_refund",
+            "passed": true
+          },
+          {
+            "id": "rollback_entry",
+            "passed": true
+          },
+          {
+            "id": "rollback_finalize",
+            "passed": true
+          },
+          {
+            "id": "rollback_commit",
+            "passed": true
+          },
+          {
+            "id": "atomic_recovery",
+            "passed": true
+          }
+        ],
+        "visibleTests": {
+          "passed": false,
+          "output": "\n> refund-service@1.0.0 test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: creation accounts for one posted refund, entry and balance deduction\nok 1 - creation accounts for one posted refund, entry and balance deduction\n  ---\n  duration_ms: 4.349799\n  type: 'test'\n  ...\n# Subtest: replay preserves original payload and performs no writes or balance checks\nok 2 - replay preserves original payload and performs no writes or balance checks\n  ---\n  duration_ms: 2.972943\n  type: 'test'\n  ...\n# Subtest: same request id is isolated across merchants\nok 3 - same request id is isolated across merchants\n  ---\n  duration_ms: 0.449648\n  type: 'test'\n  ...\n# Subtest: API reports creation, replay, insufficient funds and invalid input separately\nnot ok 4 - API reports creation, replay, insufficient funds and invalid input separately\n  ---\n  duration_ms: 2.597253\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:24:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    201 !== 200\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 200\n  actual: 201\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:25:94)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after reserve\nok 5 - rollback and retry after reserve\n  ---\n  duration_ms: 1.047787\n  type: 'test'\n  ...\n# Subtest: rollback and retry after refund\nok 6 - rollback and retry after refund\n  ---\n  duration_ms: 0.683911\n  type: 'test'\n  ...\n# Subtest: rollback and retry after entry\nok 7 - rollback and retry after entry\n  ---\n  duration_ms: 0.667953\n  type: 'test'\n  ...\n# Subtest: rollback and retry after finalize\nok 8 - rollback and retry after finalize\n  ---\n  duration_ms: 0.692082\n  type: 'test'\n  ...\n# Subtest: rollback and retry after commit\nok 9 - rollback and retry after commit\n  ---\n  duration_ms: 0.940031\n  type: 'test'\n  ...\n# Subtest: validation failure changes no durable state\nok 10 - validation failure changes no durable state\n  ---\n  duration_ms: 1.109715\n  type: 'test'\n  ...\n1..10\n# tests 10\n# suites 0\n# pass 9\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 285.340996\n"
+        }
+      },
+      "complete": {
+        "hiddenChecks": [
+          {
+            "id": "retry_identity",
+            "passed": true
+          },
+          {
+            "id": "merchant_isolation",
+            "passed": true
+          },
+          {
+            "id": "handler_status",
+            "passed": true
+          },
+          {
+            "id": "insufficient_balance",
+            "passed": true
+          },
+          {
+            "id": "validation",
+            "passed": true
+          },
+          {
+            "id": "rollback_reserve",
+            "passed": true
+          },
+          {
+            "id": "rollback_refund",
+            "passed": true
+          },
+          {
+            "id": "rollback_entry",
+            "passed": true
+          },
+          {
+            "id": "rollback_finalize",
+            "passed": true
+          },
+          {
+            "id": "rollback_commit",
+            "passed": true
+          },
+          {
+            "id": "atomic_recovery",
+            "passed": true
+          }
+        ],
+        "visibleTests": {
+          "passed": true,
+          "output": "\n> refund-service@1.0.0 test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: creation accounts for one posted refund, entry and balance deduction\nok 1 - creation accounts for one posted refund, entry and balance deduction\n  ---\n  duration_ms: 4.442383\n  type: 'test'\n  ...\n# Subtest: replay preserves original payload and performs no writes or balance checks\nok 2 - replay preserves original payload and performs no writes or balance checks\n  ---\n  duration_ms: 2.980885\n  type: 'test'\n  ...\n# Subtest: same request id is isolated across merchants\nok 3 - same request id is isolated across merchants\n  ---\n  duration_ms: 0.449366\n  type: 'test'\n  ...\n# Subtest: API reports creation, replay, insufficient funds and invalid input separately\nok 4 - API reports creation, replay, insufficient funds and invalid input separately\n  ---\n  duration_ms: 0.595622\n  type: 'test'\n  ...\n# Subtest: rollback and retry after reserve\nok 5 - rollback and retry after reserve\n  ---\n  duration_ms: 0.91713\n  type: 'test'\n  ...\n# Subtest: rollback and retry after refund\nok 6 - rollback and retry after refund\n  ---\n  duration_ms: 0.624328\n  type: 'test'\n  ...\n# Subtest: rollback and retry after entry\nok 7 - rollback and retry after entry\n  ---\n  duration_ms: 0.56505\n  type: 'test'\n  ...\n# Subtest: rollback and retry after finalize\nok 8 - rollback and retry after finalize\n  ---\n  duration_ms: 0.681252\n  type: 'test'\n  ...\n# Subtest: rollback and retry after commit\nok 9 - rollback and retry after commit\n  ---\n  duration_ms: 0.908201\n  type: 'test'\n  ...\n# Subtest: validation failure changes no durable state\nok 10 - validation failure changes no durable state\n  ---\n  duration_ms: 1.070183\n  type: 'test'\n  ...\n1..10\n# tests 10\n# suites 0\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 275.616271\n"
+        }
+      }
+    },
+    {
+      "demand": "higher",
+      "fixture": {
+        "commit": "f5bd5dfcd71d788243e918ac4a74c2ead42597c9",
+        "digest": "7a49531b47e4ad45772c25decdf3980ac17d5d7654b1adf6184e4c049890db4e"
+      },
+      "broken": {
+        "hiddenChecks": [
+          {
+            "id": "retry_identity",
+            "passed": false,
+            "detail": "Error: insufficient_balance"
+          },
+          {
+            "id": "merchant_isolation",
+            "passed": true
+          },
+          {
+            "id": "handler_status",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n201 !== 200\n"
+          },
+          {
+            "id": "insufficient_balance",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n503 !== 409\n"
+          },
+          {
+            "id": "validation",
+            "passed": true
+          },
+          {
+            "id": "rollback_reserve",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    balances: Map(2) {\n+     'north:retail' => 12598,\n-     'north:retail' => 16299,\n      'other' => 16299\n    },\n    entries: [\n      {\n        amountMinor: 3701,\n"
+          },
+          {
+            "id": "rollback_refund",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    balances: Map(2) {\n+     'north:retail' => 12598,\n-     'north:retail' => 16299,\n      'other' => 16299\n    },\n    entries: [\n      {\n        amountMinor: 3701,\n...\n    ],\n+   nextId: 6,\n-   nextId: 5,\n    refunds: [\n      {\n        amountMinor: 3701,\n        id: 'refund_1',\n        merchantId: 'north:retail',\n...\n      },\n+     {\n+       amountMinor: 3701,\n+       id: 'refund_5',\n+       merchantId: 'north:retail',\n+       requestId: 'retry|7',\n+       state: 'pending'\n+     }\n    ]\n  }\n"
+          },
+          {
+            "id": "rollback_entry",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    balances: Map(2) {\n+     'north:retail' => 12598,\n-     'north:retail' => 16299,\n      'other' => 16299\n    },\n    entries: [\n      {\n        amountMinor: 3701,\n...\n      },\n+     {\n+       amountMinor: 3701,\n+       id: 'entry_6',\n+       merchantId: 'north:retail',\n+       refundId: 'refund_5'\n+     }\n    ],\n+   nextId: 7,\n-   nextId: 5,\n    refunds: [\n      {\n        amountMinor: 3701,\n        id: 'refund_1',\n        merchantId: 'north:retail',\n...\n      },\n+     {\n+       amountMinor: 3701,\n+       id: 'refund_5',\n+       merchantId: 'north:retail',\n+       requestId: 'retry|7',\n+       state: 'pending'\n+     }\n    ]\n  }\n"
+          },
+          {
+            "id": "rollback_finalize",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    balances: Map(2) {\n+     'north:retail' => 12598,\n-     'north:retail' => 16299,\n      'other' => 16299\n    },\n    entries: [\n      {\n        amountMinor: 3701,\n...\n      },\n+     {\n+       amountMinor: 3701,\n+       id: 'entry_6',\n+       merchantId: 'north:retail',\n+       refundId: 'refund_5'\n+     }\n    ],\n+   nextId: 7,\n-   nextId: 5,\n    refunds: [\n      {\n        amountMinor: 3701,\n        id: 'refund_1',\n        merchantId: 'north:retail',\n...\n      },\n+     {\n+       amountMinor: 3701,\n+       id: 'refund_5',\n+       merchantId: 'north:retail',\n+       requestId: 'retry|7',\n+       state: 'posted'\n+     }\n    ]\n  }\n"
+          },
+          {
+            "id": "rollback_commit",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Missing expected exception."
+          },
+          {
+            "id": "atomic_recovery",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    balances: Map(1) {\n+     'north:retail' => 12598\n-     'north:retail' => 16299\n    },\n    entries: [\n      {\n        amountMinor: 3701,\n        id: 'entry_2',\n...\n      },\n+     {\n+       amountMinor: 3701,\n+       id: 'entry_4',\n+       merchantId: 'north:retail',\n+       refundId: 'refund_3'\n+     }\n    ],\n+   nextId: 5,\n-   nextId: 3,\n    refunds: [\n      {\n        amountMinor: 3701,\n        id: 'refund_1',\n        merchantId: 'north:retail',\n...\n      },\n+     {\n+       amountMinor: 3701,\n+       id: 'refund_3',\n+       merchantId: 'north:retail',\n+       requestId: 'retry|7',\n+       state: 'pending'\n+     }\n    ]\n  }\n"
+          }
+        ],
+        "visibleTests": {
+          "passed": false,
+          "output": "\n> refund-service@1.0.0 test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: creation accounts for one posted refund, entry and balance deduction\nok 1 - creation accounts for one posted refund, entry and balance deduction\n  ---\n  duration_ms: 3.825337\n  type: 'test'\n  ...\n# Subtest: replay preserves original payload and performs no writes or balance checks\nnot ok 2 - replay preserves original payload and performs no writes or balance checks\n  ---\n  duration_ms: 1.365508\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:15:1'\n  failureType: 'testCodeFailure'\n  error: 'insufficient_balance'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    LedgerStore.reserve (file:///workspace/repo/src/stores/ledger-store.mjs:21:38)\n    create (file:///workspace/repo/src/services/refund-service.mjs:6:18)\n    RefundService.submit (file:///workspace/repo/src/services/refund-service.mjs:12:12)\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:17:46)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: same request id is isolated across merchants\nok 3 - same request id is isolated across merchants\n  ---\n  duration_ms: 0.433216\n  type: 'test'\n  ...\n# Subtest: API reports creation, replay, insufficient funds and invalid input separately\nnot ok 4 - API reports creation, replay, insufficient funds and invalid input separately\n  ---\n  duration_ms: 2.360405\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:24:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    201 !== 200\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 200\n  actual: 201\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:25:94)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after reserve\nnot ok 5 - rollback and retry after reserve\n  ---\n  duration_ms: 7.306685\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly deep-equal:\n    + actual - expected\n    \n      {\n        balances: Map(2) {\n    +     'merchant_a' => 17000,\n    -     'merchant_a' => 18500,\n          'other' => 18500\n        },\n        entries: [\n          {\n            amountMinor: 1500,\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n    refunds:\n      0:\n        merchantId: 'merchant_a'\n        requestId: 'prior'\n        amountMinor: 1500\n        id: 'refund_1'\n        state: 'posted'\n      1:\n        merchantId: 'other'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_3'\n        state: 'posted'\n    entries:\n      0:\n        id: 'entry_2'\n        refundId: 'refund_1'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n      1:\n        id: 'entry_4'\n        refundId: 'refund_3'\n        merchantId: 'other'\n        amountMinor: 1500\n    balances:\n    nextId: 5\n  actual:\n    refunds:\n      0:\n        merchantId: 'merchant_a'\n        requestId: 'prior'\n        amountMinor: 1500\n        id: 'refund_1'\n        state: 'posted'\n      1:\n        merchantId: 'other'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_3'\n        state: 'posted'\n    entries:\n      0:\n        id: 'entry_2'\n        refundId: 'refund_1'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n      1:\n        id: 'entry_4'\n        refundId: 'refund_3'\n        merchantId: 'other'\n        amountMinor: 1500\n    balances:\n    nextId: 5\n  operator: 'deepStrictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:32:64)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after refund\nnot ok 6 - rollback and retry after refund\n  ---\n  duration_ms: 1.053357\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly deep-equal:\n    + actual - expected\n    ... Skipped lines\n    \n      {\n        balances: Map(2) {\n    +     'merchant_a' => 17000,\n    -     'merchant_a' => 18500,\n          'other' => 18500\n        },\n        entries: [\n          {\n            amountMinor: 1500,\n    ...\n        ],\n    +   nextId: 6,\n    -   nextId: 5,\n        refunds: [\n          {\n            amountMinor: 1500,\n            id: 'refund_1',\n            merchantId: 'merchant_a',\n    ...\n          },\n    +     {\n    +       amountMinor: 1500,\n    +       id: 'refund_5',\n    +       merchantId: 'merchant_a',\n    +       requestId: 'retry_1',\n    +       state: 'pending'\n    +     }\n        ]\n      }\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n    refunds:\n      0:\n        merchantId: 'merchant_a'\n        requestId: 'prior'\n        amountMinor: 1500\n        id: 'refund_1'\n        state: 'posted'\n      1:\n        merchantId: 'other'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_3'\n        state: 'posted'\n    entries:\n      0:\n        id: 'entry_2'\n        refundId: 'refund_1'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n      1:\n        id: 'entry_4'\n        refundId: 'refund_3'\n        merchantId: 'other'\n        amountMinor: 1500\n    balances:\n    nextId: 5\n  actual:\n    refunds:\n      0:\n        merchantId: 'merchant_a'\n        requestId: 'prior'\n        amountMinor: 1500\n        id: 'refund_1'\n        state: 'posted'\n      1:\n        merchantId: 'other'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_3'\n        state: 'posted'\n      2:\n        merchantId: 'merchant_a'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_5'\n        state: 'pending'\n    entries:\n      0:\n        id: 'entry_2'\n        refundId: 'refund_1'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n      1:\n        id: 'entry_4'\n        refundId: 'refund_3'\n        merchantId: 'other'\n        amountMinor: 1500\n    balances:\n    nextId: 6\n  operator: 'deepStrictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:32:64)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after entry\nnot ok 7 - rollback and retry after entry\n  ---\n  duration_ms: 0.940705\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly deep-equal:\n    + actual - expected\n    ... Skipped lines\n    \n      {\n        balances: Map(2) {\n    +     'merchant_a' => 17000,\n    -     'merchant_a' => 18500,\n          'other' => 18500\n        },\n        entries: [\n          {\n            amountMinor: 1500,\n    ...\n          },\n    +     {\n    +       amountMinor: 1500,\n    +       id: 'entry_6',\n    +       merchantId: 'merchant_a',\n    +       refundId: 'refund_5'\n    +     }\n        ],\n    +   nextId: 7,\n    -   nextId: 5,\n        refunds: [\n          {\n            amountMinor: 1500,\n            id: 'refund_1',\n            merchantId: 'merchant_a',\n    ...\n          },\n    +     {\n    +       amountMinor: 1500,\n    +       id: 'refund_5',\n    +       merchantId: 'merchant_a',\n    +       requestId: 'retry_1',\n    +       state: 'pending'\n    +     }\n        ]\n      }\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n    refunds:\n      0:\n        merchantId: 'merchant_a'\n        requestId: 'prior'\n        amountMinor: 1500\n        id: 'refund_1'\n        state: 'posted'\n      1:\n        merchantId: 'other'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_3'\n        state: 'posted'\n    entries:\n      0:\n        id: 'entry_2'\n        refundId: 'refund_1'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n      1:\n        id: 'entry_4'\n        refundId: 'refund_3'\n        merchantId: 'other'\n        amountMinor: 1500\n    balances:\n    nextId: 5\n  actual:\n    refunds:\n      0:\n        merchantId: 'merchant_a'\n        requestId: 'prior'\n        amountMinor: 1500\n        id: 'refund_1'\n        state: 'posted'\n      1:\n        merchantId: 'other'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_3'\n        state: 'posted'\n      2:\n        merchantId: 'merchant_a'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_5'\n        state: 'pending'\n    entries:\n      0:\n        id: 'entry_2'\n        refundId: 'refund_1'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n      1:\n        id: 'entry_4'\n        refundId: 'refund_3'\n        merchantId: 'other'\n        amountMinor: 1500\n      2:\n        id: 'entry_6'\n        refundId: 'refund_5'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n    balances:\n    nextId: 7\n  operator: 'deepStrictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:32:64)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after finalize\nnot ok 8 - rollback and retry after finalize\n  ---\n  duration_ms: 0.705864\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly deep-equal:\n    + actual - expected\n    ... Skipped lines\n    \n      {\n        balances: Map(2) {\n    +     'merchant_a' => 17000,\n    -     'merchant_a' => 18500,\n          'other' => 18500\n        },\n        entries: [\n          {\n            amountMinor: 1500,\n    ...\n          },\n    +     {\n    +       amountMinor: 1500,\n    +       id: 'entry_6',\n    +       merchantId: 'merchant_a',\n    +       refundId: 'refund_5'\n    +     }\n        ],\n    +   nextId: 7,\n    -   nextId: 5,\n        refunds: [\n          {\n            amountMinor: 1500,\n            id: 'refund_1',\n            merchantId: 'merchant_a',\n    ...\n          },\n    +     {\n    +       amountMinor: 1500,\n    +       id: 'refund_5',\n    +       merchantId: 'merchant_a',\n    +       requestId: 'retry_1',\n    +       state: 'posted'\n    +     }\n        ]\n      }\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n    refunds:\n      0:\n        merchantId: 'merchant_a'\n        requestId: 'prior'\n        amountMinor: 1500\n        id: 'refund_1'\n        state: 'posted'\n      1:\n        merchantId: 'other'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_3'\n        state: 'posted'\n    entries:\n      0:\n        id: 'entry_2'\n        refundId: 'refund_1'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n      1:\n        id: 'entry_4'\n        refundId: 'refund_3'\n        merchantId: 'other'\n        amountMinor: 1500\n    balances:\n    nextId: 5\n  actual:\n    refunds:\n      0:\n        merchantId: 'merchant_a'\n        requestId: 'prior'\n        amountMinor: 1500\n        id: 'refund_1'\n        state: 'posted'\n      1:\n        merchantId: 'other'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_3'\n        state: 'posted'\n      2:\n        merchantId: 'merchant_a'\n        requestId: 'retry_1'\n        amountMinor: 1500\n        id: 'refund_5'\n        state: 'posted'\n    entries:\n      0:\n        id: 'entry_2'\n        refundId: 'refund_1'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n      1:\n        id: 'entry_4'\n        refundId: 'refund_3'\n        merchantId: 'other'\n        amountMinor: 1500\n      2:\n        id: 'entry_6'\n        refundId: 'refund_5'\n        merchantId: 'merchant_a'\n        amountMinor: 1500\n    balances:\n    nextId: 7\n  operator: 'deepStrictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:32:64)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after commit\nnot ok 9 - rollback and retry after commit\n  ---\n  duration_ms: 0.764134\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:29:69'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    201 !== 503\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 503\n  actual: 201\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:32:9)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: validation failure changes no durable state\nok 10 - validation failure changes no durable state\n  ---\n  duration_ms: 1.060981\n  type: 'test'\n  ...\n1..10\n# tests 10\n# suites 0\n# pass 3\n# fail 7\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 302.927963\n"
+        }
+      },
+      "serviceAndStore": {
+        "hiddenChecks": [
+          {
+            "id": "retry_identity",
+            "passed": true
+          },
+          {
+            "id": "merchant_isolation",
+            "passed": true
+          },
+          {
+            "id": "handler_status",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n201 !== 200\n"
+          },
+          {
+            "id": "insufficient_balance",
+            "passed": false,
+            "detail": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n503 !== 409\n"
+          },
+          {
+            "id": "validation",
+            "passed": true
+          },
+          {
+            "id": "rollback_reserve",
+            "passed": true
+          },
+          {
+            "id": "rollback_refund",
+            "passed": true
+          },
+          {
+            "id": "rollback_entry",
+            "passed": true
+          },
+          {
+            "id": "rollback_finalize",
+            "passed": true
+          },
+          {
+            "id": "rollback_commit",
+            "passed": true
+          },
+          {
+            "id": "atomic_recovery",
+            "passed": true
+          }
+        ],
+        "visibleTests": {
+          "passed": false,
+          "output": "\n> refund-service@1.0.0 test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: creation accounts for one posted refund, entry and balance deduction\nok 1 - creation accounts for one posted refund, entry and balance deduction\n  ---\n  duration_ms: 4.479693\n  type: 'test'\n  ...\n# Subtest: replay preserves original payload and performs no writes or balance checks\nok 2 - replay preserves original payload and performs no writes or balance checks\n  ---\n  duration_ms: 3.038273\n  type: 'test'\n  ...\n# Subtest: same request id is isolated across merchants\nok 3 - same request id is isolated across merchants\n  ---\n  duration_ms: 0.468869\n  type: 'test'\n  ...\n# Subtest: API reports creation, replay, insufficient funds and invalid input separately\nnot ok 4 - API reports creation, replay, insufficient funds and invalid input separately\n  ---\n  duration_ms: 2.589321\n  type: 'test'\n  location: '/workspace/repo/tests/refund.test.mjs:24:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    201 !== 200\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 200\n  actual: 201\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///workspace/repo/tests/refund.test.mjs:25:94)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: rollback and retry after reserve\nok 5 - rollback and retry after reserve\n  ---\n  duration_ms: 0.898721\n  type: 'test'\n  ...\n# Subtest: rollback and retry after refund\nok 6 - rollback and retry after refund\n  ---\n  duration_ms: 0.616131\n  type: 'test'\n  ...\n# Subtest: rollback and retry after entry\nok 7 - rollback and retry after entry\n  ---\n  duration_ms: 0.727685\n  type: 'test'\n  ...\n# Subtest: rollback and retry after finalize\nok 8 - rollback and retry after finalize\n  ---\n  duration_ms: 0.675001\n  type: 'test'\n  ...\n# Subtest: rollback and retry after commit\nok 9 - rollback and retry after commit\n  ---\n  duration_ms: 1.141833\n  type: 'test'\n  ...\n# Subtest: validation failure changes no durable state\nok 10 - validation failure changes no durable state\n  ---\n  duration_ms: 1.538699\n  type: 'test'\n  ...\n1..10\n# tests 10\n# suites 0\n# pass 9\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 281.543956\n"
+        }
+      },
+      "complete": {
+        "hiddenChecks": [
+          {
+            "id": "retry_identity",
+            "passed": true
+          },
+          {
+            "id": "merchant_isolation",
+            "passed": true
+          },
+          {
+            "id": "handler_status",
+            "passed": true
+          },
+          {
+            "id": "insufficient_balance",
+            "passed": true
+          },
+          {
+            "id": "validation",
+            "passed": true
+          },
+          {
+            "id": "rollback_reserve",
+            "passed": true
+          },
+          {
+            "id": "rollback_refund",
+            "passed": true
+          },
+          {
+            "id": "rollback_entry",
+            "passed": true
+          },
+          {
+            "id": "rollback_finalize",
+            "passed": true
+          },
+          {
+            "id": "rollback_commit",
+            "passed": true
+          },
+          {
+            "id": "atomic_recovery",
+            "passed": true
+          }
+        ],
+        "visibleTests": {
+          "passed": true,
+          "output": "\n> refund-service@1.0.0 test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: creation accounts for one posted refund, entry and balance deduction\nok 1 - creation accounts for one posted refund, entry and balance deduction\n  ---\n  duration_ms: 4.933876\n  type: 'test'\n  ...\n# Subtest: replay preserves original payload and performs no writes or balance checks\nok 2 - replay preserves original payload and performs no writes or balance checks\n  ---\n  duration_ms: 3.087202\n  type: 'test'\n  ...\n# Subtest: same request id is isolated across merchants\nok 3 - same request id is isolated across merchants\n  ---\n  duration_ms: 0.445367\n  type: 'test'\n  ...\n# Subtest: API reports creation, replay, insufficient funds and invalid input separately\nok 4 - API reports creation, replay, insufficient funds and invalid input separately\n  ---\n  duration_ms: 0.559854\n  type: 'test'\n  ...\n# Subtest: rollback and retry after reserve\nok 5 - rollback and retry after reserve\n  ---\n  duration_ms: 0.878032\n  type: 'test'\n  ...\n# Subtest: rollback and retry after refund\nok 6 - rollback and retry after refund\n  ---\n  duration_ms: 0.612636\n  type: 'test'\n  ...\n# Subtest: rollback and retry after entry\nok 7 - rollback and retry after entry\n  ---\n  duration_ms: 0.561597\n  type: 'test'\n  ...\n# Subtest: rollback and retry after finalize\nok 8 - rollback and retry after finalize\n  ---\n  duration_ms: 0.660025\n  type: 'test'\n  ...\n# Subtest: rollback and retry after commit\nok 9 - rollback and retry after commit\n  ---\n  duration_ms: 0.902602\n  type: 'test'\n  ...\n# Subtest: validation failure changes no durable state\nok 10 - validation failure changes no durable state\n  ---\n  duration_ms: 1.001207\n  type: 'test'\n  ...\n1..10\n# tests 10\n# suites 0\n# pass 10\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 280.583409\n"
+        }
+      }
+    }
+  ]
+}

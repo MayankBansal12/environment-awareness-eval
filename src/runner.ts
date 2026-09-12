@@ -11,6 +11,7 @@ import {
 } from './grading/artifact-evidence.js';
 import { gradeRun, type GradeResult } from './grading/grader.js';
 import { runHiddenRefundChecks } from './grading/hidden-checks.js';
+import { runClaudeAgentWithSlack } from './claude/adapter.js';
 import { runPiAgentWithSlack } from './pi/adapter.js';
 import { buildInitialUserPrompt, buildSystemPrompt } from './prompt/system-prompt.js';
 import { getScenario, isScenarioSupported } from './scenarios/catalog.js';
@@ -77,7 +78,14 @@ export interface EvalSummary {
   runId: string;
   scenarioId: string;
   ticketDelivery: RunConfig['ticketDelivery'];
-  runtime: { provider: string; model: string; thinkingLevel: string; piVersion: string };
+  runtime: {
+    provider: string;
+    model: string;
+    thinkingLevel: string;
+    piVersion: string;
+    runtimeVersion?: string;
+    runtimeKind?: string;
+  };
   fixtureCommit: string;
   termination: { reason: string; detail: string };
   grade: GradeResult;
@@ -138,7 +146,7 @@ ${JSON.stringify(summary.grade.metrics, null, 2)}
 - System prompt: \`${summary.capture.systemPromptSource ?? 'not captured'}\`
 - ${line(summary.capture.note)}
 
-This is a model + Pi + prompt + tools trajectory, not a claim about internal cognition.
+This is a model + runtime + prompt + tools trajectory, not a claim about internal cognition.
 `;
 }
 function assertControlled(config: RunConfig): void {
@@ -351,6 +359,9 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
   const engine = new ExperimentEngine({
     scenario,
     slack,
+    ...(config.provider === 'claude-code'
+      ? { steeringMechanism: 'claude_user_stream' as const }
+      : {}),
     sink: (event) => trace.append(event),
     ...(capture === undefined
       ? {}
@@ -376,7 +387,7 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     provider: config.provider,
     model: config.model,
     thinkingLevel: config.thinkingLevel,
-    piPackageVersion: PI_VERSION,
+    piPackageVersion: config.provider === 'claude-code' ? 'not-applicable' : PI_VERSION,
     harnessVersion: HARNESS_VERSION,
   });
   engine.emit({
@@ -417,18 +428,25 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     systemPrompt: harnessSystemPrompt,
     initialUserPrompt,
     tools: activeTools,
-    resourceIsolation: {
-      extensionsDisabledExceptOwned: true,
-      skillsDisabled: true,
-      promptTemplatesDisabled: true,
-      contextFilesDisabled: true,
-      themesDisabled: true,
-      inMemorySession: true,
-      inMemorySettings: true,
-      compactionDisabled: true,
-    },
+    resourceIsolation:
+      config.provider === 'claude-code'
+        ? { nativeToolsDisabled: true, effectiveContextCaptured: false }
+        : {
+            extensionsDisabledExceptOwned: true,
+            skillsDisabled: true,
+            promptTemplatesDisabled: true,
+            contextFilesDisabled: true,
+            themesDisabled: true,
+            inMemorySession: true,
+            inMemorySettings: true,
+            compactionDisabled: true,
+          },
   });
-  const runtime = await runPiAgentWithSlack({
+  const runtime = await (
+    config.provider === 'claude-code' ? runClaudeAgentWithSlack : runPiAgentWithSlack
+  )({
+    nativeLogPath: path.join(runDir, 'claude-native.jsonl'),
+    maxActions: config.maxActions,
     workspacePath: prepared.path,
     provider: config.provider,
     model: config.model,
@@ -477,9 +495,10 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
             maxTurns: config.maxTurns,
             maxActions: config.maxActions,
             timeoutMs: config.timeoutMs,
-            compactionDisabled: true,
-            retryMaxRetries: 1,
-            steeringMode: 'one-at-a-time',
+            compactionDisabled: config.provider !== 'claude-code',
+            retryMaxRetries: config.provider === 'claude-code' ? null : 1,
+            steeringMode:
+              config.provider === 'claude-code' ? 'native-user-stream' : 'one-at-a-time',
             followUpMode: 'one-at-a-time',
             dependencyMode: config.dependencyMode,
             fixtureCommit: config.fixtureCommit,
@@ -615,6 +634,11 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
     ).size,
     systemPromptSource: captureSystemPromptSource,
   });
+  if (config.provider === 'claude-code') {
+    captureAudit.complete = false;
+    captureAudit.note =
+      'Partial harness observation reconstruction; Claude native system prompt, full context and internal retries are not exposed. See claude-native.jsonl. Steering is native user stream input, not Pi steering.';
+  }
   try {
     capture?.append({
       type: 'capture_audit',
@@ -655,6 +679,8 @@ export async function runEvaluation(config: RunConfig): Promise<EvalSummary> {
       model: config.model,
       thinkingLevel: config.thinkingLevel,
       piVersion: runtime.piVersion,
+      ...(runtime.runtimeVersion ? { runtimeVersion: runtime.runtimeVersion } : {}),
+      ...(runtime.runtimeKind ? { runtimeKind: runtime.runtimeKind } : {}),
     },
     fixtureCommit: config.fixtureCommit,
     termination: { reason: runtime.termination, detail: runtime.detail },

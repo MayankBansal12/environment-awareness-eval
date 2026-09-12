@@ -1,5 +1,11 @@
 # Limitations and claim boundaries
 
+This page describes the historical v0 protocol. The isolated Linear + Slack v2 track has
+separate [execution and measurement boundaries](environment-v2.md). The historical Claude
+bridge now also exists; the old single-adapter and single-sample notes below describe the
+original milestone, not current repository coverage. Archived Pi inputs were found to contain
+condition labels in their workspace paths; their possible influence was not measured.
+
 ## What is being measured
 
 This harness measures a **complete system**: `model + Pi harness + prompt + tools + context
