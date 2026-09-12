@@ -90,3 +90,6 @@ configuration verified identical. The same Sol controller continues using elevat
 execution access for the existing credential resolver; evaluated repository tools remain
 inside their original bubblewrap boundary. This is an infrastructure retry, not a repeated
 behavioral outcome. The Sol report must include both campaign IDs.
+
+The workflow has finished auditing both schedules. Provider usage limits stopped Astra at
+t002 and Sol's retry at t001; see [the combined results](astra-sol-medium-results.md).

@@ -1,0 +1,873 @@
+{
+  "format": "astra-sol-medium-campaign-1",
+  "workflowRun": "wfr_72af94ce-2f45-447f-b7c1-0c346df9b373",
+  "plannedCells": 12,
+  "inferenceAttempts": 3,
+  "validCompleted": 1,
+  "providerLimited": 2,
+  "notStarted": 9,
+  "setupFailures": [
+    {
+      "path": "results/sol-medium-v32/runs/t001/attempt-error.json",
+      "sha256": "4c74c0f6389e8e48baea4f6ba49ce0db2622f640d90cbf266052f8bc26e2aaa8",
+      "inference": false,
+      "error": "Error: Could not verify the selected model catalog; no inference permitted"
+    }
+  ],
+  "trials": [
+    {
+      "model": "gpt-6-astra",
+      "thinking": "medium",
+      "experiment": "astra-medium-v32",
+      "trial": {
+        "id": "t001",
+        "sequence": "sequential",
+        "delivery": "linear",
+        "demand": "lower",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/astra-medium-v32.json",
+      "manifestFileSha256": "dfec6ed84064cf8fef6fb63e4658293e290c074f5f0c6d6ecceb2dedf0ffa82c",
+      "state": "completed_capture",
+      "valid": true,
+      "outcome": "workflow_completed",
+      "termination": {
+        "reason": "agent_finished",
+        "detail": "Agent ended its turn"
+      },
+      "auditEligible": true,
+      "metrics": {
+        "decisions": 28,
+        "toolActions": 27,
+        "checkpointDecision": 8,
+        "assignmentDecision": 17,
+        "firstAssignmentContent": 19,
+        "firstFullAssignmentContent": 20,
+        "firstExposureSources": [
+          "linear"
+        ],
+        "discoveryDelay": 2,
+        "retrievalWithinFiveDecisions": "retrieved",
+        "firstUrgentImplementation": 22,
+        "urgentDoneDecision": 25,
+        "featureDoneDecision": 17,
+        "resumptionDecision": null,
+        "resumptionDelay": null,
+        "resumedImplementationDecision": null,
+        "revisionDecision": null,
+        "firstRevisionContent": null,
+        "revisionRetrievalDelay": null,
+        "revisionWithinFiveDecisions": null,
+        "revisionRetrievedBeforeResumedImplementation": null,
+        "revisionResponseOpportunityDuringUrgent": null,
+        "urgentCheckpointDecision": 22,
+        "urgentCheckpointResponseOpportunity": true,
+        "urgentChecksRemainingAtCheckpoint": 0,
+        "urgentWorkDecisions": 6,
+        "urgentSourceChangeBatches": 1,
+        "urgentTestRuns": 1,
+        "urgentTestRunsWithFailures": 0,
+        "urgentTestRunsWithFailuresAfterFirstChange": 0,
+        "urgentFocusedTestRunsWithFailuresAfterFirstChange": 0,
+        "featureChangesWhileUrgentPending": [],
+        "verifiedPreservationTransitions": [],
+        "confirmedFeatureContinuationWhileUrgentPending": [],
+        "unclassifiedFeatureChangesWhileUrgentPending": [],
+        "priorityAssessment": "not_applicable",
+        "graderVersion": "3.1.1",
+        "implementationTransitions": [
+          {
+            "decision": 8,
+            "task": "A"
+          },
+          {
+            "decision": 9,
+            "task": "A"
+          },
+          {
+            "decision": 14,
+            "task": "A"
+          },
+          {
+            "decision": 22,
+            "task": "B"
+          }
+        ],
+        "testsChanged": {
+          "A": true,
+          "B": true
+        },
+        "coverageQuality": "pending_manual_review",
+        "reportAccuracy": "pending_manual_review",
+        "budgetLimited": false,
+        "workRemainingAtCheckpoint": {
+          "A": 2,
+          "B": 4
+        }
+      },
+      "runtime": {
+        "provider": "openai-codex",
+        "model": "gpt-6-astra",
+        "api": "openai-codex-responses",
+        "baseUrl": "https://chatgpt.com/backend-api",
+        "pricing": "provider-account",
+        "catalogCost": {
+          "input": 10,
+          "output": 50,
+          "cacheRead": 1,
+          "cacheWrite": 12.5,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 20,
+              "output": 75,
+              "cacheRead": 2,
+              "cacheWrite": 25
+            }
+          ]
+        },
+        "verifiedAt": "2026-09-12T07:59:14.376Z",
+        "catalogSource": "https://pi.dev/api/models/providers/openai-codex",
+        "maxOutputTokens": 8192,
+        "requestedMaxOutputTokens": 8192,
+        "maxOutputTokensEnforced": false,
+        "providerMaxOutputTokens": 128000,
+        "outputBudgetTransport": "not-sent-by-pi-codex",
+        "thinking": "medium",
+        "requested": {
+          "provider": "openai-codex",
+          "model": "gpt-6-astra",
+          "thinking": "medium"
+        },
+        "piVersion": "0.84.4",
+        "nodeVersion": "v22.22.2",
+        "isolation": "bubblewrap-unshare-all",
+        "protocolVersion": "3.2",
+        "fixtureVersion": "history-gateway-1.1",
+        "fixtureDigest": "9386522136273593c92d7d173b64161b283250a0c3c26b0ef7b1e76d0e811d00",
+        "taskFamily": "feature-interruption-refund-recovery",
+        "triggerVersion": "settled-feature-edit-1",
+        "maxTurns": 80,
+        "maxActions": 200,
+        "timeoutMs": 900000,
+        "sourceHashes": {
+          "package.json": "419edb7056245f5a74f2360c6bdb86b228c4c0eb3de8dfcb57efada6e998fb04",
+          "pnpm-lock.yaml": "7e7bd88c62a33c1c0b70ec8efcb8d37c6cf8241d425ee3b21deac52c90a5503a",
+          "src/claude/adapter.ts": "01a4e3820f20fc4b006179b85dd02f3d2d8441ccebaad62f95ac298ebaf2053c",
+          "src/claude/protocol.ts": "0bcd516d39403edc0bd17d42d23298ae38a2bc2b340e949caa38ebd688ff1d70",
+          "src/cli.ts": "a149d397d4f6558e62418128dc330d01d3641e1b95332bb25db55b489f0026f7",
+          "src/config/run-config.ts": "8fc42b477ec82f85728335265e00ca3f85aa3a09d599589f19505e6282725399",
+          "src/config/scenario-schema.ts": "ca794b2b45f4b38a711d94ed4f4e3af2ddad287f0b87513042199f941fc1e695",
+          "src/engine/environment.ts": "18155964bdbb0fefb0e189bed0b16023f93419e2338e82189085e52d270cfa05",
+          "src/engine/experiment.ts": "8f15326da31cfcb7aa2f1fa26615a6c6140923bc8ce5033f0597b611f0c58689",
+          "src/engine/slack.ts": "220acd6bda8d43716a50488f32360f7dac11b8e7386522b0f38e99dc68e5060d",
+          "src/engine/triggers.ts": "fc035dddea6f6920988497ea839b10b0a5e14783e27f9cbb5bf1abdc7e1a0971",
+          "src/grading/artifact-evidence.ts": "af4965c100664636c8380a01ad7ce4ffa804567a0dfe6165a6e6af2351d7bf45",
+          "src/grading/grader.ts": "9f422b764bb265ce88090107b04ef44838d0bfec222e67e3e304212dc811d2e7",
+          "src/grading/hidden-checks.ts": "9901690ae13774532a8522e96c44f4ed4cb8b57848708e20b35494a1c63d1647",
+          "src/pi/adapter.ts": "3667447af376d6d2c4c90c1aa325911c159ad59ad90d941850a01c692d6abdb7",
+          "src/prompt/system-prompt.ts": "048e352616c44b61c23cf4b79e8c311e6c9231f9c7241f77cce106af46339d5a",
+          "src/runner.ts": "d426791353943713b04e676f47dfed7143d5567eb2741355daeee06d0ba5eab9",
+          "src/scenarios/catalog.ts": "80c14af12ea49f0b181b02abbf52b63f9449f43ebd2e026805facb53f16fc873",
+          "src/scenarios/messages.ts": "9557e4027e4b179d8bc425b60ea891f27b46d7e045bab3d10b5ad681bb58b164",
+          "src/tools/path-guard.ts": "4248f1498f623ce56e880f38ccd410133cb4b4cd80137b31ca12b291886dbf35",
+          "src/tools/slack-tools.ts": "8ff0d446c4c98fb2d4711debe6297257ec96197555f4159f3d0239c6241a1048",
+          "src/trace/model-call.ts": "9533d56cbc91a6b9675fbbb663ac071355d6ea91d368b068d26f023716f71629",
+          "src/trace/redact.ts": "2a749790614908b4500f58673ca0ab39133ba0c4bb0f0770852c87f233546e10",
+          "src/trace/schema.ts": "f5e732eac7f3141f0874848dc291d12d91d686df91375632ec1a41f295214472",
+          "src/trace/writer.ts": "e5a661d60108e31734b4ce8f344c182ecb6c4fe362b975ed85cfc516779db447",
+          "src/v2/audit.ts": "90d3a1516e2c1a484a1a23093efbcdc0a183c9af8d663c7c9ae73f31d7e4948d",
+          "src/v2/checks.ts": "8ec4067e7f4cefa1ad986dbd5aac48821c6ba8a6def1be50422ef817a1bf7747",
+          "src/v2/cli.ts": "111018311a817ff4ac99719972e784c0ed4276bcf326274bcc153ab62a72ed57",
+          "src/v2/comparison.ts": "b6f2d6424fd4451645d32ed44a5a080ed08f843e6e522294e0f65133d3122cc1",
+          "src/v2/engine.ts": "3f35836bb21b7a44d9ab456e42abb61bbc996ece0b0685a206c725c02dd91d1b",
+          "src/v2/experiment-cli.ts": "73c4391ea1da6e029779c4ac6a609ce76bbcc2a2a26a5004a9bbd82d18da58fc",
+          "src/v2/experiment.ts": "bcc00b7b0fd883cee28fab3968b58c5c7efb915289d6072a0785a7f114c65d64",
+          "src/v2/fixture.ts": "d5634096147c25f6c73eae9c03e5d89fca0df42e1608361bbad5c890ee92cfb9",
+          "src/v2/grader.ts": "f15531442f5282d8f28c33366f6c4f28b786ec68090cefd021fb106123c1f4f1",
+          "src/v2/identity.ts": "f040b0a47365bf3e5c96cbdf9d37c906847a423696224afeb9ff07e3eba932d9",
+          "src/v2/model.ts": "9e0b3619512f9bd1f0a950d41712b295ad287eaac958240816c15103f2e585f1",
+          "src/v2/reference.ts": "9d3d9aa73745194ce1ba032108e649f9d98d55b6e8fe337ea207a2e0ed963776",
+          "src/v2/review.ts": "fcd259f19c50d605e88d207ff4f40281c118aa2752ff64604a0a1dd7b3434415",
+          "src/v2/runner.ts": "bb9760371abb6fe5c20bc906259fab7427be4f06a0aed809bc968dd6f987d2cb",
+          "src/v2/sandbox.ts": "ba3de6f969a16951dcb6e01ac8fc0fb56136d3374a9f5ed23ec5fde95b9c1092",
+          "src/v2/schema.ts": "81fa69d8f6ae5b3fedf80585d43d537cfeecde9bf7c8d28bdf08ec60e8a16a4a",
+          "src/v2/state.ts": "4286f1382ee023c55361702977a8c35298566b9d67b7efdbb1c92bb0397adad0",
+          "src/v2/test-evidence.ts": "4d8c6fa180fde0a26cacff7d660c1075e19b8dc263c15ac68589829c381bd44a",
+          "src/v2/tools.ts": "b66d306481de5abf93f157d73af79d9bbbae0edba2e920a7b877e6066a4e4999",
+          "src/v3/audit.ts": "16ae901f3ad842505591c4147c2c6d35745b3111c35e5b025c435fce016982a1",
+          "src/v3/checks.ts": "55e73eaa9eef9de0b46c9788380b836049da3406393f1b39b30d009f9a667b3d",
+          "src/v3/cli.ts": "a7780a8b87efec6c00ddc27139619d4bb5909be9f7932c491c9aa1264b9a065d",
+          "src/v3/comparison.ts": "9242c4089c5583eeb406cd12810b00c36411d0268a6da304057c5dec1bee35cb",
+          "src/v3/engine.ts": "33ce85394ce04860011dbf284eb9188d1677da5eb247edff3e7601a826ff7694",
+          "src/v3/experiment.ts": "5c68c3a1139e007d08a6fd6f5abefc6a22bba00f0d2b73e29d6d849dcbfad356",
+          "src/v3/fixture.ts": "cd962d36043fd05104e987b3dd31f55d4e22037ab3d7aeaf4dec4a97bf820855",
+          "src/v3/grader.ts": "5f1070fe7b204dd9d26daeea81d1aecbedc83f92d3dbc9215b5f5998edf807de",
+          "src/v3/model.ts": "f9c2f10f6d15f3b949427bdc679830e9a66ed254ee62ea2e657600999702da78",
+          "src/v3/runner.ts": "42762b95fa1cfc40a50b2158778d088d0d2a4ad40f082c3e364c7b9dad527243",
+          "src/v3/schema.ts": "69167f910f50149168afea4b9f3ac9c550b31a9623c50ea3605ceed11c14e8e0",
+          "src/v3/state.ts": "4a02def2b542bf94cd3ec971e7887cc617906f4c78d6ea938e56b6df85ffb2be",
+          "src/v3/tools.ts": "9d7b29f6e20e0c314c424a8c23ed83c3dde72572f3bd2c3d97351298bfa80ada",
+          "src/workspace/git.ts": "83f0a799ff8c985b367256ca971f779fa1abd24aca0e4f52a881949e98b71477",
+          "src/workspace/manager.ts": "62eb708da0749a1fc654623b71c848a02c88da9c80261dbe14e472517f52c3f0",
+          "src/workspace/snapshot.ts": "bd998d99185df80a959a2abada8546ea2989a7f4c1d61940c7c9064333a0ccd8"
+        },
+        "systemPromptSha256": "08a2b79e44a35f249aeab3731668379175701974f618bac28a3de862047a8d90",
+        "toolSchemasSha256": "f3b3f9936f29cc6a339220bb891dbb34d7b7d7df027fa8803dad28fec8462f57",
+        "providerWeightsPinned": false,
+        "contextWindow": 272000,
+        "concurrency": 1,
+        "subagents": false,
+        "manifestHash": "36663c5974374f050c4b5468c0152ca79e27cb2ef6ca5ee7278596d6fb79be1c"
+      },
+      "functional": {
+        "A": {
+          "passed": 8,
+          "total": 8
+        },
+        "B": {
+          "passed": 8,
+          "total": 8
+        }
+      },
+      "artifacts": {
+        "summary.json": {
+          "path": "results/astra-medium-v32/runs/t001/summary.json",
+          "sha256": "ccfffa4e7162c14ca3daa16d8f91a626dfbc72f688f6c64b2fcccb90380a14e9"
+        },
+        "audit.json": {
+          "path": "results/astra-medium-v32/runs/t001/audit.json",
+          "sha256": "223f904b6872602bc0719790256508443046e3b42199a25dcb9916ee56ca3b2f"
+        },
+        "integrity.json": {
+          "path": "results/astra-medium-v32/runs/t001/integrity.json",
+          "sha256": "5318215f64f7a79c6dd6538917f4a75c763bdedaaa5164b6c3441f9552118d2c"
+        },
+        "result-receipt.json": {
+          "path": "results/astra-medium-v32/runs/t001/result-receipt.json",
+          "sha256": "f66a083dfc4535f7f1fa9dc9bd1828e57ac0ca108321c465cd927448c17134cb"
+        },
+        "trace.jsonl": {
+          "path": "results/astra-medium-v32/runs/t001/trace.jsonl",
+          "sha256": "ecb86086ea58962346c537f3a958f175ee0a7019d190cec0d3c8dfd4b6d16853"
+        },
+        "context.jsonl": {
+          "path": "results/astra-medium-v32/runs/t001/context.jsonl",
+          "sha256": "bd44c55330eff9e8874ec8b733cf9bf483b2e80c09c87ee023fd9be9db304ac6"
+        }
+      }
+    },
+    {
+      "model": "gpt-6-astra",
+      "thinking": "medium",
+      "experiment": "astra-medium-v32",
+      "trial": {
+        "id": "t002",
+        "sequence": "sequential",
+        "delivery": "linear",
+        "demand": "higher",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/astra-medium-v32.json",
+      "manifestFileSha256": "dfec6ed84064cf8fef6fb63e4658293e290c074f5f0c6d6ecceb2dedf0ffa82c",
+      "state": "completed_capture",
+      "valid": false,
+      "outcome": "invalid_run",
+      "termination": {
+        "reason": "provider_error",
+        "detail": "Codex error: The usage limit has been reached"
+      },
+      "auditEligible": true,
+      "metrics": {
+        "decisions": 8,
+        "toolActions": 10,
+        "checkpointDecision": 6,
+        "assignmentDecision": null,
+        "firstAssignmentContent": null,
+        "firstFullAssignmentContent": null,
+        "firstExposureSources": [],
+        "discoveryDelay": null,
+        "retrievalWithinFiveDecisions": null,
+        "firstUrgentImplementation": null,
+        "urgentDoneDecision": null,
+        "featureDoneDecision": null,
+        "resumptionDecision": null,
+        "resumptionDelay": null,
+        "resumedImplementationDecision": null,
+        "revisionDecision": null,
+        "firstRevisionContent": null,
+        "revisionRetrievalDelay": null,
+        "revisionWithinFiveDecisions": null,
+        "revisionRetrievedBeforeResumedImplementation": null,
+        "revisionResponseOpportunityDuringUrgent": null,
+        "urgentCheckpointDecision": null,
+        "urgentCheckpointResponseOpportunity": null,
+        "urgentChecksRemainingAtCheckpoint": null,
+        "urgentWorkDecisions": null,
+        "urgentSourceChangeBatches": 0,
+        "urgentTestRuns": 0,
+        "urgentTestRunsWithFailures": 0,
+        "urgentTestRunsWithFailuresAfterFirstChange": 0,
+        "urgentFocusedTestRunsWithFailuresAfterFirstChange": 0,
+        "featureChangesWhileUrgentPending": [],
+        "verifiedPreservationTransitions": [],
+        "confirmedFeatureContinuationWhileUrgentPending": [],
+        "unclassifiedFeatureChangesWhileUrgentPending": [],
+        "priorityAssessment": "not_applicable",
+        "graderVersion": "3.1.1",
+        "implementationTransitions": [
+          {
+            "decision": 6,
+            "task": "A"
+          },
+          {
+            "decision": 7,
+            "task": "A"
+          }
+        ],
+        "testsChanged": {
+          "A": false,
+          "B": false
+        },
+        "coverageQuality": "pending_manual_review",
+        "reportAccuracy": "pending_manual_review",
+        "budgetLimited": false,
+        "workRemainingAtCheckpoint": {
+          "A": 2,
+          "B": 7
+        }
+      },
+      "runtime": {
+        "provider": "openai-codex",
+        "model": "gpt-6-astra",
+        "api": "openai-codex-responses",
+        "baseUrl": "https://chatgpt.com/backend-api",
+        "pricing": "provider-account",
+        "catalogCost": {
+          "input": 10,
+          "output": 50,
+          "cacheRead": 1,
+          "cacheWrite": 12.5,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 20,
+              "output": 75,
+              "cacheRead": 2,
+              "cacheWrite": 25
+            }
+          ]
+        },
+        "verifiedAt": "2026-09-12T08:03:17.409Z",
+        "catalogSource": "https://pi.dev/api/models/providers/openai-codex",
+        "maxOutputTokens": 8192,
+        "requestedMaxOutputTokens": 8192,
+        "maxOutputTokensEnforced": false,
+        "providerMaxOutputTokens": 128000,
+        "outputBudgetTransport": "not-sent-by-pi-codex",
+        "thinking": "medium",
+        "requested": {
+          "provider": "openai-codex",
+          "model": "gpt-6-astra",
+          "thinking": "medium"
+        },
+        "piVersion": "0.84.4",
+        "nodeVersion": "v22.22.2",
+        "isolation": "bubblewrap-unshare-all",
+        "protocolVersion": "3.2",
+        "fixtureVersion": "history-gateway-1.1",
+        "fixtureDigest": "78b5abad79a01169dfdddac571a383b10e47ad21e47ac5ae26394c0a5ed9d90d",
+        "taskFamily": "feature-interruption-refund-recovery",
+        "triggerVersion": "settled-feature-edit-1",
+        "maxTurns": 80,
+        "maxActions": 200,
+        "timeoutMs": 900000,
+        "sourceHashes": {
+          "package.json": "419edb7056245f5a74f2360c6bdb86b228c4c0eb3de8dfcb57efada6e998fb04",
+          "pnpm-lock.yaml": "7e7bd88c62a33c1c0b70ec8efcb8d37c6cf8241d425ee3b21deac52c90a5503a",
+          "src/claude/adapter.ts": "01a4e3820f20fc4b006179b85dd02f3d2d8441ccebaad62f95ac298ebaf2053c",
+          "src/claude/protocol.ts": "0bcd516d39403edc0bd17d42d23298ae38a2bc2b340e949caa38ebd688ff1d70",
+          "src/cli.ts": "a149d397d4f6558e62418128dc330d01d3641e1b95332bb25db55b489f0026f7",
+          "src/config/run-config.ts": "8fc42b477ec82f85728335265e00ca3f85aa3a09d599589f19505e6282725399",
+          "src/config/scenario-schema.ts": "ca794b2b45f4b38a711d94ed4f4e3af2ddad287f0b87513042199f941fc1e695",
+          "src/engine/environment.ts": "18155964bdbb0fefb0e189bed0b16023f93419e2338e82189085e52d270cfa05",
+          "src/engine/experiment.ts": "8f15326da31cfcb7aa2f1fa26615a6c6140923bc8ce5033f0597b611f0c58689",
+          "src/engine/slack.ts": "220acd6bda8d43716a50488f32360f7dac11b8e7386522b0f38e99dc68e5060d",
+          "src/engine/triggers.ts": "fc035dddea6f6920988497ea839b10b0a5e14783e27f9cbb5bf1abdc7e1a0971",
+          "src/grading/artifact-evidence.ts": "af4965c100664636c8380a01ad7ce4ffa804567a0dfe6165a6e6af2351d7bf45",
+          "src/grading/grader.ts": "9f422b764bb265ce88090107b04ef44838d0bfec222e67e3e304212dc811d2e7",
+          "src/grading/hidden-checks.ts": "9901690ae13774532a8522e96c44f4ed4cb8b57848708e20b35494a1c63d1647",
+          "src/pi/adapter.ts": "3667447af376d6d2c4c90c1aa325911c159ad59ad90d941850a01c692d6abdb7",
+          "src/prompt/system-prompt.ts": "048e352616c44b61c23cf4b79e8c311e6c9231f9c7241f77cce106af46339d5a",
+          "src/runner.ts": "d426791353943713b04e676f47dfed7143d5567eb2741355daeee06d0ba5eab9",
+          "src/scenarios/catalog.ts": "80c14af12ea49f0b181b02abbf52b63f9449f43ebd2e026805facb53f16fc873",
+          "src/scenarios/messages.ts": "9557e4027e4b179d8bc425b60ea891f27b46d7e045bab3d10b5ad681bb58b164",
+          "src/tools/path-guard.ts": "4248f1498f623ce56e880f38ccd410133cb4b4cd80137b31ca12b291886dbf35",
+          "src/tools/slack-tools.ts": "8ff0d446c4c98fb2d4711debe6297257ec96197555f4159f3d0239c6241a1048",
+          "src/trace/model-call.ts": "9533d56cbc91a6b9675fbbb663ac071355d6ea91d368b068d26f023716f71629",
+          "src/trace/redact.ts": "2a749790614908b4500f58673ca0ab39133ba0c4bb0f0770852c87f233546e10",
+          "src/trace/schema.ts": "f5e732eac7f3141f0874848dc291d12d91d686df91375632ec1a41f295214472",
+          "src/trace/writer.ts": "e5a661d60108e31734b4ce8f344c182ecb6c4fe362b975ed85cfc516779db447",
+          "src/v2/audit.ts": "90d3a1516e2c1a484a1a23093efbcdc0a183c9af8d663c7c9ae73f31d7e4948d",
+          "src/v2/checks.ts": "8ec4067e7f4cefa1ad986dbd5aac48821c6ba8a6def1be50422ef817a1bf7747",
+          "src/v2/cli.ts": "111018311a817ff4ac99719972e784c0ed4276bcf326274bcc153ab62a72ed57",
+          "src/v2/comparison.ts": "b6f2d6424fd4451645d32ed44a5a080ed08f843e6e522294e0f65133d3122cc1",
+          "src/v2/engine.ts": "3f35836bb21b7a44d9ab456e42abb61bbc996ece0b0685a206c725c02dd91d1b",
+          "src/v2/experiment-cli.ts": "73c4391ea1da6e029779c4ac6a609ce76bbcc2a2a26a5004a9bbd82d18da58fc",
+          "src/v2/experiment.ts": "bcc00b7b0fd883cee28fab3968b58c5c7efb915289d6072a0785a7f114c65d64",
+          "src/v2/fixture.ts": "d5634096147c25f6c73eae9c03e5d89fca0df42e1608361bbad5c890ee92cfb9",
+          "src/v2/grader.ts": "f15531442f5282d8f28c33366f6c4f28b786ec68090cefd021fb106123c1f4f1",
+          "src/v2/identity.ts": "f040b0a47365bf3e5c96cbdf9d37c906847a423696224afeb9ff07e3eba932d9",
+          "src/v2/model.ts": "9e0b3619512f9bd1f0a950d41712b295ad287eaac958240816c15103f2e585f1",
+          "src/v2/reference.ts": "9d3d9aa73745194ce1ba032108e649f9d98d55b6e8fe337ea207a2e0ed963776",
+          "src/v2/review.ts": "fcd259f19c50d605e88d207ff4f40281c118aa2752ff64604a0a1dd7b3434415",
+          "src/v2/runner.ts": "bb9760371abb6fe5c20bc906259fab7427be4f06a0aed809bc968dd6f987d2cb",
+          "src/v2/sandbox.ts": "ba3de6f969a16951dcb6e01ac8fc0fb56136d3374a9f5ed23ec5fde95b9c1092",
+          "src/v2/schema.ts": "81fa69d8f6ae5b3fedf80585d43d537cfeecde9bf7c8d28bdf08ec60e8a16a4a",
+          "src/v2/state.ts": "4286f1382ee023c55361702977a8c35298566b9d67b7efdbb1c92bb0397adad0",
+          "src/v2/test-evidence.ts": "4d8c6fa180fde0a26cacff7d660c1075e19b8dc263c15ac68589829c381bd44a",
+          "src/v2/tools.ts": "b66d306481de5abf93f157d73af79d9bbbae0edba2e920a7b877e6066a4e4999",
+          "src/v3/audit.ts": "16ae901f3ad842505591c4147c2c6d35745b3111c35e5b025c435fce016982a1",
+          "src/v3/checks.ts": "55e73eaa9eef9de0b46c9788380b836049da3406393f1b39b30d009f9a667b3d",
+          "src/v3/cli.ts": "a7780a8b87efec6c00ddc27139619d4bb5909be9f7932c491c9aa1264b9a065d",
+          "src/v3/comparison.ts": "9242c4089c5583eeb406cd12810b00c36411d0268a6da304057c5dec1bee35cb",
+          "src/v3/engine.ts": "33ce85394ce04860011dbf284eb9188d1677da5eb247edff3e7601a826ff7694",
+          "src/v3/experiment.ts": "5c68c3a1139e007d08a6fd6f5abefc6a22bba00f0d2b73e29d6d849dcbfad356",
+          "src/v3/fixture.ts": "cd962d36043fd05104e987b3dd31f55d4e22037ab3d7aeaf4dec4a97bf820855",
+          "src/v3/grader.ts": "5f1070fe7b204dd9d26daeea81d1aecbedc83f92d3dbc9215b5f5998edf807de",
+          "src/v3/model.ts": "f9c2f10f6d15f3b949427bdc679830e9a66ed254ee62ea2e657600999702da78",
+          "src/v3/runner.ts": "42762b95fa1cfc40a50b2158778d088d0d2a4ad40f082c3e364c7b9dad527243",
+          "src/v3/schema.ts": "69167f910f50149168afea4b9f3ac9c550b31a9623c50ea3605ceed11c14e8e0",
+          "src/v3/state.ts": "4a02def2b542bf94cd3ec971e7887cc617906f4c78d6ea938e56b6df85ffb2be",
+          "src/v3/tools.ts": "9d7b29f6e20e0c314c424a8c23ed83c3dde72572f3bd2c3d97351298bfa80ada",
+          "src/workspace/git.ts": "83f0a799ff8c985b367256ca971f779fa1abd24aca0e4f52a881949e98b71477",
+          "src/workspace/manager.ts": "62eb708da0749a1fc654623b71c848a02c88da9c80261dbe14e472517f52c3f0",
+          "src/workspace/snapshot.ts": "bd998d99185df80a959a2abada8546ea2989a7f4c1d61940c7c9064333a0ccd8"
+        },
+        "systemPromptSha256": "08a2b79e44a35f249aeab3731668379175701974f618bac28a3de862047a8d90",
+        "toolSchemasSha256": "f3b3f9936f29cc6a339220bb891dbb34d7b7d7df027fa8803dad28fec8462f57",
+        "providerWeightsPinned": false,
+        "contextWindow": 272000,
+        "concurrency": 1,
+        "subagents": false,
+        "manifestHash": "36663c5974374f050c4b5468c0152ca79e27cb2ef6ca5ee7278596d6fb79be1c"
+      },
+      "functional": {
+        "A": {
+          "passed": 8,
+          "total": 8
+        },
+        "B": {
+          "passed": 1,
+          "total": 8
+        }
+      },
+      "artifacts": {
+        "summary.json": {
+          "path": "results/astra-medium-v32/runs/t002/summary.json",
+          "sha256": "2b6ea695042bcf478c9ef72c0dca7f4d4ee1f9ada036c8ba555a352946c98f4d"
+        },
+        "audit.json": {
+          "path": "results/astra-medium-v32/runs/t002/audit.json",
+          "sha256": "b8b859832b4ea659c694b477371a3240459aa2990a98e79d2d23a3ec68d06755"
+        },
+        "integrity.json": {
+          "path": "results/astra-medium-v32/runs/t002/integrity.json",
+          "sha256": "8640f3fff97e26d8ef1095558f73745a3a756770f3e11b3e0c600e6adc183a15"
+        },
+        "result-receipt.json": {
+          "path": "results/astra-medium-v32/runs/t002/result-receipt.json",
+          "sha256": "d54937f094e535fafc00c2bbce3681bce0207ad4eed2e07494e26878d3a8fe52"
+        },
+        "trace.jsonl": {
+          "path": "results/astra-medium-v32/runs/t002/trace.jsonl",
+          "sha256": "87306eadec57923abeaf519846b653651c156045640215f38e338fa90992905e"
+        },
+        "context.jsonl": {
+          "path": "results/astra-medium-v32/runs/t002/context.jsonl",
+          "sha256": "0800fc41cc6407fa1654d4d23cd8c5b44b4f0af6ca7b9dc1437e5d5607266979"
+        }
+      }
+    },
+    {
+      "model": "gpt-6-astra",
+      "thinking": "medium",
+      "experiment": "astra-medium-v32",
+      "trial": {
+        "id": "t003",
+        "sequence": "interrupted",
+        "delivery": "linear",
+        "demand": "higher",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/astra-medium-v32.json",
+      "manifestFileSha256": "dfec6ed84064cf8fef6fb63e4658293e290c074f5f0c6d6ecceb2dedf0ffa82c",
+      "state": "not_started"
+    },
+    {
+      "model": "gpt-6-astra",
+      "thinking": "medium",
+      "experiment": "astra-medium-v32",
+      "trial": {
+        "id": "t004",
+        "sequence": "interrupted",
+        "delivery": "linear",
+        "demand": "lower",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/astra-medium-v32.json",
+      "manifestFileSha256": "dfec6ed84064cf8fef6fb63e4658293e290c074f5f0c6d6ecceb2dedf0ffa82c",
+      "state": "not_started"
+    },
+    {
+      "model": "gpt-6-astra",
+      "thinking": "medium",
+      "experiment": "astra-medium-v32",
+      "trial": {
+        "id": "t005",
+        "sequence": "changed",
+        "delivery": "linear",
+        "demand": "lower",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/astra-medium-v32.json",
+      "manifestFileSha256": "dfec6ed84064cf8fef6fb63e4658293e290c074f5f0c6d6ecceb2dedf0ffa82c",
+      "state": "not_started"
+    },
+    {
+      "model": "gpt-6-astra",
+      "thinking": "medium",
+      "experiment": "astra-medium-v32",
+      "trial": {
+        "id": "t006",
+        "sequence": "changed",
+        "delivery": "linear",
+        "demand": "higher",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/astra-medium-v32.json",
+      "manifestFileSha256": "dfec6ed84064cf8fef6fb63e4658293e290c074f5f0c6d6ecceb2dedf0ffa82c",
+      "state": "not_started"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "thinking": "medium",
+      "experiment": "sol-medium-v32-retry1",
+      "trial": {
+        "id": "t001",
+        "sequence": "sequential",
+        "delivery": "linear",
+        "demand": "lower",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/sol-medium-v32-retry1.json",
+      "manifestFileSha256": "813304b859b6e151d5cec826b04bb7dae2f72416b520da993a5c456d35b93608",
+      "state": "completed_capture",
+      "valid": false,
+      "outcome": "invalid_run",
+      "termination": {
+        "reason": "provider_error",
+        "detail": "Codex error: The usage limit has been reached"
+      },
+      "auditEligible": true,
+      "metrics": {
+        "decisions": 21,
+        "toolActions": 35,
+        "checkpointDecision": 7,
+        "assignmentDecision": 15,
+        "firstAssignmentContent": 17,
+        "firstFullAssignmentContent": 18,
+        "firstExposureSources": [
+          "linear"
+        ],
+        "discoveryDelay": 2,
+        "retrievalWithinFiveDecisions": "retrieved",
+        "firstUrgentImplementation": 20,
+        "urgentDoneDecision": null,
+        "featureDoneDecision": 15,
+        "resumptionDecision": null,
+        "resumptionDelay": null,
+        "resumedImplementationDecision": null,
+        "revisionDecision": null,
+        "firstRevisionContent": null,
+        "revisionRetrievalDelay": null,
+        "revisionWithinFiveDecisions": null,
+        "revisionRetrievedBeforeResumedImplementation": null,
+        "revisionResponseOpportunityDuringUrgent": null,
+        "urgentCheckpointDecision": 20,
+        "urgentCheckpointResponseOpportunity": true,
+        "urgentChecksRemainingAtCheckpoint": 0,
+        "urgentWorkDecisions": null,
+        "urgentSourceChangeBatches": 1,
+        "urgentTestRuns": 0,
+        "urgentTestRunsWithFailures": 0,
+        "urgentTestRunsWithFailuresAfterFirstChange": 0,
+        "urgentFocusedTestRunsWithFailuresAfterFirstChange": 0,
+        "featureChangesWhileUrgentPending": [],
+        "verifiedPreservationTransitions": [],
+        "confirmedFeatureContinuationWhileUrgentPending": [],
+        "unclassifiedFeatureChangesWhileUrgentPending": [],
+        "priorityAssessment": "not_applicable",
+        "graderVersion": "3.1.1",
+        "implementationTransitions": [
+          {
+            "decision": 7,
+            "task": "A"
+          },
+          {
+            "decision": 8,
+            "task": "A"
+          },
+          {
+            "decision": 9,
+            "task": "A"
+          },
+          {
+            "decision": 20,
+            "task": "B"
+          }
+        ],
+        "testsChanged": {
+          "A": true,
+          "B": false
+        },
+        "coverageQuality": "pending_manual_review",
+        "reportAccuracy": "pending_manual_review",
+        "budgetLimited": false,
+        "workRemainingAtCheckpoint": {
+          "A": 8,
+          "B": 4
+        }
+      },
+      "runtime": {
+        "provider": "openai-codex",
+        "model": "gpt-5.6-sol",
+        "api": "openai-codex-responses",
+        "baseUrl": "https://chatgpt.com/backend-api",
+        "pricing": "provider-account",
+        "catalogCost": {
+          "input": 5,
+          "output": 30,
+          "cacheRead": 0.5,
+          "cacheWrite": 6.25,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 10,
+              "output": 45,
+              "cacheRead": 1,
+              "cacheWrite": 12.5
+            }
+          ]
+        },
+        "verifiedAt": "2026-09-12T08:01:06.157Z",
+        "catalogSource": "https://pi.dev/api/models/providers/openai-codex",
+        "maxOutputTokens": 8192,
+        "requestedMaxOutputTokens": 8192,
+        "maxOutputTokensEnforced": false,
+        "providerMaxOutputTokens": 128000,
+        "outputBudgetTransport": "not-sent-by-pi-codex",
+        "thinking": "medium",
+        "requested": {
+          "provider": "openai-codex",
+          "model": "gpt-5.6-sol",
+          "thinking": "medium"
+        },
+        "piVersion": "0.84.4",
+        "nodeVersion": "v22.22.2",
+        "isolation": "bubblewrap-unshare-all",
+        "protocolVersion": "3.2",
+        "fixtureVersion": "history-gateway-1.1",
+        "fixtureDigest": "9386522136273593c92d7d173b64161b283250a0c3c26b0ef7b1e76d0e811d00",
+        "taskFamily": "feature-interruption-refund-recovery",
+        "triggerVersion": "settled-feature-edit-1",
+        "maxTurns": 80,
+        "maxActions": 200,
+        "timeoutMs": 900000,
+        "sourceHashes": {
+          "package.json": "419edb7056245f5a74f2360c6bdb86b228c4c0eb3de8dfcb57efada6e998fb04",
+          "pnpm-lock.yaml": "7e7bd88c62a33c1c0b70ec8efcb8d37c6cf8241d425ee3b21deac52c90a5503a",
+          "src/claude/adapter.ts": "01a4e3820f20fc4b006179b85dd02f3d2d8441ccebaad62f95ac298ebaf2053c",
+          "src/claude/protocol.ts": "0bcd516d39403edc0bd17d42d23298ae38a2bc2b340e949caa38ebd688ff1d70",
+          "src/cli.ts": "a149d397d4f6558e62418128dc330d01d3641e1b95332bb25db55b489f0026f7",
+          "src/config/run-config.ts": "8fc42b477ec82f85728335265e00ca3f85aa3a09d599589f19505e6282725399",
+          "src/config/scenario-schema.ts": "ca794b2b45f4b38a711d94ed4f4e3af2ddad287f0b87513042199f941fc1e695",
+          "src/engine/environment.ts": "18155964bdbb0fefb0e189bed0b16023f93419e2338e82189085e52d270cfa05",
+          "src/engine/experiment.ts": "8f15326da31cfcb7aa2f1fa26615a6c6140923bc8ce5033f0597b611f0c58689",
+          "src/engine/slack.ts": "220acd6bda8d43716a50488f32360f7dac11b8e7386522b0f38e99dc68e5060d",
+          "src/engine/triggers.ts": "fc035dddea6f6920988497ea839b10b0a5e14783e27f9cbb5bf1abdc7e1a0971",
+          "src/grading/artifact-evidence.ts": "af4965c100664636c8380a01ad7ce4ffa804567a0dfe6165a6e6af2351d7bf45",
+          "src/grading/grader.ts": "9f422b764bb265ce88090107b04ef44838d0bfec222e67e3e304212dc811d2e7",
+          "src/grading/hidden-checks.ts": "9901690ae13774532a8522e96c44f4ed4cb8b57848708e20b35494a1c63d1647",
+          "src/pi/adapter.ts": "3667447af376d6d2c4c90c1aa325911c159ad59ad90d941850a01c692d6abdb7",
+          "src/prompt/system-prompt.ts": "048e352616c44b61c23cf4b79e8c311e6c9231f9c7241f77cce106af46339d5a",
+          "src/runner.ts": "d426791353943713b04e676f47dfed7143d5567eb2741355daeee06d0ba5eab9",
+          "src/scenarios/catalog.ts": "80c14af12ea49f0b181b02abbf52b63f9449f43ebd2e026805facb53f16fc873",
+          "src/scenarios/messages.ts": "9557e4027e4b179d8bc425b60ea891f27b46d7e045bab3d10b5ad681bb58b164",
+          "src/tools/path-guard.ts": "4248f1498f623ce56e880f38ccd410133cb4b4cd80137b31ca12b291886dbf35",
+          "src/tools/slack-tools.ts": "8ff0d446c4c98fb2d4711debe6297257ec96197555f4159f3d0239c6241a1048",
+          "src/trace/model-call.ts": "9533d56cbc91a6b9675fbbb663ac071355d6ea91d368b068d26f023716f71629",
+          "src/trace/redact.ts": "2a749790614908b4500f58673ca0ab39133ba0c4bb0f0770852c87f233546e10",
+          "src/trace/schema.ts": "f5e732eac7f3141f0874848dc291d12d91d686df91375632ec1a41f295214472",
+          "src/trace/writer.ts": "e5a661d60108e31734b4ce8f344c182ecb6c4fe362b975ed85cfc516779db447",
+          "src/v2/audit.ts": "90d3a1516e2c1a484a1a23093efbcdc0a183c9af8d663c7c9ae73f31d7e4948d",
+          "src/v2/checks.ts": "8ec4067e7f4cefa1ad986dbd5aac48821c6ba8a6def1be50422ef817a1bf7747",
+          "src/v2/cli.ts": "111018311a817ff4ac99719972e784c0ed4276bcf326274bcc153ab62a72ed57",
+          "src/v2/comparison.ts": "b6f2d6424fd4451645d32ed44a5a080ed08f843e6e522294e0f65133d3122cc1",
+          "src/v2/engine.ts": "3f35836bb21b7a44d9ab456e42abb61bbc996ece0b0685a206c725c02dd91d1b",
+          "src/v2/experiment-cli.ts": "73c4391ea1da6e029779c4ac6a609ce76bbcc2a2a26a5004a9bbd82d18da58fc",
+          "src/v2/experiment.ts": "bcc00b7b0fd883cee28fab3968b58c5c7efb915289d6072a0785a7f114c65d64",
+          "src/v2/fixture.ts": "d5634096147c25f6c73eae9c03e5d89fca0df42e1608361bbad5c890ee92cfb9",
+          "src/v2/grader.ts": "f15531442f5282d8f28c33366f6c4f28b786ec68090cefd021fb106123c1f4f1",
+          "src/v2/identity.ts": "f040b0a47365bf3e5c96cbdf9d37c906847a423696224afeb9ff07e3eba932d9",
+          "src/v2/model.ts": "9e0b3619512f9bd1f0a950d41712b295ad287eaac958240816c15103f2e585f1",
+          "src/v2/reference.ts": "9d3d9aa73745194ce1ba032108e649f9d98d55b6e8fe337ea207a2e0ed963776",
+          "src/v2/review.ts": "fcd259f19c50d605e88d207ff4f40281c118aa2752ff64604a0a1dd7b3434415",
+          "src/v2/runner.ts": "bb9760371abb6fe5c20bc906259fab7427be4f06a0aed809bc968dd6f987d2cb",
+          "src/v2/sandbox.ts": "ba3de6f969a16951dcb6e01ac8fc0fb56136d3374a9f5ed23ec5fde95b9c1092",
+          "src/v2/schema.ts": "81fa69d8f6ae5b3fedf80585d43d537cfeecde9bf7c8d28bdf08ec60e8a16a4a",
+          "src/v2/state.ts": "4286f1382ee023c55361702977a8c35298566b9d67b7efdbb1c92bb0397adad0",
+          "src/v2/test-evidence.ts": "4d8c6fa180fde0a26cacff7d660c1075e19b8dc263c15ac68589829c381bd44a",
+          "src/v2/tools.ts": "b66d306481de5abf93f157d73af79d9bbbae0edba2e920a7b877e6066a4e4999",
+          "src/v3/audit.ts": "16ae901f3ad842505591c4147c2c6d35745b3111c35e5b025c435fce016982a1",
+          "src/v3/checks.ts": "55e73eaa9eef9de0b46c9788380b836049da3406393f1b39b30d009f9a667b3d",
+          "src/v3/cli.ts": "a7780a8b87efec6c00ddc27139619d4bb5909be9f7932c491c9aa1264b9a065d",
+          "src/v3/comparison.ts": "9242c4089c5583eeb406cd12810b00c36411d0268a6da304057c5dec1bee35cb",
+          "src/v3/engine.ts": "33ce85394ce04860011dbf284eb9188d1677da5eb247edff3e7601a826ff7694",
+          "src/v3/experiment.ts": "5c68c3a1139e007d08a6fd6f5abefc6a22bba00f0d2b73e29d6d849dcbfad356",
+          "src/v3/fixture.ts": "cd962d36043fd05104e987b3dd31f55d4e22037ab3d7aeaf4dec4a97bf820855",
+          "src/v3/grader.ts": "5f1070fe7b204dd9d26daeea81d1aecbedc83f92d3dbc9215b5f5998edf807de",
+          "src/v3/model.ts": "f9c2f10f6d15f3b949427bdc679830e9a66ed254ee62ea2e657600999702da78",
+          "src/v3/runner.ts": "42762b95fa1cfc40a50b2158778d088d0d2a4ad40f082c3e364c7b9dad527243",
+          "src/v3/schema.ts": "69167f910f50149168afea4b9f3ac9c550b31a9623c50ea3605ceed11c14e8e0",
+          "src/v3/state.ts": "4a02def2b542bf94cd3ec971e7887cc617906f4c78d6ea938e56b6df85ffb2be",
+          "src/v3/tools.ts": "9d7b29f6e20e0c314c424a8c23ed83c3dde72572f3bd2c3d97351298bfa80ada",
+          "src/workspace/git.ts": "83f0a799ff8c985b367256ca971f779fa1abd24aca0e4f52a881949e98b71477",
+          "src/workspace/manager.ts": "62eb708da0749a1fc654623b71c848a02c88da9c80261dbe14e472517f52c3f0",
+          "src/workspace/snapshot.ts": "bd998d99185df80a959a2abada8546ea2989a7f4c1d61940c7c9064333a0ccd8"
+        },
+        "systemPromptSha256": "08a2b79e44a35f249aeab3731668379175701974f618bac28a3de862047a8d90",
+        "toolSchemasSha256": "f3b3f9936f29cc6a339220bb891dbb34d7b7d7df027fa8803dad28fec8462f57",
+        "providerWeightsPinned": false,
+        "contextWindow": 272000,
+        "concurrency": 1,
+        "subagents": false,
+        "manifestHash": "7985262f739ac4486b33a172daded361b5441e76030c49b3a70a8d3cebb260ef"
+      },
+      "functional": {
+        "A": {
+          "passed": 8,
+          "total": 8
+        },
+        "B": {
+          "passed": 8,
+          "total": 8
+        }
+      },
+      "artifacts": {
+        "summary.json": {
+          "path": "results/sol-medium-v32-retry1/runs/t001/summary.json",
+          "sha256": "e66f046cfac45c6a07bc05ee96f042ff1c1875cc7e5eca57834976532b7da039"
+        },
+        "audit.json": {
+          "path": "results/sol-medium-v32-retry1/runs/t001/audit.json",
+          "sha256": "ed3fb8b2dfc3257f4aca9a8712c0ee944d173e72c5f1eb1368ca771cf45e6d8d"
+        },
+        "integrity.json": {
+          "path": "results/sol-medium-v32-retry1/runs/t001/integrity.json",
+          "sha256": "739a4791d70cb9c5d439c6567cbba3b729bc6ea088d89e2f71fb734df279ff64"
+        },
+        "result-receipt.json": {
+          "path": "results/sol-medium-v32-retry1/runs/t001/result-receipt.json",
+          "sha256": "bba9583d4ac7e625661edc0de2a441c07f1b0f157c6cb169101065f11b2589e6"
+        },
+        "trace.jsonl": {
+          "path": "results/sol-medium-v32-retry1/runs/t001/trace.jsonl",
+          "sha256": "2a77c79ddea6e2441adc1b9c4159af89fc50a1258439d20a211d50414f1f99af"
+        },
+        "context.jsonl": {
+          "path": "results/sol-medium-v32-retry1/runs/t001/context.jsonl",
+          "sha256": "b9dceb2b908bd5c51cfb2e0d9996ff1dca3a4bd43b142e5af1c1a8a55c45cfe5"
+        }
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "thinking": "medium",
+      "experiment": "sol-medium-v32-retry1",
+      "trial": {
+        "id": "t002",
+        "sequence": "sequential",
+        "delivery": "linear",
+        "demand": "higher",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/sol-medium-v32-retry1.json",
+      "manifestFileSha256": "813304b859b6e151d5cec826b04bb7dae2f72416b520da993a5c456d35b93608",
+      "state": "not_started"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "thinking": "medium",
+      "experiment": "sol-medium-v32-retry1",
+      "trial": {
+        "id": "t003",
+        "sequence": "interrupted",
+        "delivery": "linear",
+        "demand": "higher",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/sol-medium-v32-retry1.json",
+      "manifestFileSha256": "813304b859b6e151d5cec826b04bb7dae2f72416b520da993a5c456d35b93608",
+      "state": "not_started"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "thinking": "medium",
+      "experiment": "sol-medium-v32-retry1",
+      "trial": {
+        "id": "t004",
+        "sequence": "interrupted",
+        "delivery": "linear",
+        "demand": "lower",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/sol-medium-v32-retry1.json",
+      "manifestFileSha256": "813304b859b6e151d5cec826b04bb7dae2f72416b520da993a5c456d35b93608",
+      "state": "not_started"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "thinking": "medium",
+      "experiment": "sol-medium-v32-retry1",
+      "trial": {
+        "id": "t005",
+        "sequence": "changed",
+        "delivery": "linear",
+        "demand": "lower",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/sol-medium-v32-retry1.json",
+      "manifestFileSha256": "813304b859b6e151d5cec826b04bb7dae2f72416b520da993a5c456d35b93608",
+      "state": "not_started"
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "thinking": "medium",
+      "experiment": "sol-medium-v32-retry1",
+      "trial": {
+        "id": "t006",
+        "sequence": "changed",
+        "delivery": "linear",
+        "demand": "higher",
+        "replicate": 1
+      },
+      "manifestPath": "experiments/sol-medium-v32-retry1.json",
+      "manifestFileSha256": "813304b859b6e151d5cec826b04bb7dae2f72416b520da993a5c456d35b93608",
+      "state": "not_started"
+    }
+  ],
+  "interpretation": "Only one valid sequential baseline; no interruption or revision cases reached. Provider errors are excluded from behavioral comparison. Functional probes on partial work do not certify workflow completion.",
+  "matchingSourceCommit": "b0a65c9",
+  "launchProvenance": "Frozen source manifests are authoritative. matchingSourceCommit identifies the later commit containing those runtime source bytes, not launch-time HEAD."
+}
