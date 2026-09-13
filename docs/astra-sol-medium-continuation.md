@@ -10,6 +10,9 @@ Workflow `wfr_0c1ef886-e632-43df-afb8-7f557ee99a04` launched on 2026-09-13 UTC
 controller reports; a running or successful controller workflow does not establish that
 every evaluation trajectory completed.
 
+The workflow is now finished: ten fresh valid observations and one invalid Sol timeout.
+See the [combined results and next steps](astra-sol-medium-cont1-results.md).
+
 | Campaign | Fresh trials | Retained evidence |
 | --- | --- | --- |
 | `astra-medium-v32-cont1` | t002–t006, in original order | Original Astra t001 remains the valid lower-demand sequential baseline |

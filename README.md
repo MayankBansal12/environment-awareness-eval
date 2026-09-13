@@ -10,8 +10,9 @@ See [current status and the proposed Astra–Sol comparison](docs/status-and-nex
 for readiness, model support, and the next bounded experiment.
 Protocol 3.2 now supports explicit Astra/Sol selection through Pi, including frozen reasoning
 settings and model-aware audits. See [the medium-reasoning pilot](docs/astra-sol-medium-pilot.md).
-The [Astra–Sol pilot results](docs/astra-sol-medium-results.md) retain one completed baseline
-and two provider-limited partial attempts; interruption cases were not reached.
+The [Astra–Sol Pi continuation results](docs/astra-sol-medium-cont1-results.md) now cover
+11 valid cells, including interruption and changed requirements; Sol's final cell timed out.
+One Astra stash transition retains an automated review flag. Earlier failures remain preserved.
 
 The **v2** cancellation track adds simulated Linear state, paired task-demand fixtures, and
 enforced per-run repository isolation. Start with [the v2 protocol](docs/environment-v2.md).
