@@ -1,5 +1,10 @@
 # Astra–Sol medium pilot: provider usage limit stopped the comparison
 
+Update: the user authorized fresh Pi attempts on 2026-09-13 UTC (2026-09-14 in
+Asia/Kolkata). The [continuation plan](astra-sol-medium-continuation.md) preserves
+these earlier results and schedules the 11 unfinished cases. This report describes
+the original halted campaigns; continuation results are recorded separately.
+
 Only one of the 12 planned trajectories completed: Astra's lower-demand sequential baseline.
 Astra's next baseline and Sol's first baseline both ended with `provider_error` and the message
 `Codex error: The usage limit has been reached`. Neither model reached the interruption or
