@@ -35,8 +35,8 @@ Each run writes `results/…/<run>/` with `report.md` (update detection, outcome
 ## Develop
 
 ```sh
-pnpm typecheck && pnpm test && pnpm format:check
+pnpm typecheck && pnpm test && pnpm viz:test && pnpm format:check
+pnpm viz && pnpm viz:serve    # results viewer over results/ (EAW_RESULTS_DIR=<dir> to point elsewhere)
 ```
 
-Earlier tracks (v0–v3), the results viewer and their reports are preserved at tag
-`archive/pre-v4-cleanup`.
+Earlier tracks (v0–v3) and their reports are preserved at tag `archive/pre-v4-cleanup`.

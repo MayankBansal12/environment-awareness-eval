@@ -11,8 +11,11 @@
     "eval": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\""
+    "viz": "pnpm --filter @eaw/viewer build",
+    "viz:serve": "pnpm --filter @eaw/viewer preview",
+    "viz:test": "pnpm --filter @eaw/viewer typecheck && pnpm --filter @eaw/viewer test",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"viewer/{src,scripts,tests}/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"viewer/{src,scripts,tests}/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "0.84.4",

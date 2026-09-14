@@ -1,0 +1,618 @@
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --wash: rgba(42, 120, 214, 0.08);
+  --k1: #2a78d6;
+  --k2: #eb6834;
+  --k3: #1baf7a;
+  --k4: #eda100;
+  --neutral: #52514e;
+  --good: #0ca30c;
+  --good-text: #006300;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  font:
+    14px/1.45 system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --wash: rgba(57, 135, 229, 0.16);
+    --k1: #3987e5;
+    --k2: #d95926;
+    --k3: #199e70;
+    --k4: #c98500;
+    --neutral: #c3c2b7;
+    --good-text: #0ca30c;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+}
+a {
+  color: var(--k1);
+  cursor: pointer;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+h1 {
+  font-size: 20px;
+  margin: 2px 0 6px;
+}
+h2 {
+  font-size: 15px;
+  margin: 0 0 10px;
+}
+h3 {
+  font-size: 13px;
+  margin: 12px 0 6px;
+  color: var(--ink-2);
+}
+pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font:
+    12px/1.45 ui-monospace,
+    'SFMono-Regular',
+    Menlo,
+    monospace;
+}
+code {
+  font:
+    12px ui-monospace,
+    Menlo,
+    monospace;
+}
+button,
+select {
+  font: inherit;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 9px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.small {
+  font-size: 12px;
+}
+.muted {
+  color: var(--muted);
+}
+.error {
+  color: var(--critical);
+}
+.warning {
+  color: var(--serious);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.brand {
+  font-weight: 650;
+  color: var(--ink);
+}
+.brand span {
+  color: var(--muted);
+  font-weight: 400;
+}
+.topbar nav {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+.topbar nav a {
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: var(--ink-2);
+}
+.topbar nav a.active {
+  background: var(--wash);
+  color: var(--ink);
+}
+main {
+  padding: 16px 20px 40px;
+  max-width: 1680px;
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+details.card > summary {
+  cursor: pointer;
+}
+details.card > summary h2 {
+  display: inline;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th,
+td {
+  text-align: left;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--grid);
+  vertical-align: top;
+}
+th {
+  color: var(--ink-2);
+  font-weight: 550;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+table.runs {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+table.runs tbody tr {
+  cursor: pointer;
+}
+table.runs tbody tr:hover,
+th.sortable:hover {
+  background: var(--wash);
+}
+th.sortable {
+  cursor: pointer;
+}
+
+.filters {
+  display: flex;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.filters label {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  gap: 2px;
+}
+.filters select {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+.skipped {
+  margin-top: 16px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+.empty {
+  max-width: 640px;
+}
+
+.status {
+  font-size: 12px;
+  white-space: nowrap;
+  font-weight: 550;
+}
+.status.good {
+  color: var(--good-text);
+}
+.status.warning {
+  color: var(--ink-2);
+}
+.status.warning::first-letter {
+  color: var(--warning);
+}
+.status.serious {
+  color: var(--ink-2);
+}
+.status.critical {
+  color: var(--critical);
+}
+h1 .status {
+  font-size: 13px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.load {
+  font-weight: 550;
+}
+.load-medium::before,
+.load-high::before,
+.load-low::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 6px;
+  margin-right: 5px;
+  border-radius: 2px;
+  vertical-align: middle;
+  background: linear-gradient(90deg, var(--ink-2) var(--fill), var(--grid) var(--fill));
+}
+.load-low {
+  --fill: 33%;
+}
+.load-medium {
+  --fill: 66%;
+}
+.load-high {
+  --fill: 100%;
+}
+
+.run-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.crumbs {
+  color: var(--muted);
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.chips > * {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 1px 9px;
+}
+.tiles {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  flex-wrap: wrap;
+}
+.tiles > div {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  min-width: 92px;
+}
+.tiles dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.tiles dd {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: var(--ink-2);
+  margin: 8px 0 0;
+}
+.swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  vertical-align: baseline;
+}
+
+/* Series by role: the four updates keep a fixed hue order everywhere. */
+.fill-requirement_change {
+  fill: var(--k1);
+  background: var(--k1);
+}
+.fill-urgent_assignment {
+  fill: var(--k2);
+  background: var(--k2);
+}
+.fill-comment_change {
+  fill: var(--k3);
+  background: var(--k3);
+}
+.fill-decoy {
+  fill: var(--k4);
+  background: var(--k4);
+}
+.fill-series-neutral {
+  fill: var(--neutral);
+}
+.stroke-requirement_change {
+  stroke: var(--k1);
+}
+.stroke-urgent_assignment {
+  stroke: var(--k2);
+}
+.stroke-comment_change {
+  stroke: var(--k3);
+}
+.stroke-decoy {
+  stroke: var(--k4);
+}
+.stroke-series-neutral {
+  stroke: var(--neutral);
+}
+.ring {
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.timeline {
+  display: flex;
+  position: relative;
+}
+.lane-labels text {
+  font-size: 11px;
+  fill: var(--ink-2);
+}
+.timeline .plot {
+  flex: 1;
+  overflow-x: auto;
+  position: relative;
+}
+.timeline svg {
+  display: block;
+}
+.lane-base {
+  stroke: var(--grid);
+}
+.cursor {
+  fill: var(--wash);
+  stroke: var(--k1);
+  stroke-width: 1;
+}
+.hover {
+  fill: var(--wash);
+}
+.noise {
+  fill: var(--muted);
+}
+.bar-linear,
+.bar-slack {
+  fill: var(--neutral);
+  opacity: 0.55;
+}
+.work-focal {
+  fill: var(--ink-2);
+}
+.work-hotfix {
+  fill: var(--k2);
+}
+.work-commit {
+  fill: var(--ink);
+  font-size: 10px;
+}
+.work-test {
+  fill: var(--critical);
+  font-size: 11px;
+  font-weight: 700;
+}
+.rt-retry,
+.rt-compaction {
+  fill: var(--serious);
+  font-size: 12px;
+  font-weight: 700;
+}
+.timeline line[class^='stroke-'] {
+  stroke-width: 2;
+}
+.timeline line.missed {
+  stroke-dasharray: 3 3;
+}
+.cue {
+  fill: var(--surface);
+  stroke-width: 2;
+}
+.missed-label {
+  font-size: 10px;
+  fill: var(--critical);
+}
+.series {
+  fill: none;
+  stroke: var(--k1);
+  stroke-width: 2;
+}
+.axis {
+  font-size: 10px;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.grid {
+  stroke: var(--grid);
+}
+.tooltip {
+  position: absolute;
+  top: 6px;
+  width: 250px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  font-size: 12px;
+  pointer-events: none;
+}
+.dash {
+  color: var(--critical);
+}
+
+.kv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px 24px;
+}
+.kv {
+  margin: 0;
+  font-size: 12px;
+}
+.kv > div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--grid);
+  padding: 2px 0;
+}
+.kv dt {
+  color: var(--ink-2);
+}
+.kv dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.inspector-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.inspector-head h2 {
+  margin: 0 8px 0 0;
+}
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin: 0 8px;
+}
+.tabs button[aria-selected='true'] {
+  background: var(--wash);
+  border-color: var(--k1);
+}
+.io {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 1000px) {
+  .io {
+    grid-template-columns: 1fr;
+  }
+}
+.message {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: 6px 0;
+  background: var(--page);
+}
+.message .role {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 3px;
+}
+.message.role-assistant {
+  border-left: 3px solid var(--k1);
+}
+.message.tool.failed {
+  border-left: 3px solid var(--critical);
+}
+.message.update {
+  border-left: 3px solid var(--k2);
+}
+.message.noise-msg {
+  opacity: 0.75;
+}
+.thinking pre {
+  color: var(--ink-2);
+  font-style: italic;
+}
+.tool-call {
+  margin-top: 4px;
+}
+mark.status-block {
+  background: var(--wash);
+  color: inherit;
+}
+mark.notification {
+  background: rgba(235, 104, 52, 0.16);
+  color: inherit;
+}
+.prompt {
+  background: var(--page);
+  padding: 10px;
+  border-radius: 8px;
+}
+.tool-def summary {
+  padding: 3px 0;
+}
+.attempt {
+  margin-right: 10px;
+}
+
+.trend {
+  margin-bottom: 12px;
+}
+.multiples {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.multiples figure {
+  margin: 0;
+}
+.multiples figcaption {
+  color: var(--ink-2);
+}
+.trend-line {
+  fill: none;
+  stroke-width: 2;
+}
+.whisker {
+  stroke-width: 1.5;
+  opacity: 0.6;
+}

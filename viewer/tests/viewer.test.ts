@@ -1,0 +1,146 @@
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { contextSchema } from '../../src/schema.js';
+import { loadResults } from '../scripts/build-data.js';
+import { writeFixtures } from '../scripts/fixtures.js';
+import {
+  decisionRows,
+  filterRuns,
+  inputMessages,
+  NO_FILTERS,
+  trendGroups,
+} from '../src/derive.js';
+import type { RunDetail, ViewerIndex } from '../src/model.js';
+import { RunView } from '../src/ui/Cockpit.js';
+import { ExperimentView } from '../src/ui/ExperimentView.js';
+import { RunList } from '../src/ui/RunList.js';
+
+let dir: string;
+let index: ViewerIndex;
+let details: RunDetail[];
+const run = (key: string) => details.find((d) => d.key === key)!;
+
+beforeAll(async () => {
+  dir = await mkdtemp(path.join(os.tmpdir(), 'eaw-viewer-'));
+  await writeFixtures(dir);
+  await mkdir(path.join(dir, 'old-v3'));
+  await writeFile(path.join(dir, 'old-v3', 'manifest.json'), '{"version":"3.0"}');
+  ({ index, details } = await loadResults(dir));
+}, 120_000);
+afterAll(() => rm(dir, { recursive: true, force: true }));
+
+describe('loading', () => {
+  it('finds experiment and ad hoc runs and skips other formats', () => {
+    expect(index.experiments.map((e) => e.id).sort()).toEqual([
+      'fixture-controls',
+      'fixture-load-sweep',
+    ]);
+    expect(index.runs).toHaveLength(33);
+    expect(index.runs.filter((r) => r.experiment === null).map((r) => r.key)).toEqual([
+      'dev/fulfillment-high-heavy',
+      'dev/settlement-heavy-exposed',
+    ]);
+    expect(index.skipped).toEqual([
+      { path: 'old-v3', reason: 'manifest.json is not a v4 manifest' },
+    ]);
+  });
+
+  it('interns captured inputs without losing any message', async () => {
+    const r = run('fixture-load-sweep/runs/t003');
+    const raw = (await readFile(path.join(dir, r.key, 'context.jsonl'), 'utf8'))
+      .trim()
+      .split('\n')
+      .map((l) => contextSchema.parse(JSON.parse(l)));
+    for (const c of raw)
+      if (c.type === 'input')
+        expect(inputMessages(r, c.decision).map((m) => m.message)).toEqual(c.messages);
+    expect(r.header?.tools.map((t) => t.name)).toContain('linear_inbox');
+    expect(r.capture?.complete).toBe(true);
+  });
+});
+
+describe('decision timeline', () => {
+  it('agrees with the grade for every run', () => {
+    for (const r of details) {
+      const rows = decisionRows(r.trace);
+      const s = r.summary;
+      expect(rows.map((x) => x.decision)).toEqual(rows.map((_, i) => i + 1));
+      expect(rows).toHaveLength(s.usage.turnCalls);
+      for (const e of s.grade.events.filter((e) => e.fired)) {
+        expect(rows[e.firedDecision! - 1]!.fired.map((f) => f.eventId)).toContain(
+          e.eventId,
+        );
+        if (e.contentDecision !== null)
+          expect(rows[e.contentDecision - 1]!.exposures).toContainEqual(
+            expect.objectContaining({ eventId: e.eventId, level: 'content' }),
+          );
+      }
+      const noise = rows.flatMap((x) => x.fired).filter((f) => f.kind === 'noise');
+      expect(noise).toHaveLength(s.grade.summary['noiseEvents']!);
+      expect(rows.reduce((n, x) => n + x.commits, 0)).toBe(s.finalWorkspace.commits.length);
+      const summaryCalls = s.usage.summaryCalls ? 1 : 0;
+      if (!summaryCalls) expect(rows.at(-1)!.cumulativeTokens).toBe(s.usage.totalTokens);
+      else expect(rows.some((x) => x.compaction)).toBe(true);
+    }
+  });
+
+  it('marks retries, test failures, hotfix work and unread counts', () => {
+    const failed = decisionRows(run('fixture-load-sweep/runs/t005').trace);
+    expect(failed.at(-1)).toMatchObject({ retries: 4, stopReason: 'error' });
+    const rows = decisionRows(run('fixture-load-sweep/runs/t018').trace);
+    expect(rows.some((x) => x.testFailure)).toBe(true);
+    expect(rows.some((x) => x.hotfixEdit)).toBe(true);
+    expect(rows.some((x) => x.focalEdit)).toBe(true);
+    const urgent = run('fixture-load-sweep/runs/t018').summary.grade.events[1]!;
+    expect(rows[urgent.firedDecision!]!.unread.slack).toBeGreaterThan(0);
+  });
+});
+
+describe('aggregates', () => {
+  it('filters runs by condition', () => {
+    const high = filterRuns(index.runs, { ...NO_FILTERS, load: 'high' });
+    expect(high.length).toBeGreaterThan(0);
+    expect(high.every((r) => r.condition.load === 'high')).toBe(true);
+    expect(filterRuns(index.runs, { ...NO_FILTERS, experiment: 'dev' })).toHaveLength(2);
+  });
+
+  it('groups load-sweep cells into low → high trends', () => {
+    const sweep = index.experiments.find((e) => e.id === 'fixture-load-sweep')!.comparison;
+    const groups = trendGroups(sweep);
+    expect(groups.map((g) => g.key)).toEqual([
+      'fulfillment/normal/ambient',
+      'settlement/normal/ambient',
+    ]);
+    for (const g of groups)
+      expect(Object.keys(g.byLoad).sort()).toEqual(['high', 'low', 'medium']);
+    const controls = index.experiments.find((e) => e.id === 'fixture-controls')!.comparison;
+    expect(
+      trendGroups(controls).every((g) => Object.keys(g.byLoad).join() === 'high'),
+    ).toBe(true);
+  });
+});
+
+describe('rendering', () => {
+  it('renders the run list, cockpit and experiment view', () => {
+    const list = renderToStaticMarkup(
+      createElement(RunList, { index, query: new URLSearchParams('noise=heavy') }),
+    );
+    expect(list).toContain('2 of 33 runs');
+    const missed = details.find((d) => d.summary.grade.events.some((e) => e.missed))!;
+    const cockpit = renderToStaticMarkup(
+      createElement(RunView, { run: missed, decision: 2 }),
+    );
+    expect(cockpit).toContain('Model call D2');
+    expect(cockpit).toContain('missed');
+    expect(cockpit).toContain('environment_status');
+    const experiment = renderToStaticMarkup(
+      createElement(ExperimentView, { index, id: 'fixture-load-sweep' }),
+    );
+    expect(experiment).toContain('Missed rate (95% CI)');
+    expect(experiment).toContain('settlement/high/normal/ambient');
+  });
+});
