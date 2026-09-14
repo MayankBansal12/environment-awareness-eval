@@ -15,6 +15,10 @@ import {
   trendGroups,
 } from '../src/derive.js';
 import type { RunDetail, ViewerIndex } from '../src/model.js';
+import { capturedContext } from '../src/derive/capture.js';
+import { indicatorDecision, slackThreadOf, visibilityAt } from '../src/derive/slack.js';
+import { actionRowsOf } from '../src/derive/timeline.js';
+import { Comparison } from '../src/ui/Compare.js';
 import { RunView } from '../src/ui/Cockpit.js';
 import { ExperimentView } from '../src/ui/ExperimentView.js';
 import { RunList } from '../src/ui/RunList.js';
@@ -134,7 +138,7 @@ describe('rendering', () => {
     const cockpit = renderToStaticMarkup(
       createElement(RunView, { run: missed, decision: 2 }),
     );
-    expect(cockpit).toContain('Model call D2');
+    expect(cockpit).toContain('Model call · D2');
     expect(cockpit).toContain('missed');
     expect(cockpit).toContain('environment_status');
     const experiment = renderToStaticMarkup(
@@ -142,5 +146,111 @@ describe('rendering', () => {
     );
     expect(experiment).toContain('Missed rate (95% CI)');
     expect(experiment).toContain('settlement/high/normal/ambient');
+  });
+});
+
+describe('restored cockpit on v4 artifacts', () => {
+  it('replays important update knowledge without leaking final read states', () => {
+    for (const r of details) {
+      const messages = slackThreadOf(r);
+      for (const metric of r.summary.grade.events.filter((e) => e.fired)) {
+        const related = messages.filter((m) => m.eventId === metric.eventId && !m.cueOnly);
+        expect(related.length).toBeGreaterThan(0);
+        const indicator = indicatorDecision(r, metric.eventId);
+        if (indicator !== null) expect(indicator).toBe(metric.firedDecision! + 1);
+        for (const message of related) {
+          expect(visibilityAt(message, metric.firedDecision! - 1)).toBe('unsent');
+          expect(visibilityAt(message, metric.firedDecision!)).toBe('unread');
+          if (metric.contentDecision !== null) {
+            expect(['read', 'exposed']).not.toContain(
+              visibilityAt(message, metric.contentDecision - 1),
+            );
+            expect(visibilityAt(message, metric.contentDecision)).toBe(
+              r.summary.condition.delivery === 'exposed' ? 'exposed' : 'read',
+            );
+          } else
+            expect(['read', 'exposed']).not.toContain(
+              visibilityAt(message, r.summary.usage.turnCalls),
+            );
+        }
+      }
+    }
+  });
+
+  it('distinguishes a retrieved Slack ping from authoritative Linear requirements', () => {
+    const r = run('fixture-load-sweep/runs/t018');
+    const urgent = r.summary.grade.events.find((e) => e.kind === 'urgent_assignment')!;
+    const messages = slackThreadOf(r).filter((m) => m.eventId === urgent.eventId);
+    const ping = messages.find((m) => m.source === 'slack')!;
+    const ticket = messages.find((m) => m.source === 'linear')!;
+    expect(ping.cueOnly).toBe(true);
+    expect(ping.readAtDecision).not.toBeNull();
+    expect(ping.readAtDecision!).toBeLessThan(urgent.contentDecision!);
+    expect(visibilityAt(ping, ping.readAtDecision! - 1)).toBe('unread');
+    expect(visibilityAt(ping, ping.readAtDecision!)).toBe('read');
+    expect(visibilityAt(ticket, ping.readAtDecision!)).toBe('indicated');
+    expect(visibilityAt(ticket, urgent.contentDecision!)).toBe('read');
+  });
+
+  it('preserves captured order, structured blocks and tool arguments in the original inspector', () => {
+    const r = run('fixture-load-sweep/runs/t018');
+    const { bundle, blobs } = capturedContext(r);
+    expect(bundle.fidelity.level).toBe('full');
+    expect(blobs[bundle.header!.systemPromptRef]).toBe(r.header!.systemPrompt);
+    for (const call of bundle.calls) {
+      const original = inputMessages(r, call.decisionIndex).map((m) => m.message);
+      expect(call.input!.messages.map((m) => blobs[m.textRef])).toEqual(
+        original.map((m) => m.text),
+      );
+      expect(call.input!.messages.map((m) => m.blocks?.map((b) => b.kind))).toEqual(
+        original.map((m) => m.blocks?.map((b) => b.kind)),
+      );
+      for (const tool of call.output?.toolCalls ?? []) {
+        const originalTool = r.outputs[call.decisionIndex]!.blocks!.find(
+          (b) => b.kind === 'toolCall' && b.id === tool.id,
+        );
+        expect(originalTool?.kind).toBe('toolCall');
+        if (originalTool?.kind === 'toolCall')
+          expect(JSON.parse(blobs[tool.argumentsRef]!)).toEqual(originalTool.arguments);
+      }
+    }
+    const missing = structuredClone(r);
+    delete missing.outputs[2];
+    const partial = capturedContext(missing).bundle;
+    expect(partial.fidelity.level).toBe('partial');
+    expect(partial.calls.find((c) => c.decisionIndex === 2)?.output).toBeNull();
+    expect(partial.fidelity.limitations.join(' ')).toContain('Missing outputs: 2');
+  });
+
+  it('keeps terminal output readable and renders the original panes and aligned comparison', () => {
+    const r = run('fixture-load-sweep/runs/t018');
+    const shell = actionRowsOf(r).find((a) => a.toolName === 'bash')!;
+    expect(shell.outputPreview).toBe(
+      (shell.event.observation.value as { stdout: string }).stdout,
+    );
+    const cockpit = renderToStaticMarkup(
+      createElement(RunView, { run: r, decision: null, siblings: index.runs }),
+    );
+    for (const pane of [
+      'railpane',
+      'activitypane',
+      'terminalpane',
+      'slackpane',
+      'scrubber',
+      'model-inspector',
+    ])
+      expect(cockpit).toContain(pane);
+    expect(cockpit).toContain(`value="${r.summary.usage.turnCalls}"`);
+    const shorter = run('fixture-load-sweep/runs/t005');
+    const comparison = renderToStaticMarkup(
+      createElement(Comparison, { a: r, b: shorter }),
+    );
+    expect(comparison).toContain('No decision in this run');
+    expect(comparison.match(/class="compare-decision"/g)).toHaveLength(
+      r.summary.usage.turnCalls,
+    );
+    expect(comparison.indexOf('edit src/money.mjs')).toBeLessThan(
+      comparison.indexOf('Requirement change fired'),
+    );
   });
 });

@@ -1,0 +1,144 @@
+/* v4 surfaces added to the original archived viewer. Shared pane styles stay in styles.css. */
+:root {
+  color-scheme: dark;
+  --page: var(--bg);
+  --surface: var(--panel);
+  --ink: var(--text);
+  --ink-2: var(--dim);
+  --muted: var(--dim);
+  --border: var(--line);
+  --grid: var(--line);
+  --axis: var(--faint);
+  --wash: #182a37;
+  --k1: #6ea8fe;
+  --k2: #e07a7a;
+  --k3: #7ee0c0;
+  --k4: #e0a458;
+  --neutral: var(--dim);
+  --good: var(--ok);
+  --good-text: var(--ok);
+  --warning: #e0a458;
+  --serious: #e07a7a;
+  --critical: var(--danger);
+}
+.topbar .nav a {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 10px;
+  text-decoration: none;
+  color: var(--dim);
+}
+.topbar .nav a.active {
+  background: var(--panel-2);
+  border-color: var(--line);
+  color: var(--text);
+}
+.muted {
+  color: var(--dim);
+}
+.small {
+  font-size: 11px;
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.sortable {
+  cursor: pointer;
+}
+.status.critical,
+.status.serious,
+.error {
+  color: var(--danger);
+}
+.status.good {
+  color: var(--ok);
+}
+.fixture-note {
+  margin: 0 0 12px;
+}
+.update-controls {
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.update-controls select {
+  max-width: 280px;
+}
+.context-disclosure pre {
+  max-width: 100%;
+  white-space: pre-wrap;
+}
+.v4-evidence {
+  overflow-x: auto;
+}
+.v4-evidence .card {
+  display: block;
+}
+.v4-experiment .card,
+.v4-evidence .card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 16px;
+  border-radius: 8px;
+}
+.aligned-compare {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.aligned-compare h4 {
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+.compare-decision {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  border-top: 1px solid var(--line);
+}
+.compare-cell {
+  min-width: 0;
+  padding: 10px;
+  overflow-wrap: anywhere;
+}
+.compare-cell + .compare-cell {
+  border-left: 1px solid var(--line);
+}
+.compare-cell .cmp-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 25px;
+}
+.compare-cell.blank {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 6px,
+    var(--panel) 6px,
+    var(--panel) 8px
+  );
+}
+.controls select {
+  max-width: 100%;
+}
+.controls label {
+  min-width: 0;
+}
+.slackmsg .role {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 650px) {
+  .runstrip select {
+    max-width: 240px;
+  }
+  .scrubber {
+    flex-wrap: wrap;
+  }
+  .update-controls .spacer {
+    display: none;
+  }
+}
+
+.scrub-mark.cue {
+  background: var(--inspect);
+}

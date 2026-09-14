@@ -326,9 +326,7 @@ function Trend({ group }: { group: TrendGroup }) {
                             r={4}
                           >
                             <title>
-                              {k === 'all' ? '' : `${KIND_LABEL[kk]} · `}
-                              {p.l}: {chart.format(p.v!)}
-                              {p.ci ? ` (95% CI ${pct(p.ci[0])}–${pct(p.ci[1])})` : ''}
+                              {`${k === 'all' ? '' : `${KIND_LABEL[kk]} · `}${p.l}: ${chart.format(p.v!)}${p.ci ? ` (95% CI ${pct(p.ci[0])}–${pct(p.ci[1])})` : ''}`}
                             </title>
                           </circle>
                         </g>

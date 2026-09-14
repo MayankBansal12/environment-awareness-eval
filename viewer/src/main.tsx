@@ -2,6 +2,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './ui/App.js';
 import './styles.css';
+import './v4.css';
+import './adaptation.css';
 
 const container = document.getElementById('root');
 if (container === null) throw new Error('#root missing');

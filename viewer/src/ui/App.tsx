@@ -2,16 +2,22 @@ import { useEffect, useState } from 'react';
 import { useIndex } from '../data.js';
 import { Cockpit } from './Cockpit.js';
 import { ExperimentView } from './ExperimentView.js';
+import { Compare } from './Compare.js';
 import { RunList } from './RunList.js';
 
 export type Route =
   | { name: 'runs'; query: URLSearchParams }
   | { name: 'run'; key: string; decision: number | null }
-  | { name: 'experiment'; id: string };
+  | { name: 'experiment'; id: string }
+  | { name: 'compare'; a: string | null; b: string | null };
 
 export function parseRoute(hash: string): Route {
   const [pathPart = '', search = ''] = hash.replace(/^#\/?/, '').split('?');
   const [head, ...rest] = pathPart.split('/').map(decodeURIComponent);
+  if (head === 'compare') {
+    const q = new URLSearchParams(search);
+    return { name: 'compare', a: q.get('a'), b: q.get('b') };
+  }
   if (head === 'run' && rest.length) {
     const last = rest.at(-1)!;
     const decision = /^d\d+$/.test(last) ? Number(last.slice(1)) : null;
@@ -26,6 +32,9 @@ export const href = {
     '#/' + (query ? '?' + new URLSearchParams(query).toString() : ''),
   run: (key: string, decision?: number | null) =>
     `#/run/${key.split('/').map(encodeURIComponent).join('/')}${decision ? `/d${decision}` : ''}`,
+  compare: (a?: string, b?: string) =>
+    '#/compare?' +
+    new URLSearchParams({ ...(a ? { a } : {}), ...(b ? { b } : {}) }).toString(),
   experiment: (id: string) => `#/experiment/${encodeURIComponent(id)}`,
 };
 
@@ -39,14 +48,15 @@ export function App() {
   const index = useIndex();
 
   return (
-    <div className="app">
-      <header className="topbar">
-        <a className="brand" href={href.runs()}>
-          Environment awareness <span>v4</span>
-        </a>
-        <nav>
-          <a className={route.name !== 'experiment' ? 'active' : ''} href={href.runs()}>
-            Runs
+    <div className={route.name === 'run' ? 'app wide' : 'app'}>
+      <div className="topbar">
+        <h1>Environment awareness</h1>
+        <div className="nav">
+          <a className={route.name === 'runs' ? 'active' : ''} href={href.runs()}>
+            Results
+          </a>
+          <a className={route.name === 'compare' ? 'active' : ''} href={href.compare()}>
+            Compare
           </a>
           {index.data?.experiments.map((e) => (
             <a
@@ -57,23 +67,48 @@ export function App() {
               {e.id}
             </a>
           ))}
-        </nav>
-        {index.data && (
-          <span className="muted small">
-            {index.data.runs.length} runs · built{' '}
-            {index.data.generatedAt.slice(0, 16).replace('T', ' ')}
-          </span>
-        )}
-      </header>
+        </div>
+        <div className="spacer" />
+        <div className="meta">
+          <details>
+            <summary>Dataset info · v4</summary>
+            <div className="dataset-info">
+              {index.data?.runs.length ?? 0} runs · {index.data?.resultsDir}
+              <br />
+              Built {index.data?.generatedAt.slice(0, 16).replace('T', ' ')}
+            </div>
+          </details>
+        </div>
+      </div>
+      {index.data?.runs.some((r) => r.experiment?.startsWith('fixture-')) && (
+        <p className="capture-note fixture-note">
+          Engine-driven fixture data · scripted behavior for viewer validation, not model
+          evaluation results.
+        </p>
+      )}
       <main>
         {index.error && (
           <p className="error">Could not load data/index.json: {index.error}</p>
         )}
         {index.data &&
           (route.name === 'run' ? (
-            <Cockpit key={route.key} runKey={route.key} decision={route.decision} />
+            <Cockpit
+              key={route.key}
+              runKey={route.key}
+              decision={route.decision}
+              siblings={index.data.runs}
+            />
+          ) : route.name === 'compare' ? (
+            <Compare
+              key={location.hash}
+              index={index.data}
+              initialA={route.a}
+              initialB={route.b}
+            />
           ) : route.name === 'experiment' ? (
-            <ExperimentView index={index.data} id={route.id} />
+            <div className="v4-experiment">
+              <ExperimentView index={index.data} id={route.id} />
+            </div>
           ) : (
             <RunList index={index.data} query={route.query} />
           ))}
