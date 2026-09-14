@@ -2,21 +2,15 @@
   "name": "environment-awareness-eval",
   "version": "0.1.0",
   "private": true,
-  "description": "Behavioral environment-change blindness eval harness for coding agents (Pi track, v0)",
+  "description": "Measures whether coding agents notice and act on workplace updates while debugging, as cognitive load rises",
   "type": "module",
   "engines": {
     "node": ">=22.19.0"
   },
   "scripts": {
     "eval": "tsx src/cli.ts",
-    "eval:v2": "tsx src/v2/cli.ts",
-    "eval:v3": "tsx src/v3/cli.ts",
-    "eval:experiment": "tsx src/v2/experiment-cli.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "viz": "pnpm --filter @eaw/viewer build && node -e \"console.log('\\nviewer built: ' + require('path').resolve('viewer/dist/index.html'))\"",
-    "viz:test": "pnpm --filter @eaw/viewer test",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\""
   },

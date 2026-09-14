@@ -1,120 +1,163 @@
-#!/usr/bin/env node
-import { buildRunConfig, type RunConfigInput } from './config/run-config.js';
-import { SCENARIOS } from './scenarios/catalog.js';
-import { runEvaluation, validateDryRun } from './runner.js';
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { parseArgs } from 'node:util';
+import { createRuntime, DEFAULT_SELECTION, modelSelectionSchema } from './harness/model.js';
+import { auditRun } from './audit.js';
+import { calibrate } from './calibrate.js';
+import { compare, execute, freeze, profileSchema } from './experiment.js';
+import { DEFAULT_BUDGETS, run } from './runner.js';
+import { conditionSchema, familySchema, type FamilyId } from './scenario.js';
 
-const HELP = `Usage:
-  pnpm eval --list-scenarios
-  pnpm eval --scenario <id> [options]
+const USAGE = `pnpm eval <command>
 
-Options:
-  --fixture <path>          Fixture repository
-  --fixture-commit <sha>    Pinned fixture commit
-  --provider <id>           Pi provider or claude-code (default openai-codex)
-  --model <id>              Model (default gpt-5.6-luna)
-  --thinking <level>        Thinking level (default high)
-  --results <path>          Artifact directory
-  --workspace-root <path>   Disposable workspace parent
-  --run-id <id>             Deterministic artifact directory name
-  --max-turns <n>           Maximum model turns
-  --max-actions <n>         Maximum tool actions
-  --timeout-ms <n>          Run timeout
-  --dependency-mode <mode>  copy | symlink | none (default copy)
-  --ticket-delivery <mode>  slack | direct (default slack)
-  --dry-run                 Validate and prepare without inference
-  --keep-workspace          Retain the disposable checkout
-  --skip-hidden-checks      Skip external behavior checks
-`;
+  calibrate [out.json]                    Verify fixtures, bugs per load and reference solutions (no inference)
+  verify-model [--provider P --model M --thinking T]
+  run --family F --load L [--noise N] [--delivery D] [--seed S] [--run-id ID] [--results DIR]
+      [--provider P --model M --thinking T] [--timeout-min 60] [--max-tokens N] [--no-compaction]
+                                          One development run outside a manifest
+  freeze <manifest.json> <id> <smoke|load-sweep|controls> [--reps 3] [--seed S] [--families a,b]
+      [--provider P --model M --thinking T] [--timeout-min 60] [--max-tokens N] [--no-compaction]
+  execute <manifest.json> [maxNew]        Run pending trials (provider errors are re-attempted)
+  compare <manifest.json>                 Rebuild comparison.json / comparison.md
+  audit <run-dir>`;
 
-function requiredValue(args: string[], index: number, flag: string): string {
-  const value = args[index + 1];
-  if (value === undefined || value.startsWith('--'))
-    throw new Error(`${flag} requires a value`);
-  return value;
-}
-function positive(value: string, flag: string): number {
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isInteger(parsed) || parsed <= 0)
-    throw new Error(`${flag} must be a positive integer`);
-  return parsed;
-}
-function parseArgs(args: string[]): {
-  list: boolean;
-  help: boolean;
-  input: RunConfigInput;
-} {
-  const input: RunConfigInput = { scenarioId: '' };
-  let list = false,
-    help = false;
-  for (let index = 0; index < args.length; index += 1) {
-    const flag = args[index]!;
-    if (flag === '--list-scenarios') list = true;
-    else if (flag === '--help' || flag === '-h') help = true;
-    else if (flag === '--dry-run') input.dryRun = true;
-    else if (flag === '--keep-workspace') input.keepWorkspace = true;
-    else if (flag === '--skip-hidden-checks') input.skipHiddenChecks = true;
-    else {
-      const value = requiredValue(args, index, flag);
-      index += 1;
-      if (flag === '--scenario') input.scenarioId = value;
-      else if (flag === '--fixture') input.fixturePath = value;
-      else if (flag === '--fixture-commit') input.fixtureCommit = value;
-      else if (flag === '--provider') input.provider = value;
-      else if (flag === '--model') input.model = value;
-      else if (flag === '--thinking') input.thinkingLevel = value;
-      else if (flag === '--results') input.resultsDir = value;
-      else if (flag === '--workspace-root') input.workspaceRoot = value;
-      else if (flag === '--dependency-mode') input.dependencyMode = value;
-      else if (flag === '--ticket-delivery') input.ticketDelivery = value;
-      else if (flag === '--run-id') input.runId = value;
-      else if (flag === '--max-turns') input.maxTurns = positive(value, flag);
-      else if (flag === '--max-actions') input.maxActions = positive(value, flag);
-      else if (flag === '--timeout-ms') input.timeoutMs = positive(value, flag);
-      else throw new Error(`unknown option: ${flag}`);
-    }
-  }
-  return { list, help, input };
-}
+async function main() {
+  const { values, positionals } = parseArgs({
+    args: process.argv.slice(2),
+    allowPositionals: true,
+    options: {
+      provider: { type: 'string' },
+      model: { type: 'string' },
+      thinking: { type: 'string' },
+      family: { type: 'string' },
+      load: { type: 'string' },
+      noise: { type: 'string' },
+      delivery: { type: 'string' },
+      seed: { type: 'string' },
+      reps: { type: 'string' },
+      families: { type: 'string' },
+      'run-id': { type: 'string' },
+      results: { type: 'string' },
+      'timeout-min': { type: 'string' },
+      'max-tokens': { type: 'string' },
+      'no-compaction': { type: 'boolean' },
+    },
+  });
+  const [command, a, b, c] = positionals;
+  if (Boolean(values.provider) !== Boolean(values.model))
+    throw Error('Provide both --provider and --model');
+  const selection = modelSelectionSchema.parse({
+    provider: values.provider ?? DEFAULT_SELECTION.provider,
+    model: values.model ?? DEFAULT_SELECTION.model,
+    thinking: values.thinking ?? DEFAULT_SELECTION.thinking,
+  });
+  const budgets = {
+    ...DEFAULT_BUDGETS,
+    ...(values['timeout-min'] ? { timeoutMs: Number(values['timeout-min']) * 60_000 } : {}),
+    ...(values['max-tokens'] ? { maxTotalTokens: Number(values['max-tokens']) } : {}),
+    ...(values['no-compaction'] ? { compaction: false } : {}),
+  };
 
-async function main(): Promise<void> {
-  const parsed = parseArgs(process.argv.slice(2));
-  if (parsed.help) {
-    process.stdout.write(HELP);
+  if (command === 'calibrate') {
+    const report = await calibrate();
+    if (a) await writeFile(a, JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
+    console.log(JSON.stringify(report.summary, null, 2));
+    if (!report.ok) process.exitCode = 1;
     return;
   }
-  if (parsed.list) {
-    for (const scenario of SCENARIOS) {
-      const suffix = scenario.unsupportedReason === undefined ? '' : ' [unsupported]';
-      process.stdout.write(`${scenario.id}${suffix}\t${scenario.description}\n`);
-    }
+  if (command === 'verify-model') {
+    console.log(JSON.stringify((await createRuntime(selection)).verification, null, 2));
     return;
   }
-  if (parsed.input.scenarioId.length === 0) throw new Error('--scenario is required');
-  const config = buildRunConfig(parsed.input);
-  if (config.dryRun) {
-    const result = await validateDryRun(config);
-    process.stdout.write(
-      JSON.stringify({ mode: 'dry-run', config, result }, null, 2) + '\n',
+  if (command === 'run') {
+    const condition = conditionSchema.parse({
+      family: values.family,
+      load: values.load,
+      noise: values.noise ?? 'normal',
+      delivery: values.delivery ?? 'ambient',
+      seed: Number(values.seed ?? 1),
+    });
+    const runId =
+      values['run-id'] ??
+      `dev-${condition.family}-${condition.load}-${condition.noise}-${condition.delivery}-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+    const summary = await run({
+      runId,
+      resultsDir: values.results ?? 'results/dev',
+      condition,
+      budgets,
+      keepWorkspace: false,
+      modelConfig: selection,
+    });
+    console.log(path.join(values.results ?? 'results/dev', runId, 'report.md'));
+    console.log(
+      JSON.stringify(
+        {
+          termination: summary.termination,
+          usage: summary.usage,
+          summary: summary.grade.summary,
+        },
+        null,
+        2,
+      ),
     );
     return;
   }
-  const summary = await runEvaluation(config);
-  process.stdout.write(
-    JSON.stringify(
-      {
-        runId: summary.runId,
-        classification: summary.grade.classification,
-        valid: summary.grade.valid,
-        artifacts: summary.artifacts,
-      },
-      null,
-      2,
-    ) + '\n',
-  );
+  if (command === 'freeze' && a && b && c) {
+    const manifest = await freeze(a, {
+      id: b,
+      profile: profileSchema.parse(c),
+      seed: Number(values.seed ?? 0),
+      repetitions: Number(values.reps ?? 3),
+      families: (values.families?.split(',') ?? familySchema.options).map((f) =>
+        familySchema.parse(f),
+      ) as FamilyId[],
+      modelConfig: selection,
+      budgets,
+    });
+    console.log(
+      JSON.stringify(
+        {
+          id: manifest.id,
+          trials: manifest.trials.length,
+          model: manifest.modelConfig,
+          budgets: manifest.budgets,
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+  if (command === 'execute' && a) {
+    const result = await execute(a, 'results', b ? Number(b) : Infinity);
+    console.log(
+      JSON.stringify(
+        {
+          launched: result.launched,
+          haltedBy: result.haltedBy,
+          completed: result.completed,
+          scheduled: result.scheduled,
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+  if (command === 'compare' && a) {
+    console.log(JSON.stringify(await compare(a, 'results'), null, 2));
+    return;
+  }
+  if (command === 'audit' && a) {
+    const audit = await auditRun(a);
+    console.log(JSON.stringify(audit, null, 2));
+    if (!audit.eligible) process.exitCode = 1;
+    return;
+  }
+  console.log(USAGE);
 }
-main().catch((error: unknown) => {
-  process.stderr.write(
-    `eval failed: ${error instanceof Error ? error.message : String(error)}\n`,
-  );
+
+main().catch((e) => {
+  console.error(String(e));
   process.exitCode = 1;
 });

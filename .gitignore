@@ -1,22 +1,7 @@
 node_modules/
-dist/
-coverage/
-# Run artifacts are local output. Historical reference runs were archived before
-# the v2 reset; see docs/status-and-next-steps.md for provenance and current scope.
 results/
-# Likewise scratch, with one run force-added: quarantine-turnindex-bug holds runs
-# corrupted by the turn-index collision, kept as the only recorded evidence of it.
-quarantine-turnindex-bug/
 *.log
 *.tsbuildinfo
 .DS_Store
 .env
 .env.local
-
-# Viewer build output. data.json is regenerated from results/ on every `pnpm viz`, so it
-# is derived state, not source.
-viewer/src/generated/
-
-# Patch/merge leftovers
-*.orig
-*.rej
