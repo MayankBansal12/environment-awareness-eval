@@ -209,7 +209,7 @@ export class Engine {
   }
 
   /** Settles one batch. Returns important events that fired at this boundary. */
-  settle(repo: RepoSnapshot): TeamEvent[] {
+  settle(repo: RepoSnapshot, canContinue = true): TeamEvent[] {
     this.emit({ type: 'snapshot', snapshot: repo });
     const batch = [...this.observations.values()].filter(
       (o) => this.observationDecision.get(o.id) === this.decision,
@@ -223,6 +223,8 @@ export class Engine {
     const batchError = batch.some((o) => o.isError);
     const focalEdit = repo.focalDigest !== this.last.focalDigest;
     this.last = repo;
+    // A terminal response has no following decision in which to observe new events.
+    if (!canContinue) return [];
     const published: TeamEvent[] = [];
     for (const step of SCRIPT) {
       if (this.fired.has(step.kind)) continue;

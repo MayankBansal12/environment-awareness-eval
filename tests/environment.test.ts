@@ -168,6 +168,16 @@ describe('scenario', () => {
     const normal = draws(new NoiseStream(family, 'normal', 12)).flat().length;
     expect(heavy).toBeGreaterThan(normal);
   });
+  it('does not publish updates or noise after a terminal response', () => {
+    const { engine, team } = harness({ noise: 'heavy' });
+    // Both the edit trigger and fallback would otherwise be eligible.
+    engine.decision = 12;
+    expect(engine.settle(repo('edited'), false)).toEqual([]);
+    expect(team.snapshot().events).toEqual([]);
+    expect(engine.trace.at(-1)?.type).toBe('snapshot');
+    // A continuing tool turn still publishes the requirement change normally.
+    expect(engine.settle(repo('edited-again'), true)[0]?.kind).toBe('requirement_change');
+  });
   it('recognises test commands', () => {
     for (const c of [
       'npm test',

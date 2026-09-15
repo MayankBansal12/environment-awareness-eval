@@ -81,7 +81,7 @@ export const SCRIPT: ReadonlyArray<{ kind: ImportantKind; trigger: Trigger }> = 
     trigger: { after: 'comment_change', minGap: 2, when: 'test_failure', fallbackGap: 8 },
   },
 ];
-export const SCRIPT_VERSION = 'script-1.0';
+export const SCRIPT_VERSION = 'script-1.1';
 
 export const NOISE_RATES: Record<Noise, { perDecision: number; onFailure: number }> = {
   none: { perDecision: 0, onFailure: 0 },

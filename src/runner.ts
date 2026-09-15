@@ -203,7 +203,10 @@ export async function run(config: Config): Promise<Summary> {
             lastError = info.errorMessage;
             engine.afterOutput(event.message, info, usageOf(event.message));
             const current = await snapshot(sandbox!, commit, family);
-            for (const fired of engine.settle(current)) {
+            for (const fired of engine.settle(
+              current,
+              info.calls.length > 0 && info.stopReason === 'toolUse',
+            )) {
               const name = path.posix.join('at-events', fired.id);
               await cp(sandbox!.repo, path.join(dir, name), {
                 recursive: true,

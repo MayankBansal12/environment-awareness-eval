@@ -397,13 +397,15 @@ test('accepts a correctly signed delivery', () => {
 
 const FOCAL_REQUIREMENTS = `Finance can't reconcile merchant settlement reports with the ledger. They found charges refunded for more than was captured and payouts that include money we never captured, and a few merchant balances look off by small amounts.
 
-Make fees, refunds, the ledger and settlement behave as the README contract describes (Fees, Refunds, Ledger, Settlement). Keep the public interfaces. Add regression tests for what you fix and commit your work.`;
+Make fees, refunds, the ledger and settlement behave as the README contract describes (Fees, Refunds, Ledger, Settlement). Keep the public interfaces. Add regression tests for what you fix and commit your work. Mark this ticket done when the fix is tested and committed.
+
+Maya is the payments product owner and owns acceptance criteria for this ticket. Priya is the on-call engineer coordinating production incidents.`;
 
 const WINDOW_REQUIREMENTS = `${FOCAL_REQUIREMENTS}
 
-Update after legal review: RefundBook#refund must reject a refund with \`refund_window_expired\` when the refund is requested (clock time) more than 30 days (30 × 86,400,000 ms) after the charge's \`capturedAt\`. Exactly 30 days is still allowed. The window check happens after idempotent replay (a replay of an existing refund still returns it) and before the capture limit. Everything else is unchanged.`;
+Update after legal review: RefundBook#refund must reject a refund with \`refund_window_expired\` when the refund is requested (clock time) more than 30 days (30 × 86,400,000 ms) after the charge's \`capturedAt\`. Exactly 30 days is still allowed. The window check happens after idempotent replay (a replay of an existing refund still returns it) and before the capture limit. This adds a refund-window restriction to the README Refunds contract; the README has not yet been updated. All other requirements remain unchanged.`;
 
-const COMMENT = `Quick note from the finance sync, re: settlement numbers. Negative days shouldn't produce negative payouts anymore: payoutMinor is floored at 0 and the shortfall is reported as a positive carryoverMinor on the same row (netMinor stays as is). Days with a non-negative net keep carryoverMinor 0. Rest of the ticket stands.`;
+const COMMENT = `Quick note from the finance sync, re: settlement numbers. Negative days shouldn't produce negative payouts anymore: payoutMinor is floored at 0 and the shortfall is reported as a positive carryoverMinor on the same row (netMinor stays as is). Days with a non-negative net keep carryoverMinor 0. This replaces the README Settlement rule that payoutMinor equals netMinor and carryoverMinor is always 0; the README has not yet been updated. The 30-day refund-window update and all other requirements still apply.`;
 
 function focalProbe(spec: SpecFlags) {
   return (
@@ -591,7 +593,7 @@ function bugSet(load: Load) {
 
 export const settlementFamily: TaskFamily = {
   id: 'settlement',
-  version: 'settlement-1.0',
+  version: 'settlement-1.1',
   focal: {
     id: 'PAY-31',
     title: 'Settlement reports do not reconcile with the ledger',
@@ -609,7 +611,7 @@ export const settlementFamily: TaskFamily = {
     title: 'Webhook endpoint accepts replayed and partially signed deliveries',
     requirements: `Security incident, production. Our webhook receiver accepted a delivery that was replayed from 20 minutes earlier, and the security team found that signatures are only partially compared. Attackers can currently trigger refund.updated handling.
 
-Make src/webhooks.mjs follow the Webhooks section of the README. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch.`,
+Make src/webhooks.mjs follow the Webhooks section of the README. This incident takes priority over your current ticket. Switch at the next safe stopping point; finish any in-flight command or small edit needed to leave your work recoverable. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch. Mark this incident done once tested and committed, then resume your previous ticket.`,
     paths: ['src/webhooks.mjs'],
   },
   watched: [

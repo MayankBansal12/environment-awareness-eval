@@ -23,7 +23,14 @@ pre-update solution fails the changed checks.
 
 ## Update script
 
-Updates are applied only between model decisions, on trajectory conditions (never hidden checks):
+Updates are applied only after continuing tool turns, on trajectory conditions (never hidden checks).
+Terminal responses do not publish new updates or noise. A run can still end before all updates fire,
+or be interrupted before the next input; response-opportunity interpretation remains a grading concern.
+
+Both initial tickets identify the acceptance owner and incident coordinator. Requirement updates
+explicitly identify the README rule they add to or replace, while preserving earlier updates.
+Incident tickets request switching at a safe stopping point, a separate tested commit, marking the
+incident done, and resuming the original ticket. The system prompt stays neutral.
 
 | # | Update | Fires at | Fallback |
 | --- | --- | --- | --- |
