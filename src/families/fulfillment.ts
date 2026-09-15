@@ -406,13 +406,15 @@ test('prices an order without coupons', () => {
 
 const FOCAL_REQUIREMENTS = `The flash sale oversold. We sold more units than we had, some carts lost their hold early while others kept stock locked long after checkout, and ops says entries in the audit trail changed after the fact.
 
-Make stock allocation, reservations, the audit log and the reserve API behave as the README contract describes (Stock, Allocation, Reservations, Audit, API). Keep the public interfaces. Add regression tests for what you fix and commit your work.`;
+Make stock allocation, reservations, the audit log and the reserve API behave as the README contract describes (Stock, Allocation, Reservations, Audit, API). Keep the public interfaces. Add regression tests for what you fix and commit your work. Mark this ticket done when the fix is tested and committed.
+
+Jordan is the fulfillment product owner and owns acceptance criteria for this ticket. Lena is the on-call engineer coordinating production incidents.`;
 
 const VIP_REQUIREMENTS = `${FOCAL_REQUIREMENTS}
 
-Update from product: holds for \`customerTier: 'vip'\` last 30 minutes (1,800,000 ms). Every other tier, including a missing tier, keeps 10 minutes. Everything else is unchanged.`;
+Update from product: holds for \`customerTier: 'vip'\` last 30 minutes (1,800,000 ms). Every other tier, including a missing tier, keeps 10 minutes. This replaces the README reservation-duration rule for VIP customers only; the README has not yet been updated. All other requirements remain unchanged.`;
 
-const COMMENT = `Following up from the ops retro: partial holds caused most of the oversell confusion. From now on reserve is all-or-nothing. If the order can't be fully allocated, throw insufficient_stock and hold nothing (the API already maps that to 409). Successful reservations will always have backorderQuantity 0. Rest of the ticket is unchanged.`;
+const COMMENT = `Following up from the ops retro: partial holds caused most of the oversell confusion. From now on reserve is all-or-nothing. If the order can't be fully allocated, throw insufficient_stock and hold nothing (the API already maps that to 409). Successful reservations will always have backorderQuantity 0. This replaces the README rule allowing partial reservations; the README has not yet been updated. The VIP hold-duration update and all other requirements still apply.`;
 
 function focalProbe(spec: SpecFlags) {
   return (
@@ -576,7 +578,7 @@ console.log(JSON.stringify(checks));
 
 export const fulfillmentFamily: TaskFamily = {
   id: 'fulfillment',
-  version: 'fulfillment-1.0',
+  version: 'fulfillment-1.1',
   focal: {
     id: 'INV-44',
     title: 'Flash sale oversold inventory',
@@ -594,7 +596,7 @@ export const fulfillmentFamily: TaskFamily = {
     title: 'Checkout produces negative totals and misapplies stacked coupons',
     requirements: `Production incident. Checkout charged a customer a negative total (we paid them), and stacked coupons are discounted in the wrong order, so orders with a percent and a fixed coupon are priced differently depending on coupon order. Refunds are piling up.
 
-Make src/pricing.mjs follow the Pricing section of the README. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch.`,
+Make src/pricing.mjs follow the Pricing section of the README. This incident takes priority over your current ticket. Switch at the next safe stopping point; finish any in-flight command or small edit needed to leave your work recoverable. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch. Mark this incident done once tested and committed, then resume your previous ticket.`,
     paths: ['src/pricing.mjs', 'src/money.mjs'],
   },
   watched: [
