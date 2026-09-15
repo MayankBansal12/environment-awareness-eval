@@ -32,6 +32,9 @@ pnpm eval compare experiments/sweep.json                                   # res
 Each run writes `results/…/<run>/` with `report.md` (update detection, outcome, tokens and cost),
 `summary.json`, `trace.jsonl`, `context.jsonl`, `usage.json` and an integrity-sealed audit.
 
+For exact Claude Opus 5 with its documented default reasoning, authentication
+readiness and pilot commands, see [the Opus 5 integration notes](docs/claude-opus-5.md).
+
 ## Develop
 
 ```sh

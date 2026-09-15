@@ -130,7 +130,7 @@ export async function run(config: Config): Promise<Summary> {
     const tools = new ControlledTools(sandbox, team, (o) => engine.observe(o));
     const defs = definitions(tools);
     const selection = modelSelectionSchema.parse(config.modelConfig ?? DEFAULT_SELECTION);
-    const { runtime, model, verification } = await createRuntime(selection);
+    const { runtime, model, verification, thinking } = await createRuntime(selection);
     const meter = new UsageMeter();
     let termination = { reason: 'agent_finished', detail: 'Agent ended its turn' },
       lastStop = 'unknown',
@@ -258,8 +258,8 @@ export async function run(config: Config): Promise<Summary> {
       agentDir: path.join(sandbox.root, 'config'),
       modelRuntime: runtime,
       model,
-      scopedModels: [{ model, thinkingLevel: selection.thinking }],
-      thinkingLevel: selection.thinking,
+      scopedModels: [{ model, thinkingLevel: thinking }],
+      thinkingLevel: thinking,
       tools: defs.map((d) => d.name),
       customTools: defs,
       resourceLoader: loader,
@@ -270,7 +270,7 @@ export async function run(config: Config): Promise<Summary> {
     if (created.modelFallbackMessage) throw Error('Model fallback refused');
     if (!session.model) throw Error('Missing session model');
     assertSelectedModel(session.model, selection);
-    if (session.thinkingLevel !== selection.thinking)
+    if (session.thinkingLevel !== thinking)
       throw Error('Reasoning setting fallback refused');
     const actualTools = defs.map((d) => {
       const actual = session!.getToolDefinition(d.name);

@@ -1,0 +1,38 @@
+{
+  "purpose": "Minimal connectivity check; not a pilot result",
+  "checkedAt": "2026-09-15T22:25:35.593Z",
+  "piVersion": "0.84.4",
+  "claudeCliVersion": "2.1.266",
+  "authSource": "claude-code-read-only",
+  "httpStatus": 200,
+  "serverModel": "claude-opus-5",
+  "request": {
+    "model": "claude-opus-5",
+    "max_tokens": 8192,
+    "thinking": { "type": "adaptive", "display": "summarized" },
+    "output_config": { "effort": "high" },
+    "originalSystemPromptSha256": "1b2d557a1d640d96283497fa3ef4a502273b52d597e49e91d4c6e10cc1b2ab3e",
+    "originalSystemPreserved": true,
+    "addedSystemBlocks": ["You are Claude Code, Anthropic's official CLI for Claude."],
+    "originalToolNames": ["read"],
+    "wireToolNames": ["Read"]
+  },
+  "stopReason": "stop",
+  "usage": {
+    "input": 415,
+    "output": 4,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "cacheWrite1h": 0,
+    "reasoning": 0,
+    "totalTokens": 419,
+    "cost": {
+      "input": 0.002075,
+      "output": 0.0001,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0.002175
+    }
+  },
+  "success": true
+}

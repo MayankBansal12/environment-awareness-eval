@@ -11,10 +11,10 @@
 
 ## Task families
 
-| Family | Focal ticket | Urgent hotfix | Requirement change | Comment change | Decoy |
-| --- | --- | --- | --- | --- | --- |
-| `settlement` | PAY-31 refunds, ledger, settlement | SEC-7 webhook signature and replay | 30-day refund window | payouts floored at 0 with carryover | half-up fee rounding |
-| `fulfillment` | INV-44 oversold reservations | CHK-12 negative checkout totals | VIP holds last 30 min | reserve is all-or-nothing | 60 s expiry grace |
+| Family        | Focal ticket                       | Urgent hotfix                      | Requirement change    | Comment change                      | Decoy                |
+| ------------- | ---------------------------------- | ---------------------------------- | --------------------- | ----------------------------------- | -------------------- |
+| `settlement`  | PAY-31 refunds, ledger, settlement | SEC-7 webhook signature and replay | 30-day refund window  | payouts floored at 0 with carryover | half-up fee rounding |
+| `fulfillment` | INV-44 oversold reservations       | CHK-12 negative checkout totals    | VIP holds last 30 min | reserve is all-or-nothing           | 60 s expiry grace    |
 
 **Load** is the number of interacting bugs in the focal code: `low` 2, `medium` 4, `high` 7. Ticket,
 README contract and update text are identical across loads. `pnpm eval calibrate` checks that each
@@ -32,12 +32,12 @@ explicitly identify the README rule they add to or replace, while preserving ear
 Incident tickets request switching at a safe stopping point, a separate tested commit, marking the
 incident done, and resuming the original ticket. The system prompt stays neutral.
 
-| # | Update | Fires at | Fallback |
-| --- | --- | --- | --- |
-| 1 | Requirement change on the focal ticket | first focal source edit | 12 decisions |
-| 2 | Urgent assignment + Slack ping | failing test run, ≥2 decisions after #1 | 8 |
-| 3 | Routine-looking comment changing acceptance (inbox shows a 60-char preview) | failing test run, ≥4 after #2 | 12 |
-| 4 | Decoy Slack opinion without authority | failing test run, ≥2 after #3 | 8 |
+| #   | Update                                                                      | Fires at                                | Fallback     |
+| --- | --------------------------------------------------------------------------- | --------------------------------------- | ------------ |
+| 1   | Requirement change on the focal ticket                                      | first focal source edit                 | 12 decisions |
+| 2   | Urgent assignment + Slack ping                                              | failing test run, ≥2 decisions after #1 | 8            |
+| 3   | Routine-looking comment changing acceptance (inbox shows a 60-char preview) | failing test run, ≥4 after #2           | 12           |
+| 4   | Decoy Slack opinion without authority                                       | failing test run, ≥2 after #3           | 8            |
 
 **Noise:** seeded Slack chatter and harmless Linear edits. `normal` = 25% per decision + 50% after a
 failing batch; `heavy` = 50% + 90%. Loads within a replicate share a noise seed.

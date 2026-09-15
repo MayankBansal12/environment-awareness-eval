@@ -8,6 +8,7 @@ import {
   DEFAULT_SELECTION,
   matchesRuntimeIdentity,
   modelSelectionSchema,
+  selectModel,
   type ModelSelection,
 } from '../src/harness/model.js';
 
@@ -54,6 +55,106 @@ beforeEach(() => vi.mocked(readFile).mockRejectedValue({ code: 'ENOENT' }));
 afterEach(() => vi.restoreAllMocks());
 
 describe('explicit model runtime', () => {
+  const opusSelection = {
+    provider: 'anthropic',
+    model: 'claude-opus-5',
+    thinking: 'default',
+  } as const;
+  const opusModel: Model = {
+    ...catalogModel,
+    id: 'claude-opus-5',
+    provider: 'anthropic',
+    api: 'anthropic-messages',
+    baseUrl: 'https://api.anthropic.com',
+    compat: { forceAdaptiveThinking: true },
+  };
+
+  it('selects the documented Claude default independently of the existing high default', () => {
+    expect(selectModel({ provider: 'anthropic', model: 'claude-opus-5' })).toEqual(
+      opusSelection,
+    );
+    expect(selectModel({})).toEqual(DEFAULT_SELECTION);
+    for (const change of [
+      { model: 'opus' },
+      { model: 'claude-opus-4-8' },
+      { provider: 'openrouter' },
+      { thinking: 'high' },
+      { thinking: 'off' },
+    ])
+      expect(() => selectModel({ ...opusSelection, ...change })).toThrow();
+  });
+
+  it('audits Claude identity and default provenance and refuses altered routes or thinking modes', async () => {
+    const fake = mockRuntime(opusModel);
+    const result = await createRuntime(opusSelection);
+    expect(result.thinking).toBe('high');
+    expect(result.verification).toMatchObject({
+      ...opusSelection,
+      resolvedThinking: 'high',
+      thinkingMode: 'adaptive',
+      effortTransport: 'explicit-high-equivalent-to-api-default',
+      maxOutputTokensEnforced: true,
+      outputBudgetTransport: 'anthropic-max_tokens',
+    });
+    expect(matchesRuntimeIdentity(result.verification)).toBe(true);
+    for (const change of [
+      { model: 'claude-opus-4-8' },
+      { thinking: 'high' },
+      { resolvedThinking: 'medium' },
+      { thinkingMode: 'disabled' },
+      { reasoningDefaultSource: undefined },
+      { effortTransport: undefined },
+      { authSource: undefined },
+      { api: 'openai-responses' },
+      { baseUrl: 'https://proxy.invalid' },
+      { catalogSource: 'https://proxy.invalid' },
+      { maxOutputTokensEnforced: false },
+      { outputBudgetTransport: 'not-sent-by-pi-codex' },
+    ])
+      expect(matchesRuntimeIdentity({ ...result.verification, ...change })).toBe(false);
+    for (const change of [
+      { id: 'claude-opus-4-8' },
+      { provider: 'openrouter' },
+      { baseUrl: 'https://proxy.invalid' },
+      { api: 'openai-responses' as const },
+      { compat: {} },
+      { reasoning: false },
+      { thinkingLevelMap: { high: 'medium' } },
+      { cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } },
+    ])
+      expect(() => assertSelectedModel({ ...opusModel, ...change }, opusSelection)).toThrow(
+        'identity',
+      );
+    expect(fake.stream).not.toHaveBeenCalled();
+  });
+
+  it('keeps omitted summary reasoning adaptive/high and honors smaller compaction budgets within the cap', async () => {
+    const fake = mockRuntime(opusModel);
+    const result = await createRuntime(opusSelection);
+    result.runtime.streamSimple(result.model, context, {
+      maxTokens: 2048,
+      apiKey: 'stale-summary-token',
+    });
+    expect(fake.stream).toHaveBeenLastCalledWith(result.model, context, {
+      reasoning: 'high',
+      maxTokens: 2048,
+      apiKey: undefined,
+    });
+    result.runtime.streamSimple(result.model, context, { reasoning: result.thinking });
+    expect(fake.stream).toHaveBeenLastCalledWith(result.model, context, {
+      reasoning: 'high',
+      maxTokens: 8192,
+      apiKey: undefined,
+    });
+    for (const maxTokens of [0, -1, 8193, NaN, 2.5])
+      expect(() =>
+        result.runtime.streamSimple(result.model, context, { maxTokens }),
+      ).toThrow('output budget');
+    expect(() =>
+      result.runtime.streamSimple(result.model, context, { reasoning: 'medium' }),
+    ).toThrow('reasoning');
+  });
+
   it('retains Muse/high by default and accepts only the authorized provider/model tuples', () => {
     expect(DEFAULT_SELECTION).toEqual({
       provider: 'opencode',
