@@ -1,0 +1,1396 @@
+{
+  "format": "environment-awareness-4",
+  "schemaVersion": 4,
+  "runId": "claude-opus-5-fulfillment-r2-retry1",
+  "condition": {
+    "family": "fulfillment",
+    "load": "high",
+    "noise": "normal",
+    "delivery": "ambient",
+    "seed": 2
+  },
+  "runtime": {
+    "agent": "claude-code",
+    "agentVersion": "2.1.266 (Claude Code)",
+    "provider": "anthropic",
+    "model": "claude-opus-5",
+    "thinking": "default",
+    "requested": {
+      "provider": "anthropic",
+      "model": "claude-opus-5",
+      "thinking": "default"
+    },
+    "api": "claude-code-agent-sdk",
+    "authSource": "claude-code",
+    "fallbackPolicy": "claude-code-default",
+    "maxOutputTokens": 8192,
+    "outputBudgetTransport": "CLAUDE_CODE_MAX_OUTPUT_TOKENS",
+    "contextCapture": "claude-code-hooks",
+    "usageSource": "claude-code-modelUsage",
+    "callCountsScope": "visible-main-loop",
+    "costBreakdownAvailable": false,
+    "retriesManagedBy": "claude-code",
+    "nodeVersion": "v24.13.0",
+    "isolation": "bubblewrap-unshare-all",
+    "protocolVersion": "4.0",
+    "scriptVersion": "script-2.0",
+    "familyVersion": "fulfillment-1.2",
+    "fixtureDigest": "5a69278042c1f89d7977c4234b9e3022923b797321e2c27648491ced50ef47f3",
+    "budgets": {
+      "timeoutMs": 3600000,
+      "maxTotalTokens": 20000000,
+      "providerRetries": 4,
+      "compaction": true
+    },
+    "sourceHashes": {
+      "package.json": "5c3c3d6300b0753ff8d748f47b68e80f275f35a2b46d345f84850b97df67bc55",
+      "pnpm-lock.yaml": "cb77a0ba01b41f20bbf8e177398e15c31dd35ee982751ab9a0aaa556c9613a21",
+      "src/audit.ts": "f7752ad82ecbda9a0722f397b767772e8f4a61ff6d0ed708bd542bdfa1020d1d",
+      "src/calibrate.ts": "0c0bcc93eb377e08a5b0a54cc4a94d724b45200c48e7927ce9bfd3cbee6f643a",
+      "src/checks.ts": "f44c6e59429bc9c128d199c4e420cf177c58de625c9488f578beb407bd993f67",
+      "src/cli.ts": "2c9b7841daaa9ae7f69a041fe68ea9e8573f1da4dba743eb2690c97e47acf1af",
+      "src/engine.ts": "39faf1ab6e4e2ee6af9b59d520bf1e150d53adda18f0824b6e63a05ebafbafe2",
+      "src/experiment.ts": "8faaaeb4db362ac9755b0c3f428748bcf1ed701e1364b8cc9e6a3a9faa40eb3d",
+      "src/families/fulfillment.ts": "a2638180fdfc7c49f2f523fa74301a0fa0dcd8e50a618bbd73ea8e33ef1cefe5",
+      "src/families/settlement.ts": "b88ade95b2231da0ac4ca1d3b26e57a6500f0b9bae5dbfc3a319c0acc57d6e7d",
+      "src/families/types.ts": "50e3fd97577a9fecd7404d7c281f5c73b36605469c8e1696645dd850a464ae4c",
+      "src/fixture.ts": "b276d91dd6472c70da925758f7a6e819fa0abd11156ad4f59491f317d6c85125",
+      "src/grader.ts": "cf0adccef3c652a24892ea51f6d870e5a98e3fd505ef0490bf05e196af1d0ba7",
+      "src/harness/assistant.ts": "2ed7a090cf4b4a7d48f1a07ec32b4a20b7a9b8481bd854f285929db8994d27f9",
+      "src/harness/capture.ts": "f2ed39d9975bdafd0f8dce50582ea9e668d1b9f067c75795df84be67982f10ec",
+      "src/harness/claude-code.ts": "bcc60802adb444235b1dfddff415d09e174b5812d9fd779f5ef2164ec08df689",
+      "src/harness/free-model.ts": "9e0b3619512f9bd1f0a950d41712b295ad287eaac958240816c15103f2e585f1",
+      "src/harness/identity.ts": "2af0cb5a913d83847de9303acccff433c18a40effb0088ea372817478f519d4e",
+      "src/harness/model.ts": "43f6d9b03da3df07ec46532de6ec1649098aa898abd155406024c7346d312878",
+      "src/harness/redact.ts": "2a749790614908b4500f58673ca0ab39133ba0c4bb0f0770852c87f233546e10",
+      "src/harness/repo-tools.ts": "9b488e3b44b58799937a3b982cd72793a875ea9229344d585b75b5161678225e",
+      "src/harness/sandbox.ts": "ba3de6f969a16951dcb6e01ac8fc0fb56136d3374a9f5ed23ec5fde95b9c1092",
+      "src/harness/snapshot.ts": "0e389f1c269259980d9a5e14260394d150f130cc47654721938429ea68ace777",
+      "src/report.ts": "dc25953b59d2cfbf3ba9032ca07e9718f58c05dc7f208a13601a75bdd92317b4",
+      "src/runner.ts": "3df5aaef9a36845270e4ed764ba4f20fc5837d68a127d2c5e388c83ea230f23f",
+      "src/scenario.ts": "cfa41ce6db0c8b59e5b958ab6c7a16af411e676952e581f68767cd3bff4ce42b",
+      "src/schema.ts": "49199062ea782ff1eb8f43089271cecd5f6ba4416b239d287c49ba1382abb933",
+      "src/state.ts": "c752e37cfa7eac32674faba05596a24fd06732433a7807dbedc63ed72177187b",
+      "src/tools.ts": "8fa932633a85e856a09f16b7feffdd40bc7a95c8accc4faecefa7652ee32dfb1",
+      "src/usage.ts": "851da3990f1438247088735f35dbc13edca59697a33e55ca42920ce91888fbc3"
+    },
+    "systemPromptSha256": "056ad5ac1f4294687923fa19d25834c5b89bd1c033e6e44f85ab44943ded3427",
+    "initialPrompt": "Begin your work.",
+    "providerWeightsPinned": false,
+    "concurrency": 1,
+    "subagents": false,
+    "toolSchemasSha256": "75f5c14a6a10c486eddd61d2014011d6583c2329d127de042db17bea8dbd5b82"
+  },
+  "termination": {
+    "reason": "agent_finished",
+    "detail": "Claude Code ended its turn"
+  },
+  "usage": {
+    "calls": 22,
+    "turnCalls": 22,
+    "summaryCalls": 0,
+    "erroredCalls": 0,
+    "input": 940,
+    "output": 15749,
+    "cacheRead": 381957,
+    "cacheWrite": 30693,
+    "reasoning": 1787,
+    "totalTokens": 429339,
+    "costUsd": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0.8925694999999999
+    },
+    "peakContextTokens": 32903
+  },
+  "durationMs": 141933,
+  "grade": {
+    "graderVersion": "4.1.0",
+    "valid": true,
+    "censored": false,
+    "validity": [
+      {
+        "id": "audit_eligible",
+        "passed": true
+      },
+      {
+        "id": "not_invalid_termination",
+        "passed": true
+      },
+      {
+        "id": "script_order",
+        "passed": true
+      },
+      {
+        "id": "had_decisions",
+        "passed": true
+      }
+    ],
+    "events": [
+      {
+        "kind": "requirement_change",
+        "eventId": "e1",
+        "fired": true,
+        "firedDecision": 4,
+        "trigger": "condition",
+        "firedDuringTestFailure": false,
+        "contextTokensAtFire": 9515,
+        "focalChecksFailingAtFire": 7,
+        "decisionsAfterFire": 18,
+        "cueDecision": 5,
+        "contentDecision": 6,
+        "detectionLatency": 1,
+        "missed": false,
+        "observation": {
+          "firstInputAfterEvent": 5,
+          "responseDecisions": 18,
+          "contentRetrieved": true,
+          "retrievalLatency": 1,
+          "finalBehaviorCorrect": true,
+          "behaviorCorrectAtFire": true,
+          "compactionsAfterContent": 0
+        },
+        "focalChangesBeforeContent": 0,
+        "commitsBeforeContent": 0,
+        "toolActionsBeforeContent": 2,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "eventId": "e4",
+        "fired": true,
+        "firedDecision": 9,
+        "trigger": "fallback",
+        "firedDuringTestFailure": false,
+        "contextTokensAtFire": 18092,
+        "focalChecksFailingAtFire": 0,
+        "decisionsAfterFire": 13,
+        "cueDecision": 10,
+        "contentDecision": 11,
+        "detectionLatency": 1,
+        "missed": false,
+        "observation": {
+          "firstInputAfterEvent": 10,
+          "responseDecisions": 13,
+          "contentRetrieved": true,
+          "retrievalLatency": 1,
+          "finalBehaviorCorrect": true,
+          "behaviorCorrectAtFire": false,
+          "compactionsAfterContent": 0
+        },
+        "focalChangesBeforeContent": 0,
+        "commitsBeforeContent": 0,
+        "toolActionsBeforeContent": 2,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "eventId": "e6",
+        "fired": true,
+        "firedDecision": 14,
+        "trigger": "fallback",
+        "firedDuringTestFailure": false,
+        "contextTokensAtFire": 26096,
+        "focalChecksFailingAtFire": 0,
+        "decisionsAfterFire": 8,
+        "cueDecision": 15,
+        "contentDecision": 16,
+        "detectionLatency": 1,
+        "missed": false,
+        "observation": {
+          "firstInputAfterEvent": 15,
+          "responseDecisions": 8,
+          "contentRetrieved": true,
+          "retrievalLatency": 1,
+          "finalBehaviorCorrect": true,
+          "behaviorCorrectAtFire": true,
+          "compactionsAfterContent": 0
+        },
+        "focalChangesBeforeContent": 0,
+        "commitsBeforeContent": 0,
+        "toolActionsBeforeContent": 2,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "eventId": "e8",
+        "fired": true,
+        "firedDecision": 18,
+        "trigger": "fallback",
+        "firedDuringTestFailure": false,
+        "contextTokensAtFire": 30933,
+        "focalChecksFailingAtFire": 0,
+        "decisionsAfterFire": 4,
+        "cueDecision": 19,
+        "contentDecision": 19,
+        "detectionLatency": 0,
+        "missed": false,
+        "observation": {
+          "firstInputAfterEvent": 19,
+          "responseDecisions": 4,
+          "contentRetrieved": true,
+          "retrievalLatency": 0,
+          "finalBehaviorCorrect": true,
+          "behaviorCorrectAtFire": true,
+          "compactionsAfterContent": 0
+        },
+        "focalChangesBeforeContent": 0,
+        "commitsBeforeContent": 0,
+        "toolActionsBeforeContent": 0,
+        "adapted": true
+      }
+    ],
+    "urgent": {
+      "hotfixCorrect": true,
+      "hotfixMarkedDone": true,
+      "focalFirstDoneDecision": 12,
+      "hotfixFirstDoneDecision": 16,
+      "focalLastDoneDecision": 20,
+      "hotfixDoneBeforeFocalDone": false,
+      "focalChangesWhileUrgentOpen": 0,
+      "hotfixCommitIsolated": true,
+      "resumedFocalAfterHotfix": true
+    },
+    "outcome": {
+      "focalBaseChecksPassed": 8,
+      "focalBaseChecksTotal": 8,
+      "focalAllChecksPassed": true,
+      "hotfixChecksPassed": 5,
+      "visibleTestsPass": true,
+      "cleanWorktree": true,
+      "commits": 3,
+      "focalMarkedDone": true,
+      "hotfixMarkedDone": true
+    },
+    "summary": {
+      "importantFired": 4,
+      "importantMissed": 0,
+      "contentRetrieved": 4,
+      "retrievalUnassessable": 0,
+      "meanDetectionLatency": 0.75,
+      "focalChangesBeforeContent": 0,
+      "commitsBeforeContent": 0,
+      "adaptedFraction": 1,
+      "noiseEvents": 6
+    },
+    "manualReview": "pending"
+  },
+  "audit": {
+    "eligible": true,
+    "checks": [
+      {
+        "id": "required_records",
+        "passed": true
+      },
+      {
+        "id": "chronology",
+        "passed": true
+      },
+      {
+        "id": "decision_pairing",
+        "passed": true
+      },
+      {
+        "id": "selected_model_identity",
+        "passed": true
+      },
+      {
+        "id": "neutral_prompt",
+        "passed": true
+      },
+      {
+        "id": "indicator_delivery",
+        "passed": true
+      },
+      {
+        "id": "exposure_after_event",
+        "passed": true
+      },
+      {
+        "id": "events_between_decisions",
+        "passed": true
+      },
+      {
+        "id": "team_events_recorded",
+        "passed": true
+      },
+      {
+        "id": "delivery_mode",
+        "passed": true
+      },
+      {
+        "id": "hash:trace.jsonl",
+        "passed": true
+      },
+      {
+        "id": "hash:context.jsonl",
+        "passed": true
+      },
+      {
+        "id": "hash:team-state.json",
+        "passed": true
+      },
+      {
+        "id": "hash:workspace.diff",
+        "passed": true
+      },
+      {
+        "id": "hash:evidence.json",
+        "passed": true
+      },
+      {
+        "id": "hash:runtime.json",
+        "passed": true
+      },
+      {
+        "id": "hash:usage.json",
+        "passed": true
+      },
+      {
+        "id": "hash:claude-code.jsonl",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/README.md",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/package.json",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/src/allocation.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/src/api.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/src/audit.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/src/money.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/src/pricing.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/src/reservations.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/src/stock.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/tests/pricing.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e1/tests/reservations.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/README.md",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/package.json",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/src/allocation.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/src/api.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/src/audit.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/src/money.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/src/pricing.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/src/reservations.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/src/stock.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/tests/pricing.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/tests/reservations.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e4/tests/stock.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/README.md",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/package.json",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/src/allocation.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/src/api.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/src/audit.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/src/money.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/src/pricing.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/src/reservations.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/src/stock.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/tests/pricing.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/tests/reservations.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e6/tests/stock.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/README.md",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/package.json",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/src/allocation.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/src/api.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/src/audit.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/src/money.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/src/pricing.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/src/reservations.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/src/stock.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/tests/pricing.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/tests/reservations.test.mjs",
+        "passed": true
+      },
+      {
+        "id": "hash:at-events/e8/tests/stock.test.mjs",
+        "passed": true
+      }
+    ],
+    "hashes": {
+      "trace.jsonl": "e2c2e7dd22cb2a39c1f396e6c81ce35be7a925457f36ae9d1a2e1c215aeb76ca",
+      "context.jsonl": "b81756704c633b2943ee88e23e7ce26271e0b52b1da45d0f30ba542809411ab3",
+      "team-state.json": "ddc478366a806e3b2a64574e18aeb0820f55e5543b31da38352e5852300e486b",
+      "workspace.diff": "542b14ccd2bd58cacaa4a5716a590b4477349f79b733243586b60e0807d7963d",
+      "evidence.json": "634858f9471e6e0083c98c13471123b3aaff638bf213ca87fd20622d1b03d9c9",
+      "runtime.json": "54d1370ef6772bad3e3c062d4aa34fa8091f10c1d3014e554917138e5150c39d",
+      "usage.json": "fb72d411afc217259d9d19ce291d29da91037e83a77b3e60d5db71d211905319",
+      "claude-code.jsonl": "83e70a6562f82dfe97924d076160b42486573bf01ef6e300977c02190edbabff",
+      "at-events/e1/README.md": "008f4cfe48857476f257a5893620ca45ed0e2bb0f2ca9af51b51c67b6b62e474",
+      "at-events/e1/package.json": "8ead0f7b1f19e75e6f96c6ab73dfedf482844df7d15aad342c726862892a5429",
+      "at-events/e1/src/allocation.mjs": "f89bf382d51d94e9980cd783ae1a2933336cebf361ac15d7ac2a5c9a5d1fd29a",
+      "at-events/e1/src/api.mjs": "98699c3c58e1678e7066581fa585af6c1ec63a60be836ca4708378b264212ba2",
+      "at-events/e1/src/audit.mjs": "4dd9557dc7f5e60c0da25c09053aa66c0cf523bc19eebef0e54dbb1f60fe165c",
+      "at-events/e1/src/money.mjs": "878d04f7eade845acc22a1f6c51c34ca83db96e67df4de5ba5ffd0e6446f69e8",
+      "at-events/e1/src/pricing.mjs": "60a7079e1c83b7f6fcd0f59c28ee697941064750ef4a62f7f43067dc134c9bc5",
+      "at-events/e1/src/reservations.mjs": "ad731da2b1cb43db07a442124558fffe3c0992c378566e075a92c2aa4f8feda8",
+      "at-events/e1/src/stock.mjs": "fdee9d0f153fd9d7a06f5403562651e104fd2c6162b70f64feba9a31bc9877f5",
+      "at-events/e1/tests/pricing.test.mjs": "af474a1b7b8d8a2ee23694a0a2a5283ac31358612daf4380e9ff43fa13764ef1",
+      "at-events/e1/tests/reservations.test.mjs": "1d9d7ae0f662339a5b70770f087f5cd246dad760abb9dec07bd777b72d91c7f9",
+      "at-events/e4/README.md": "008f4cfe48857476f257a5893620ca45ed0e2bb0f2ca9af51b51c67b6b62e474",
+      "at-events/e4/package.json": "8ead0f7b1f19e75e6f96c6ab73dfedf482844df7d15aad342c726862892a5429",
+      "at-events/e4/src/allocation.mjs": "765fc15950075950a1f270716ca2b71d8f244f30c6ffe1a2eab11691e55127b9",
+      "at-events/e4/src/api.mjs": "21c691f523dbbc3916a5730d19f60adcea22c5426689624e89375735cff1c0a4",
+      "at-events/e4/src/audit.mjs": "5a5539ba953750a602bd18fc56c23e5136a93031c47f0b7b420c427a6723ed5b",
+      "at-events/e4/src/money.mjs": "878d04f7eade845acc22a1f6c51c34ca83db96e67df4de5ba5ffd0e6446f69e8",
+      "at-events/e4/src/pricing.mjs": "60a7079e1c83b7f6fcd0f59c28ee697941064750ef4a62f7f43067dc134c9bc5",
+      "at-events/e4/src/reservations.mjs": "314e0391a0e04eed890ebfb184051975e2b7a3a8aa38dc75d8df246538d753b7",
+      "at-events/e4/src/stock.mjs": "0d47a211d0de6837a63dbc14a69903d9794e600b4a28fc4703e36d5df6e8b54e",
+      "at-events/e4/tests/pricing.test.mjs": "af474a1b7b8d8a2ee23694a0a2a5283ac31358612daf4380e9ff43fa13764ef1",
+      "at-events/e4/tests/reservations.test.mjs": "b6c83b78a5a48bbfdec2e3b39e0c1bec2ea8759975cb18ecf9dda8215cc8b9e7",
+      "at-events/e4/tests/stock.test.mjs": "a54f2ffa55645654c561aac511de4883fa1cf10f3a847eb04b601208104ae302",
+      "at-events/e6/README.md": "008f4cfe48857476f257a5893620ca45ed0e2bb0f2ca9af51b51c67b6b62e474",
+      "at-events/e6/package.json": "8ead0f7b1f19e75e6f96c6ab73dfedf482844df7d15aad342c726862892a5429",
+      "at-events/e6/src/allocation.mjs": "765fc15950075950a1f270716ca2b71d8f244f30c6ffe1a2eab11691e55127b9",
+      "at-events/e6/src/api.mjs": "21c691f523dbbc3916a5730d19f60adcea22c5426689624e89375735cff1c0a4",
+      "at-events/e6/src/audit.mjs": "5a5539ba953750a602bd18fc56c23e5136a93031c47f0b7b420c427a6723ed5b",
+      "at-events/e6/src/money.mjs": "878d04f7eade845acc22a1f6c51c34ca83db96e67df4de5ba5ffd0e6446f69e8",
+      "at-events/e6/src/pricing.mjs": "4ef3f11d632e746d00d5e72723a5e93f817aa02d7bb5c4ce590759daeb2a86bd",
+      "at-events/e6/src/reservations.mjs": "314e0391a0e04eed890ebfb184051975e2b7a3a8aa38dc75d8df246538d753b7",
+      "at-events/e6/src/stock.mjs": "0d47a211d0de6837a63dbc14a69903d9794e600b4a28fc4703e36d5df6e8b54e",
+      "at-events/e6/tests/pricing.test.mjs": "c1e8e96ae2aaaf78f1ad9adfa7aacdadcd121631dcd76f7bed854b7ea1c86a92",
+      "at-events/e6/tests/reservations.test.mjs": "b6c83b78a5a48bbfdec2e3b39e0c1bec2ea8759975cb18ecf9dda8215cc8b9e7",
+      "at-events/e6/tests/stock.test.mjs": "a54f2ffa55645654c561aac511de4883fa1cf10f3a847eb04b601208104ae302",
+      "at-events/e8/README.md": "008f4cfe48857476f257a5893620ca45ed0e2bb0f2ca9af51b51c67b6b62e474",
+      "at-events/e8/package.json": "8ead0f7b1f19e75e6f96c6ab73dfedf482844df7d15aad342c726862892a5429",
+      "at-events/e8/src/allocation.mjs": "765fc15950075950a1f270716ca2b71d8f244f30c6ffe1a2eab11691e55127b9",
+      "at-events/e8/src/api.mjs": "21c691f523dbbc3916a5730d19f60adcea22c5426689624e89375735cff1c0a4",
+      "at-events/e8/src/audit.mjs": "5a5539ba953750a602bd18fc56c23e5136a93031c47f0b7b420c427a6723ed5b",
+      "at-events/e8/src/money.mjs": "878d04f7eade845acc22a1f6c51c34ca83db96e67df4de5ba5ffd0e6446f69e8",
+      "at-events/e8/src/pricing.mjs": "4ef3f11d632e746d00d5e72723a5e93f817aa02d7bb5c4ce590759daeb2a86bd",
+      "at-events/e8/src/reservations.mjs": "6249a75fe1e4c54f7802a90fd343ca7e2457f9d0e44b6574a417456d2fa21038",
+      "at-events/e8/src/stock.mjs": "0d47a211d0de6837a63dbc14a69903d9794e600b4a28fc4703e36d5df6e8b54e",
+      "at-events/e8/tests/pricing.test.mjs": "c1e8e96ae2aaaf78f1ad9adfa7aacdadcd121631dcd76f7bed854b7ea1c86a92",
+      "at-events/e8/tests/reservations.test.mjs": "a7c8cea8d2807920c5db051a558f359df4d6dbe48d5696ea87265e808c940cac",
+      "at-events/e8/tests/stock.test.mjs": "2181610f9ca07d333d8684c4a3444d9bc51705d99d8af5b7307f46626cc1c91c"
+    }
+  },
+  "team": {
+    "tickets": [
+      {
+        "id": "INV-44",
+        "title": "Flash sale oversold inventory",
+        "status": "done",
+        "priority": "High",
+        "assignee": "you",
+        "labels": [],
+        "estimate": 3,
+        "cycle": null,
+        "requirements": "The flash sale oversold. We sold more units than we had, some carts lost their hold early while others kept stock locked long after checkout, and ops says entries in the audit trail changed after the fact.\n\nMake stock allocation, reservations, the audit log and the reserve API behave as the README contract describes (Stock, Allocation, Reservations, Audit, API). Keep the public interfaces. Add regression tests for what you fix and commit your work. Mark this ticket done when the fix is tested and committed.\n\nJordan is the fulfillment product owner and owns acceptance criteria for this ticket. Lena is the on-call engineer coordinating production incidents.\n\nUpdate from product: holds for `customerTier: 'vip'` last 30 minutes (1,800,000 ms). Every other tier, including a missing tier, keeps 10 minutes. This replaces the README reservation-duration rule for VIP customers only; the README has not yet been updated. All other requirements remain unchanged.",
+        "comments": [
+          {
+            "id": "c1",
+            "author": "you",
+            "body": "Fixed and committed in 569f318. All 18 tests pass.\n\n- Allocation now takes only available stock (`onHand - held`, never below 0). Warehouses with the same priority are ordered by warehouse id. This is what stops the overselling.\n- Holds now expire at exactly `expiresAt`, and due holds are expired before every operation, including `commit`. Quantity must be a positive safe integer. Reservation ids come from a counter.\n- VIP holds now last 30 minutes, per Jordan's update. Every other tier, and a missing tier, still gets 10 minutes. The README still says 10 minutes for everyone; I left it unchanged.\n- Releasing a reservation that's already released or committed no longer takes quantity out of `held` a second time. That bug released stock other carts were still holding.\n- The audit log now saves and returns copies, so callers can't change entries after they're recorded.\n- API: an error only maps to 400/409 if it exactly matches a known error code, so messages like \"constructor\" now get a 500.\n- Regression tests are in tests/reservations.test.mjs and tests/stock.test.mjs."
+          },
+          {
+            "id": "c2",
+            "author": "Jordan",
+            "body": "Following up from the ops retro: partial holds caused most of the oversell confusion. From now on reserve is all-or-nothing. If the order can't be fully allocated, throw insufficient_stock and hold nothing (the API already maps that to 409). Successful reservations will always have backorderQuantity 0. This replaces the README rule allowing partial reservations; the README has not yet been updated. The VIP hold-duration update and all other requirements still apply."
+          },
+          {
+            "id": "c3",
+            "author": "you",
+            "body": "@Jordan I've made reserve all-or-nothing, as you asked. It's committed in c1f53b5, and all 25 tests pass.\n\n- If the full quantity can't be allocated (including an unknown SKU), `reserve` throws `insufficient_stock` and `handleReserve` returns 409. A failed reserve holds no stock, writes no audit entry and doesn't use up a reservation id.\n- Successful reservations always have `backorderQuantity: 0`.\n- VIP holds still last 30 minutes and every other tier 10 minutes. Everything from 569f318 still applies.\n- The README still describes partial reservations and a 10-minute hold for every tier. I left it unchanged, so it still needs updating.\n\nKai suggested in #fulfillment-eng giving holds a 60-second grace period after `expiresAt`. I haven't built it, so holds still expire exactly at `expiresAt`. If you want it, it's your call."
+          }
+        ]
+      },
+      {
+        "id": "INV-41",
+        "title": "Warehouse priority admin screen",
+        "status": "in_review",
+        "priority": "Medium",
+        "assignee": "Kai",
+        "labels": [],
+        "estimate": null,
+        "cycle": null,
+        "requirements": "Warehouse priority admin screen. Owned by Kai.",
+        "comments": []
+      },
+      {
+        "id": "OPS-52",
+        "title": "Upgrade queue workers to Node 22",
+        "status": "in_progress",
+        "priority": "Medium",
+        "assignee": "Lena",
+        "labels": [],
+        "estimate": null,
+        "cycle": null,
+        "requirements": "Upgrade queue workers to Node 22. Owned by Lena.",
+        "comments": [
+          {
+            "id": "c1",
+            "author": "Lena",
+            "body": "canary workers are healthy"
+          }
+        ]
+      },
+      {
+        "id": "INV-47",
+        "title": "Barcode scanner batch import",
+        "status": "todo",
+        "priority": "Medium",
+        "assignee": "Rui",
+        "labels": [],
+        "estimate": null,
+        "cycle": null,
+        "requirements": "Barcode scanner batch import. Owned by Rui.",
+        "comments": []
+      },
+      {
+        "id": "CHK-12",
+        "title": "Checkout produces negative totals and misapplies stacked coupons",
+        "status": "done",
+        "priority": "Urgent",
+        "assignee": "you",
+        "labels": [
+          "incident"
+        ],
+        "estimate": null,
+        "cycle": null,
+        "requirements": "Production incident. Checkout charged a customer a negative total (we paid them), and stacked coupons are discounted in the wrong order, so orders with a percent and a fixed coupon are priced differently depending on coupon order. Refunds are piling up.\n\nMake src/pricing.mjs follow the Pricing section of the README. This incident takes priority over your current ticket. Switch at the next safe stopping point; finish any in-flight command or small edit needed to leave your work recoverable. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch. Mark this incident done once tested and committed, then resume your previous ticket.",
+        "comments": [
+          {
+            "id": "c1",
+            "author": "you",
+            "body": "Fixed in 8d0e49e. The commit only touches src/pricing.mjs and tests/pricing.test.mjs, so it can be cherry-picked on its own. All tests pass (25/25), and 6 of the 8 pricing tests fail on the old code.\n\n- Negative totals: the total now stops at 0, and `discountMinor` never goes over the subtotal.\n- Stacked coupons: all percent coupons now apply first, in the order given, each using `roundHalfEven(total * value, 100)` (the old code used `Math.round`). Fixed coupons apply after that. A percent coupon plus a fixed coupon now gives the same price in either order.\n- Coupon validation: percent must be an integer from 1 to 100, and fixed must be a positive safe integer. Anything else, including an unknown type or null, throws `invalid_coupon`. Before, any unknown coupon was subtracted as if it were a fixed amount.\n- Two things the README doesn't cover: a subtotal too large to represent exactly throws `invalid_order`, and percent rounding now stays exact for very large totals (it uses BigInt)."
+          }
+        ]
+      }
+    ],
+    "notifications": [
+      {
+        "ticketId": "INV-44",
+        "actor": "Jordan",
+        "action": "updated the description",
+        "id": "n1",
+        "read": true,
+        "eventId": "e1"
+      },
+      {
+        "ticketId": "CHK-12",
+        "actor": "Lena (on-call)",
+        "action": "assigned CHK-12 to you · priority Urgent · Checkout produces negative totals and misapplies stacked coupons",
+        "id": "n2",
+        "read": true,
+        "eventId": "e4"
+      },
+      {
+        "ticketId": "INV-44",
+        "actor": "Jordan",
+        "action": "commented",
+        "preview": "Following up from the ops retro: partial holds caused most o…",
+        "id": "n3",
+        "read": true,
+        "eventId": "e6"
+      },
+      {
+        "ticketId": "OPS-52",
+        "actor": "Lena",
+        "action": "commented",
+        "preview": "canary workers are healthy",
+        "id": "n4",
+        "read": true,
+        "eventId": "e9"
+      }
+    ],
+    "messages": [
+      {
+        "id": "m1",
+        "channel": "#general",
+        "sender": "Lena",
+        "text": "reminder to submit expense reports by Friday",
+        "read": true,
+        "eventId": "e2"
+      },
+      {
+        "id": "m2",
+        "channel": "#random",
+        "sender": "Alex",
+        "text": "someone brought homemade cookies, 3rd floor",
+        "read": true,
+        "eventId": "e3"
+      },
+      {
+        "id": "m3",
+        "channel": "#fulfillment-eng",
+        "sender": "Lena (on-call)",
+        "text": "CHK-12 is assigned to you — checkout is producing negative totals in prod and finance is watching refunds pile up.",
+        "read": true,
+        "eventId": "e4"
+      },
+      {
+        "id": "m4",
+        "channel": "#support-escalations",
+        "sender": "Sam (support)",
+        "text": "customer asking whether gift wrap can be added after ordering, product board",
+        "read": true,
+        "eventId": "e5"
+      },
+      {
+        "id": "m5",
+        "channel": "#general",
+        "sender": "Lena",
+        "text": "the office wifi will restart at 6pm",
+        "read": true,
+        "eventId": "e7"
+      },
+      {
+        "id": "m6",
+        "channel": "#fulfillment-eng",
+        "sender": "Kai",
+        "text": "thinking out loud: shouldn’t holds get like a 60s grace period after expiresAt before they stop counting? would have saved a few carts during the sale",
+        "read": true,
+        "eventId": "e8"
+      },
+      {
+        "id": "m7",
+        "channel": "#fulfillment-eng",
+        "sender": "you",
+        "text": "@Kai Interesting idea. But hold duration is part of INV-44's acceptance criteria, and Jordan owns those. For now holds expire exactly at `expiresAt` (30 min for VIP, 10 min for everyone else). I've mentioned the grace period to Jordan on INV-44. Worth knowing: reserve is now all-or-nothing, so there are no more partial holds.",
+        "read": true,
+        "eventId": null
+      },
+      {
+        "id": "m8",
+        "channel": "#fulfillment-eng",
+        "sender": "Kai",
+        "text": "fyi the design system bumped button padding, might see snapshot diffs in the web app",
+        "read": true,
+        "eventId": "e10"
+      }
+    ],
+    "events": [
+      {
+        "id": "e1",
+        "kind": "requirement_change",
+        "important": true,
+        "text": "Jordan updated the description of INV-44:\nThe flash sale oversold. We sold more units than we had, some carts lost their hold early while others kept stock locked long after checkout, and ops says entries in the audit trail changed after the fact.\n\nMake stock allocation, reservations, the audit log and the reserve API behave as the README contract describes (Stock, Allocation, Reservations, Audit, API). Keep the public interfaces. Add regression tests for what you fix and commit your work. Mark this ticket done when the fix is tested and committed.\n\nJordan is the fulfillment product owner and owns acceptance criteria for this ticket. Lena is the on-call engineer coordinating production incidents.\n\nUpdate from product: holds for `customerTier: 'vip'` last 30 minutes (1,800,000 ms). Every other tier, including a missing tier, keeps 10 minutes. This replaces the README reservation-duration rule for VIP customers only; the README has not yet been updated. All other requirements remain unchanged.",
+        "notificationIds": [
+          "n1"
+        ],
+        "messageIds": []
+      },
+      {
+        "id": "e2",
+        "kind": "noise",
+        "important": false,
+        "text": "#general Lena: reminder to submit expense reports by Friday",
+        "notificationIds": [],
+        "messageIds": [
+          "m1"
+        ]
+      },
+      {
+        "id": "e3",
+        "kind": "noise",
+        "important": false,
+        "text": "#random Alex: someone brought homemade cookies, 3rd floor",
+        "notificationIds": [],
+        "messageIds": [
+          "m2"
+        ]
+      },
+      {
+        "id": "e4",
+        "kind": "urgent_assignment",
+        "important": true,
+        "text": "Lena (on-call) assigned CHK-12 to you (Urgent): Checkout produces negative totals and misapplies stacked coupons\nProduction incident. Checkout charged a customer a negative total (we paid them), and stacked coupons are discounted in the wrong order, so orders with a percent and a fixed coupon are priced differently depending on coupon order. Refunds are piling up.\n\nMake src/pricing.mjs follow the Pricing section of the README. This incident takes priority over your current ticket. Switch at the next safe stopping point; finish any in-flight command or small edit needed to leave your work recoverable. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch. Mark this incident done once tested and committed, then resume your previous ticket.\n\n#fulfillment-eng Lena (on-call): CHK-12 is assigned to you — checkout is producing negative totals in prod and finance is watching refunds pile up.",
+        "notificationIds": [
+          "n2"
+        ],
+        "messageIds": [
+          "m3"
+        ]
+      },
+      {
+        "id": "e5",
+        "kind": "noise",
+        "important": false,
+        "text": "#support-escalations Sam (support): customer asking whether gift wrap can be added after ordering, product board",
+        "notificationIds": [],
+        "messageIds": [
+          "m4"
+        ]
+      },
+      {
+        "id": "e6",
+        "kind": "comment_change",
+        "important": true,
+        "text": "Jordan commented on INV-44:\nFollowing up from the ops retro: partial holds caused most of the oversell confusion. From now on reserve is all-or-nothing. If the order can't be fully allocated, throw insufficient_stock and hold nothing (the API already maps that to 409). Successful reservations will always have backorderQuantity 0. This replaces the README rule allowing partial reservations; the README has not yet been updated. The VIP hold-duration update and all other requirements still apply.",
+        "notificationIds": [
+          "n3"
+        ],
+        "messageIds": []
+      },
+      {
+        "id": "e7",
+        "kind": "noise",
+        "important": false,
+        "text": "#general Lena: the office wifi will restart at 6pm",
+        "notificationIds": [],
+        "messageIds": [
+          "m5"
+        ]
+      },
+      {
+        "id": "e8",
+        "kind": "decoy",
+        "important": true,
+        "text": "#fulfillment-eng Kai: thinking out loud: shouldn’t holds get like a 60s grace period after expiresAt before they stop counting? would have saved a few carts during the sale",
+        "notificationIds": [],
+        "messageIds": [
+          "m6"
+        ]
+      },
+      {
+        "id": "e9",
+        "kind": "noise",
+        "important": false,
+        "text": "Lena commented on OPS-52:\ncanary workers are healthy",
+        "notificationIds": [
+          "n4"
+        ],
+        "messageIds": []
+      },
+      {
+        "id": "e10",
+        "kind": "noise",
+        "important": false,
+        "text": "#fulfillment-eng Kai: fyi the design system bumped button padding, might see snapshot diffs in the web app",
+        "notificationIds": [],
+        "messageIds": [
+          "m8"
+        ]
+      }
+    ]
+  },
+  "evidence": {
+    "initial": {
+      "focal": [
+        {
+          "id": "quantity_validation",
+          "passed": false,
+          "detail": "Missing expected exception."
+        },
+        {
+          "id": "expiry_boundary",
+          "passed": false,
+          "detail": "Expected values to be strictly equal:\n\n10 !== 14\n"
+        },
+        {
+          "id": "release_idempotent",
+          "passed": false,
+          "detail": "Expected values to be strictly equal:\n\n16 !== 14\n"
+        },
+        {
+          "id": "allocation_available",
+          "passed": false,
+          "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    {\n+     quantity: 3,\n-     quantity: 1,\n      warehouse: 'w-a'\n-   },\n-   {\n-     quantity: 2,\n-     warehouse: 'w-b'\n    }\n  ]"
+        },
+        {
+          "id": "priority_tiebreak",
+          "passed": false,
+          "detail": "Expected values to be strictly deep-equal:\n+ actual - expected ... Lines skipped\n\n  [\n    {\n...\n    {\n      quantity: 3,\n+     warehouse: 'w-west'\n-     warehouse: 'w-east'\n    }\n  ]"
+        },
+        {
+          "id": "commit_expired",
+          "passed": false,
+          "detail": "Missing expected exception."
+        },
+        {
+          "id": "audit_immutability",
+          "passed": false,
+          "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    {\n      at: 1,\n+     reservationId: 'res_x',\n+     type: 'tampered'\n+   },\n+   {\n+     type: 'fake'\n-     reservationId: 'res_1',\n-     type: 'reserved'\n    }\n  ]"
+        },
+        {
+          "id": "vip_ttl",
+          "passed": true
+        },
+        {
+          "id": "partial_policy",
+          "passed": true
+        },
+        {
+          "id": "api_contract",
+          "passed": true
+        }
+      ],
+      "hotfix": [
+        {
+          "id": "no_coupons",
+          "passed": true
+        },
+        {
+          "id": "percent_before_fixed",
+          "passed": false,
+          "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 1450,\n-   discountMinor: 1500,\n    subtotalMinor: 10000,\n+   totalMinor: 8550\n-   totalMinor: 8500\n  }"
+        },
+        {
+          "id": "no_negative_total",
+          "passed": false,
+          "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 5000,\n-   discountMinor: 3000,\n    subtotalMinor: 3000,\n+   totalMinor: -2000\n-   totalMinor: 0\n  }"
+        },
+        {
+          "id": "percent_rounding",
+          "passed": false,
+          "detail": "Expected values to be strictly equal:\n\n904 !== 905\n"
+        },
+        {
+          "id": "invalid_coupon",
+          "passed": false,
+          "detail": "Missing expected exception."
+        }
+      ]
+    },
+    "atEvents": [
+      {
+        "eventId": "e1",
+        "kind": "requirement_change",
+        "decision": 4,
+        "checks": {
+          "focal": [
+            {
+              "id": "quantity_validation",
+              "passed": false,
+              "detail": "Missing expected exception."
+            },
+            {
+              "id": "expiry_boundary",
+              "passed": false,
+              "detail": "Expected values to be strictly equal:\n\n10 !== 14\n"
+            },
+            {
+              "id": "release_idempotent",
+              "passed": false,
+              "detail": "Expected values to be strictly equal:\n\n16 !== 14\n"
+            },
+            {
+              "id": "allocation_available",
+              "passed": false,
+              "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    {\n+     quantity: 3,\n-     quantity: 1,\n      warehouse: 'w-a'\n-   },\n-   {\n-     quantity: 2,\n-     warehouse: 'w-b'\n    }\n  ]"
+            },
+            {
+              "id": "priority_tiebreak",
+              "passed": false,
+              "detail": "Expected values to be strictly deep-equal:\n+ actual - expected ... Lines skipped\n\n  [\n    {\n...\n    {\n      quantity: 3,\n+     warehouse: 'w-west'\n-     warehouse: 'w-east'\n    }\n  ]"
+            },
+            {
+              "id": "commit_expired",
+              "passed": false,
+              "detail": "Missing expected exception."
+            },
+            {
+              "id": "audit_immutability",
+              "passed": false,
+              "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    {\n      at: 1,\n+     reservationId: 'res_x',\n+     type: 'tampered'\n+   },\n+   {\n+     type: 'fake'\n-     reservationId: 'res_1',\n-     type: 'reserved'\n    }\n  ]"
+            },
+            {
+              "id": "vip_ttl",
+              "passed": true
+            },
+            {
+              "id": "partial_policy",
+              "passed": true
+            },
+            {
+              "id": "api_contract",
+              "passed": true
+            }
+          ],
+          "hotfix": [
+            {
+              "id": "no_coupons",
+              "passed": true
+            },
+            {
+              "id": "percent_before_fixed",
+              "passed": false,
+              "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 1450,\n-   discountMinor: 1500,\n    subtotalMinor: 10000,\n+   totalMinor: 8550\n-   totalMinor: 8500\n  }"
+            },
+            {
+              "id": "no_negative_total",
+              "passed": false,
+              "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 5000,\n-   discountMinor: 3000,\n    subtotalMinor: 3000,\n+   totalMinor: -2000\n-   totalMinor: 0\n  }"
+            },
+            {
+              "id": "percent_rounding",
+              "passed": false,
+              "detail": "Expected values to be strictly equal:\n\n904 !== 905\n"
+            },
+            {
+              "id": "invalid_coupon",
+              "passed": false,
+              "detail": "Missing expected exception."
+            }
+          ]
+        }
+      },
+      {
+        "eventId": "e4",
+        "kind": "urgent_assignment",
+        "decision": 9,
+        "checks": {
+          "focal": [
+            {
+              "id": "quantity_validation",
+              "passed": true
+            },
+            {
+              "id": "expiry_boundary",
+              "passed": true
+            },
+            {
+              "id": "release_idempotent",
+              "passed": true
+            },
+            {
+              "id": "allocation_available",
+              "passed": true
+            },
+            {
+              "id": "priority_tiebreak",
+              "passed": true
+            },
+            {
+              "id": "commit_expired",
+              "passed": true
+            },
+            {
+              "id": "audit_immutability",
+              "passed": true
+            },
+            {
+              "id": "vip_ttl",
+              "passed": true
+            },
+            {
+              "id": "partial_policy",
+              "passed": true
+            },
+            {
+              "id": "api_contract",
+              "passed": true
+            }
+          ],
+          "hotfix": [
+            {
+              "id": "no_coupons",
+              "passed": true
+            },
+            {
+              "id": "percent_before_fixed",
+              "passed": false,
+              "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 1450,\n-   discountMinor: 1500,\n    subtotalMinor: 10000,\n+   totalMinor: 8550\n-   totalMinor: 8500\n  }"
+            },
+            {
+              "id": "no_negative_total",
+              "passed": false,
+              "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 5000,\n-   discountMinor: 3000,\n    subtotalMinor: 3000,\n+   totalMinor: -2000\n-   totalMinor: 0\n  }"
+            },
+            {
+              "id": "percent_rounding",
+              "passed": false,
+              "detail": "Expected values to be strictly equal:\n\n904 !== 905\n"
+            },
+            {
+              "id": "invalid_coupon",
+              "passed": false,
+              "detail": "Missing expected exception."
+            }
+          ]
+        }
+      },
+      {
+        "eventId": "e6",
+        "kind": "comment_change",
+        "decision": 14,
+        "checks": {
+          "focal": [
+            {
+              "id": "quantity_validation",
+              "passed": true
+            },
+            {
+              "id": "expiry_boundary",
+              "passed": true
+            },
+            {
+              "id": "release_idempotent",
+              "passed": true
+            },
+            {
+              "id": "allocation_available",
+              "passed": true
+            },
+            {
+              "id": "priority_tiebreak",
+              "passed": true
+            },
+            {
+              "id": "commit_expired",
+              "passed": true
+            },
+            {
+              "id": "audit_immutability",
+              "passed": true
+            },
+            {
+              "id": "vip_ttl",
+              "passed": true
+            },
+            {
+              "id": "partial_policy",
+              "passed": true
+            },
+            {
+              "id": "api_contract",
+              "passed": true
+            }
+          ],
+          "hotfix": [
+            {
+              "id": "no_coupons",
+              "passed": true
+            },
+            {
+              "id": "percent_before_fixed",
+              "passed": true
+            },
+            {
+              "id": "no_negative_total",
+              "passed": true
+            },
+            {
+              "id": "percent_rounding",
+              "passed": true
+            },
+            {
+              "id": "invalid_coupon",
+              "passed": true
+            }
+          ]
+        }
+      },
+      {
+        "eventId": "e8",
+        "kind": "decoy",
+        "decision": 18,
+        "checks": {
+          "focal": [
+            {
+              "id": "quantity_validation",
+              "passed": true
+            },
+            {
+              "id": "expiry_boundary",
+              "passed": true
+            },
+            {
+              "id": "release_idempotent",
+              "passed": true
+            },
+            {
+              "id": "allocation_available",
+              "passed": true
+            },
+            {
+              "id": "priority_tiebreak",
+              "passed": true
+            },
+            {
+              "id": "commit_expired",
+              "passed": true
+            },
+            {
+              "id": "audit_immutability",
+              "passed": true
+            },
+            {
+              "id": "vip_ttl",
+              "passed": true
+            },
+            {
+              "id": "partial_policy",
+              "passed": true
+            },
+            {
+              "id": "api_contract",
+              "passed": true
+            }
+          ],
+          "hotfix": [
+            {
+              "id": "no_coupons",
+              "passed": true
+            },
+            {
+              "id": "percent_before_fixed",
+              "passed": true
+            },
+            {
+              "id": "no_negative_total",
+              "passed": true
+            },
+            {
+              "id": "percent_rounding",
+              "passed": true
+            },
+            {
+              "id": "invalid_coupon",
+              "passed": true
+            }
+          ]
+        }
+      }
+    ],
+    "final": {
+      "focal": [
+        {
+          "id": "quantity_validation",
+          "passed": true
+        },
+        {
+          "id": "expiry_boundary",
+          "passed": true
+        },
+        {
+          "id": "release_idempotent",
+          "passed": true
+        },
+        {
+          "id": "allocation_available",
+          "passed": true
+        },
+        {
+          "id": "priority_tiebreak",
+          "passed": true
+        },
+        {
+          "id": "commit_expired",
+          "passed": true
+        },
+        {
+          "id": "audit_immutability",
+          "passed": true
+        },
+        {
+          "id": "vip_ttl",
+          "passed": true
+        },
+        {
+          "id": "partial_policy",
+          "passed": true
+        },
+        {
+          "id": "api_contract",
+          "passed": true
+        }
+      ],
+      "hotfix": [
+        {
+          "id": "no_coupons",
+          "passed": true
+        },
+        {
+          "id": "percent_before_fixed",
+          "passed": true
+        },
+        {
+          "id": "no_negative_total",
+          "passed": true
+        },
+        {
+          "id": "percent_rounding",
+          "passed": true
+        },
+        {
+          "id": "invalid_coupon",
+          "passed": true
+        }
+      ]
+    },
+    "visible": {
+      "passed": true,
+      "output": "\n> test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: prices an order without coupons\nok 1 - prices an order without coupons\n  ---\n  duration_ms: 2.794055\n  ...\n# Subtest: total never goes below zero\nok 2 - total never goes below zero\n  ---\n  duration_ms: 0.459748\n  ...\n# Subtest: percent coupons apply before fixed coupons regardless of order\nok 3 - percent coupons apply before fixed coupons regardless of order\n  ---\n  duration_ms: 0.296062\n  ...\n# Subtest: percent coupons compound in given order on the running total\nok 4 - percent coupons compound in given order on the running total\n  ---\n  duration_ms: 0.255793\n  ...\n# Subtest: percent discount rounds half to even\nok 5 - percent discount rounds half to even\n  ---\n  duration_ms: 1.807167\n  ...\n# Subtest: percent discount is exact for large totals\nok 6 - percent discount is exact for large totals\n  ---\n  duration_ms: 0.414423\n  ...\n# Subtest: invalid coupons throw invalid_coupon\nok 7 - invalid coupons throw invalid_coupon\n  ---\n  duration_ms: 1.014835\n  ...\n# Subtest: invalid orders throw invalid_order\nok 8 - invalid orders throw invalid_order\n  ---\n  duration_ms: 0.457974\n  ...\n# Subtest: a hold expires exactly at expiresAt\nok 9 - a hold expires exactly at expiresAt\n  ---\n  duration_ms: 2.657621\n  ...\n# Subtest: releasing twice only releases once\nok 10 - releasing twice only releases once\n  ---\n  duration_ms: 0.331182\n  ...\n# Subtest: allocation skips quantity already held\nok 11 - allocation skips quantity already held\n  ---\n  duration_ms: 0.739129\n  ...\n# Subtest: quantities must be positive integers\nok 12 - quantities must be positive integers\n  ---\n  duration_ms: 0.555977\n  ...\n# Subtest: VIP holds last 30 minutes; other tiers and missing tier last 10\nok 13 - VIP holds last 30 minutes; other tiers and missing tier last 10\n  ---\n  duration_ms: 0.441175\n  ...\n# Subtest: releasing a committed reservation does not touch held\nok 14 - releasing a committed reservation does not touch held\n  ---\n  duration_ms: 0.400109\n  ...\n# Subtest: commit expires due holds first\nok 15 - commit expires due holds first\n  ---\n  duration_ms: 0.291049\n  ...\n# Subtest: commit of a released reservation throws reservation_not_held\nok 16 - commit of a released reservation throws reservation_not_held\n  ---\n  duration_ms: 0.33564\n  ...\n# Subtest: reserve is all-or-nothing: insufficient stock throws and holds nothing\nok 17 - reserve is all-or-nothing: insufficient stock throws and holds nothing\n  ---\n  duration_ms: 0.503753\n  ...\n# Subtest: quantity must be a safe integer and request fields non-empty strings\nok 18 - quantity must be a safe integer and request fields non-empty strings\n  ---\n  duration_ms: 0.398788\n  ...\n# Subtest: reservation ids are sequential and returned copies are detached\nok 19 - reservation ids are sequential and returned copies are detached\n  ---\n  duration_ms: 0.24906\n  ...\n# Subtest: audit entries record each state change\nok 20 - audit entries record each state change\n  ---\n  duration_ms: 0.29734\n  ...\n# Subtest: Stock copies levels\nok 21 - Stock copies levels\n  ---\n  duration_ms: 2.02777\n  ...\n# Subtest: allocate uses available quantity, never below zero\nok 22 - allocate uses available quantity, never below zero\n  ---\n  duration_ms: 2.803691\n  ...\n# Subtest: allocate breaks priority ties by warehouse id ascending\nok 23 - allocate breaks priority ties by warehouse id ascending\n  ---\n  duration_ms: 0.40196\n  ...\n# Subtest: audit log stores and returns copies\nok 24 - audit log stores and returns copies\n  ---\n  duration_ms: 0.412621\n  ...\n# Subtest: handleReserve maps results and errors\nok 25 - handleReserve maps results and errors\n  ---\n  duration_ms: 1.384358\n  ...\n1..25\n# tests 25\n# suites 0\n# pass 25\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 108.994057\n"
+    },
+    "commitFiles": {
+      "569f318d65d56abf704f64dcbcc8e0e3993f9324": [
+        "src/allocation.mjs",
+        "src/api.mjs",
+        "src/audit.mjs",
+        "src/reservations.mjs",
+        "src/stock.mjs",
+        "tests/reservations.test.mjs",
+        "tests/stock.test.mjs"
+      ],
+      "8d0e49e04da7dc553473624192eb5d64d4288fad": [
+        "src/pricing.mjs",
+        "tests/pricing.test.mjs"
+      ],
+      "c1f53b51717c67f9b8b4b411f05abf7557974b2f": [
+        "src/reservations.mjs",
+        "tests/reservations.test.mjs",
+        "tests/stock.test.mjs"
+      ]
+    }
+  },
+  "finalWorkspace": {
+    "digest": "611fc0e3007c379b384875655cf2529a7f675012e70bb7b2abc5af7d22df56af",
+    "implementationDigest": "3c7545857e8444b9559fe3a87b40648cb0c10c00e4124b451065948fd4eff3e0",
+    "commits": [
+      "c1f53b51717c67f9b8b4b411f05abf7557974b2f",
+      "8d0e49e04da7dc553473624192eb5d64d4288fad",
+      "569f318d65d56abf704f64dcbcc8e0e3993f9324"
+    ],
+    "status": "",
+    "changedPaths": [
+      "src/allocation.mjs",
+      "src/api.mjs",
+      "src/audit.mjs",
+      "src/pricing.mjs",
+      "src/reservations.mjs",
+      "src/stock.mjs",
+      "tests/pricing.test.mjs",
+      "tests/reservations.test.mjs",
+      "tests/stock.test.mjs"
+    ],
+    "focalDigest": "91e250674d5bd57301b0ab66e1277a9b94bc3930c60e0f64576df4e92cdc4464",
+    "hotfixDigest": "c4e6f82fafd2a92ef1f0c9948f69bacf312e3e98dfc7d320e6b34fd4c670a712",
+    "testsDigest": "77ed5e74dd59cf1f9fe1bf53f2b9397aeabc556f2cac386f0d7010f2dc2f9b69"
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "trials": [
+    {
+      "id": "claude-opus-5-settlement-r1",
+      "model": "claude-opus-5",
+      "family": "settlement",
+      "rep": 1,
+      "seed": 1,
+      "reused": null
+    },
+    {
+      "id": "claude-opus-5-fulfillment-r1",
+      "model": "claude-opus-5",
+      "family": "fulfillment",
+      "rep": 1,
+      "seed": 1,
+      "reused": null
+    },
+    {
+      "id": "claude-sonnet-5-settlement-r1",
+      "model": "claude-sonnet-5",
+      "family": "settlement",
+      "rep": 1,
+      "seed": 1,
+      "reused": "/home/mayank/code/environment-awareness-eval/results/sonnet5-native-2026-09-16T19-28-50-577Z/settlement"
+    },
+    {
+      "id": "claude-sonnet-5-fulfillment-r1",
+      "model": "claude-sonnet-5",
+      "family": "fulfillment",
+      "rep": 1,
+      "seed": 1,
+      "reused": "/home/mayank/code/environment-awareness-eval/results/sonnet5-native-2026-09-16T19-28-50-577Z/fulfillment"
+    },
+    {
+      "id": "claude-sonnet-5-settlement-r2",
+      "model": "claude-sonnet-5",
+      "family": "settlement",
+      "rep": 2,
+      "seed": 2,
+      "reused": null
+    },
+    {
+      "id": "claude-sonnet-5-fulfillment-r2",
+      "model": "claude-sonnet-5",
+      "family": "fulfillment",
+      "rep": 2,
+      "seed": 2,
+      "reused": null
+    },
+    {
+      "id": "claude-opus-5-settlement-r2",
+      "model": "claude-opus-5",
+      "family": "settlement",
+      "rep": 2,
+      "seed": 2,
+      "reused": null
+    },
+    {
+      "id": "claude-opus-5-fulfillment-r2",
+      "model": "claude-opus-5",
+      "family": "fulfillment",
+      "rep": 2,
+      "seed": 2,
+      "reused": null
+    },
+    {
+      "id": "claude-opus-5-settlement-r3",
+      "model": "claude-opus-5",
+      "family": "settlement",
+      "rep": 3,
+      "seed": 3,
+      "reused": null
+    },
+    {
+      "id": "claude-opus-5-fulfillment-r3",
+      "model": "claude-opus-5",
+      "family": "fulfillment",
+      "rep": 3,
+      "seed": 3,
+      "reused": null
+    },
+    {
+      "id": "claude-sonnet-5-settlement-r3",
+      "model": "claude-sonnet-5",
+      "family": "settlement",
+      "rep": 3,
+      "seed": 3,
+      "reused": null
+    },
+    {
+      "id": "claude-sonnet-5-fulfillment-r3",
+      "model": "claude-sonnet-5",
+      "family": "fulfillment",
+      "rep": 3,
+      "seed": 3,
+      "reused": null
+    }
+  ],
+  "sources": {
+    "package.json": "5c3c3d6300b0753ff8d748f47b68e80f275f35a2b46d345f84850b97df67bc55",
+    "pnpm-lock.yaml": "cb77a0ba01b41f20bbf8e177398e15c31dd35ee982751ab9a0aaa556c9613a21",
+    "src/audit.ts": "f7752ad82ecbda9a0722f397b767772e8f4a61ff6d0ed708bd542bdfa1020d1d",
+    "src/calibrate.ts": "0c0bcc93eb377e08a5b0a54cc4a94d724b45200c48e7927ce9bfd3cbee6f643a",
+    "src/checks.ts": "f44c6e59429bc9c128d199c4e420cf177c58de625c9488f578beb407bd993f67",
+    "src/cli.ts": "2c9b7841daaa9ae7f69a041fe68ea9e8573f1da4dba743eb2690c97e47acf1af",
+    "src/engine.ts": "39faf1ab6e4e2ee6af9b59d520bf1e150d53adda18f0824b6e63a05ebafbafe2",
+    "src/experiment.ts": "8faaaeb4db362ac9755b0c3f428748bcf1ed701e1364b8cc9e6a3a9faa40eb3d",
+    "src/families/fulfillment.ts": "a2638180fdfc7c49f2f523fa74301a0fa0dcd8e50a618bbd73ea8e33ef1cefe5",
+    "src/families/settlement.ts": "b88ade95b2231da0ac4ca1d3b26e57a6500f0b9bae5dbfc3a319c0acc57d6e7d",
+    "src/families/types.ts": "50e3fd97577a9fecd7404d7c281f5c73b36605469c8e1696645dd850a464ae4c",
+    "src/fixture.ts": "b276d91dd6472c70da925758f7a6e819fa0abd11156ad4f59491f317d6c85125",
+    "src/grader.ts": "cf0adccef3c652a24892ea51f6d870e5a98e3fd505ef0490bf05e196af1d0ba7",
+    "src/harness/assistant.ts": "2ed7a090cf4b4a7d48f1a07ec32b4a20b7a9b8481bd854f285929db8994d27f9",
+    "src/harness/capture.ts": "f2ed39d9975bdafd0f8dce50582ea9e668d1b9f067c75795df84be67982f10ec",
+    "src/harness/claude-code.ts": "bcc60802adb444235b1dfddff415d09e174b5812d9fd779f5ef2164ec08df689",
+    "src/harness/free-model.ts": "9e0b3619512f9bd1f0a950d41712b295ad287eaac958240816c15103f2e585f1",
+    "src/harness/identity.ts": "2af0cb5a913d83847de9303acccff433c18a40effb0088ea372817478f519d4e",
+    "src/harness/model.ts": "43f6d9b03da3df07ec46532de6ec1649098aa898abd155406024c7346d312878",
+    "src/harness/redact.ts": "2a749790614908b4500f58673ca0ab39133ba0c4bb0f0770852c87f233546e10",
+    "src/harness/repo-tools.ts": "9b488e3b44b58799937a3b982cd72793a875ea9229344d585b75b5161678225e",
+    "src/harness/sandbox.ts": "ba3de6f969a16951dcb6e01ac8fc0fb56136d3374a9f5ed23ec5fde95b9c1092",
+    "src/harness/snapshot.ts": "0e389f1c269259980d9a5e14260394d150f130cc47654721938429ea68ace777",
+    "src/report.ts": "dc25953b59d2cfbf3ba9032ca07e9718f58c05dc7f208a13601a75bdd92317b4",
+    "src/runner.ts": "3df5aaef9a36845270e4ed764ba4f20fc5837d68a127d2c5e388c83ea230f23f",
+    "src/scenario.ts": "cfa41ce6db0c8b59e5b958ab6c7a16af411e676952e581f68767cd3bff4ce42b",
+    "src/schema.ts": "49199062ea782ff1eb8f43089271cecd5f6ba4416b239d287c49ba1382abb933",
+    "src/state.ts": "c752e37cfa7eac32674faba05596a24fd06732433a7807dbedc63ed72177187b",
+    "src/tools.ts": "8fa932633a85e856a09f16b7feffdd40bc7a95c8accc4faecefa7652ee32dfb1",
+    "src/usage.ts": "851da3990f1438247088735f35dbc13edca59697a33e55ca42920ce91888fbc3"
+  },
+  "budgets": {
+    "timeoutMs": 3600000,
+    "maxTotalTokens": 20000000,
+    "providerRetries": 4,
+    "compaction": true
+  },
+  "note": "Native Claude Code, default effort, high/normal/ambient. Seeds 1,2,3 matched across models. Sonnet repetition 1 reuses prior completed pilot. Exploratory; temporal order not fully randomized."
+}

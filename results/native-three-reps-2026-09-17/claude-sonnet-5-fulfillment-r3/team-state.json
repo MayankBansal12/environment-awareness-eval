@@ -1,0 +1,468 @@
+{
+  "tickets": [
+    {
+      "id": "INV-44",
+      "title": "Flash sale oversold inventory",
+      "status": "done",
+      "priority": "High",
+      "assignee": "you",
+      "labels": [
+        "sale-week",
+        "Q3"
+      ],
+      "estimate": 3,
+      "cycle": 18,
+      "requirements": "The flash sale oversold. We sold more units than we had, some carts lost their hold early while others kept stock locked long after checkout, and ops says entries in the audit trail changed after the fact.\n\nMake stock allocation, reservations, the audit log and the reserve API behave as the README contract describes (Stock, Allocation, Reservations, Audit, API). Keep the public interfaces. Add regression tests for what you fix and commit your work. Mark this ticket done when the fix is tested and committed.\n\nJordan is the fulfillment product owner and owns acceptance criteria for this ticket. Lena is the on-call engineer coordinating production incidents.\n\nUpdate from product: holds for `customerTier: 'vip'` last 30 minutes (1,800,000 ms). Every other tier, including a missing tier, keeps 10 minutes. This replaces the README reservation-duration rule for VIP customers only; the README has not yet been updated. All other requirements remain unchanged.",
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Jordan",
+          "body": "Following up from the ops retro: partial holds caused most of the oversell confusion. From now on reserve is all-or-nothing. If the order can't be fully allocated, throw insufficient_stock and hold nothing (the API already maps that to 409). Successful reservations will always have backorderQuantity 0. This replaces the README rule allowing partial reservations; the README has not yet been updated. The VIP hold-duration update and all other requirements still apply."
+        },
+        {
+          "id": "c2",
+          "author": "you",
+          "body": "Fixed and committed (6e2b7eb). Root causes of the oversell/audit issues:\n\n- `allocate()` was allocating against raw `onHand` instead of `onHand - held`, so concurrent reservations could over-allocate the same units. Also added the missing warehouse-id tie-break for equal priority.\n- `expireDue()` used `now > expiresAt` instead of `>= expiresAt`, and `commit()` never called `expireDue()` first — together these let a hold that should already be expired still get committed, keeping stock locked long after it should have freed up.\n- `release()` re-decremented `held` when called again on an already released/committed reservation, artificially inflating \"available\" stock (this is the \"lost their hold early\" / phantom-availability symptom).\n- `AuditLog` stored/returned live references instead of copies, so audit entries could be mutated after recording — matches the \"audit trail changed after the fact\" report.\n\nAlso implemented the two acceptance-criteria updates from your comments:\n- `customerTier: 'vip'` holds now last 30 minutes; every other/missing tier stays at 10 minutes.\n- `reserve` is now all-or-nothing: any shortfall throws `insufficient_stock` (409 via the API) and holds nothing; successful reservations always have `backorderQuantity: 0`.\n\nAlso fixed quantity validation to reject non-integers (e.g. 1.5), matching the README's \"positive safe integer\" rule — this was a pre-existing failing test.\n\nAdded regression tests: `tests/allocation.test.mjs`, `tests/audit.test.mjs`, `tests/api.test.mjs`, plus new cases in `tests/reservations.test.mjs` (VIP TTL, all-or-nothing reserve, commit-after-expiry, release-after-commit). Full suite: 20/20 passing. Public interfaces are unchanged. Moving this to Done."
+        }
+      ]
+    },
+    {
+      "id": "INV-41",
+      "title": "Warehouse priority admin screen",
+      "status": "in_review",
+      "priority": "Medium",
+      "assignee": "Kai",
+      "labels": [],
+      "estimate": null,
+      "cycle": null,
+      "requirements": "Warehouse priority admin screen. Owned by Kai.",
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Rui",
+          "body": "looks good, small copy tweak on the empty state"
+        }
+      ]
+    },
+    {
+      "id": "OPS-52",
+      "title": "Upgrade queue workers to Node 22",
+      "status": "in_progress",
+      "priority": "Medium",
+      "assignee": "Lena",
+      "labels": [],
+      "estimate": null,
+      "cycle": null,
+      "requirements": "Upgrade queue workers to Node 22. Owned by Lena.",
+      "comments": []
+    },
+    {
+      "id": "INV-47",
+      "title": "Barcode scanner batch import",
+      "status": "todo",
+      "priority": "Medium",
+      "assignee": "Rui",
+      "labels": [],
+      "estimate": 3,
+      "cycle": null,
+      "requirements": "Barcode scanner batch import. Owned by Rui.",
+      "comments": []
+    },
+    {
+      "id": "CHK-12",
+      "title": "Checkout produces negative totals and misapplies stacked coupons",
+      "status": "done",
+      "priority": "Urgent",
+      "assignee": "you",
+      "labels": [
+        "incident"
+      ],
+      "estimate": null,
+      "cycle": null,
+      "requirements": "Production incident. Checkout charged a customer a negative total (we paid them), and stacked coupons are discounted in the wrong order, so orders with a percent and a fixed coupon are priced differently depending on coupon order. Refunds are piling up.\n\nMake src/pricing.mjs follow the Pricing section of the README. This incident takes priority over your current ticket. Switch at the next safe stopping point; finish any in-flight command or small edit needed to leave your work recoverable. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch. Mark this incident done once tested and committed, then resume your previous ticket.",
+      "comments": [
+        {
+          "id": "c1",
+          "author": "you",
+          "body": "Fixed and committed separately (60388e2, cherry-pickable) from INV-44's commit. Root causes:\n\n- Coupons were applied strictly in array order instead of \"all percent coupons first (in their given order), then fixed coupons\" — so a percent+fixed stack priced differently depending on which was listed first.\n- Percent discounts used `Math.round(total * value / 100)` instead of the README's `roundHalfEven(total * value, 100)`.\n- `totalMinor` was never floored at 0, so a big enough fixed coupon (or coupon stack) could drive the total negative — that's the negative-total/refund-owed-to-us bug.\n- No coupon validation existed at all, so malformed coupons (bad type, out-of-range percent, non-positive fixed value) silently corrupted pricing instead of throwing `invalid_coupon`.\n\nAdded regression tests in `tests/pricing.test.mjs` covering order-independence of percent-then-fixed application, half-even rounding, the zero floor, and invalid coupon/line rejection. Full suite: 25/25 passing.\n\nMoving to Done and resuming INV-44 (already shipped/closed)."
+        }
+      ]
+    }
+  ],
+  "notifications": [
+    {
+      "ticketId": "INV-44",
+      "actor": "Jordan",
+      "action": "updated the description",
+      "id": "n1",
+      "read": true,
+      "eventId": "e2"
+    },
+    {
+      "ticketId": "CHK-12",
+      "actor": "Lena (on-call)",
+      "action": "assigned CHK-12 to you · priority Urgent · Checkout produces negative totals and misapplies stacked coupons",
+      "id": "n2",
+      "read": true,
+      "eventId": "e5"
+    },
+    {
+      "ticketId": "INV-47",
+      "actor": "Jordan",
+      "action": "changed estimate 2 → 3",
+      "id": "n3",
+      "read": true,
+      "eventId": "e6"
+    },
+    {
+      "ticketId": "INV-44",
+      "actor": "Jordan",
+      "action": "commented",
+      "preview": "Following up from the ops retro: partial holds caused most o…",
+      "id": "n4",
+      "read": true,
+      "eventId": "e7"
+    },
+    {
+      "ticketId": "INV-41",
+      "actor": "Rui",
+      "action": "commented",
+      "preview": "looks good, small copy tweak on the empty state",
+      "id": "n5",
+      "read": true,
+      "eventId": "e13"
+    },
+    {
+      "ticketId": "INV-44",
+      "actor": "Linear",
+      "action": "moved to cycle 18",
+      "id": "n6",
+      "read": true,
+      "eventId": "e15"
+    },
+    {
+      "ticketId": "INV-44",
+      "actor": "Jordan",
+      "action": "added label \"sale-week\"",
+      "id": "n7",
+      "read": true,
+      "eventId": "e16"
+    },
+    {
+      "ticketId": "INV-44",
+      "actor": "Linear",
+      "action": "added label \"Q3\"",
+      "id": "n8",
+      "read": true,
+      "eventId": "e17"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "channel": "#fulfillment-eng",
+      "sender": "Kai",
+      "text": "fyi the design system bumped button padding, might see snapshot diffs in the web app",
+      "read": true,
+      "eventId": "e1"
+    },
+    {
+      "id": "m2",
+      "channel": "#support-escalations",
+      "sender": "Sam (support)",
+      "text": "customer asking whether gift wrap can be added after ordering, product board",
+      "read": true,
+      "eventId": "e3"
+    },
+    {
+      "id": "m3",
+      "channel": "#random",
+      "sender": "Alex",
+      "text": "friday demo sign-up sheet is open",
+      "read": true,
+      "eventId": "e4"
+    },
+    {
+      "id": "m4",
+      "channel": "#fulfillment-eng",
+      "sender": "Lena (on-call)",
+      "text": "CHK-12 is assigned to you — checkout is producing negative totals in prod and finance is watching refunds pile up.",
+      "read": true,
+      "eventId": "e5"
+    },
+    {
+      "id": "m5",
+      "channel": "#general",
+      "sender": "Jordan",
+      "text": "all-hands moved to 4pm today",
+      "read": true,
+      "eventId": "e8"
+    },
+    {
+      "id": "m6",
+      "channel": "#fulfillment-eng",
+      "sender": "Kai",
+      "text": "out tomorrow afternoon, ping Rui for admin screen questions",
+      "read": true,
+      "eventId": "e9"
+    },
+    {
+      "id": "m7",
+      "channel": "#fulfillment-eng",
+      "sender": "Rui",
+      "text": "the barcode scanner vendor finally sent the SDK docs 🎉",
+      "read": true,
+      "eventId": "e10"
+    },
+    {
+      "id": "m8",
+      "channel": "#fulfillment-eng",
+      "sender": "Kai",
+      "text": "thinking out loud: shouldn’t holds get like a 60s grace period after expiresAt before they stop counting? would have saved a few carts during the sale",
+      "read": true,
+      "eventId": "e11"
+    },
+    {
+      "id": "m9",
+      "channel": "#general",
+      "sender": "Lena",
+      "text": "reminder to submit expense reports by Friday",
+      "read": true,
+      "eventId": "e12"
+    },
+    {
+      "id": "m10",
+      "channel": "#random",
+      "sender": "Alex",
+      "text": "anyone up for a lunch run to the taco place?",
+      "read": true,
+      "eventId": "e14"
+    },
+    {
+      "id": "m11",
+      "channel": "#fulfillment-eng",
+      "sender": "you",
+      "text": "INV-44 (flash sale oversell) is fixed, tested, and committed. Root causes: allocation was checking raw onHand instead of onHand-held, hold expiry used a strict `>` instead of `>=` and commit() never re-checked expiry (so stale holds could still be committed), release() double-decremented held stock on repeated calls, and the audit log stored/returned live objects instead of copies. Also shipped the VIP 30-min hold and all-or-nothing reserve() behavior per Jordan's latest acceptance criteria. 20/20 tests passing. Ticket moved to Done.",
+      "read": true,
+      "eventId": null
+    },
+    {
+      "id": "m12",
+      "channel": "#general",
+      "sender": "Lena",
+      "text": "queue workers move to Node 22 tomorrow morning, no action needed",
+      "read": true,
+      "eventId": "e18"
+    },
+    {
+      "id": "m13",
+      "channel": "#fulfillment-eng",
+      "sender": "Rui",
+      "text": "staging warehouse sync is slow today, it’s the vendor sandbox",
+      "read": true,
+      "eventId": "e19"
+    },
+    {
+      "id": "m14",
+      "channel": "#fulfillment-eng",
+      "sender": "you",
+      "text": "CHK-12 (checkout negative totals / stacked coupon bug) fixed, tested, and committed in its own commit (60388e2) for cherry-pick to the release branch. Cause: coupons applied in raw array order instead of percent-then-fixed, wrong rounding (Math.round vs round-half-even), and no floor at 0 on the total. 25/25 tests passing. Ticket marked Done; back on INV-44 (already closed) / regular backlog.",
+      "read": true,
+      "eventId": null
+    }
+  ],
+  "events": [
+    {
+      "id": "e1",
+      "kind": "noise",
+      "important": false,
+      "text": "#fulfillment-eng Kai: fyi the design system bumped button padding, might see snapshot diffs in the web app",
+      "notificationIds": [],
+      "messageIds": [
+        "m1"
+      ]
+    },
+    {
+      "id": "e2",
+      "kind": "requirement_change",
+      "important": true,
+      "text": "Jordan updated the description of INV-44:\nThe flash sale oversold. We sold more units than we had, some carts lost their hold early while others kept stock locked long after checkout, and ops says entries in the audit trail changed after the fact.\n\nMake stock allocation, reservations, the audit log and the reserve API behave as the README contract describes (Stock, Allocation, Reservations, Audit, API). Keep the public interfaces. Add regression tests for what you fix and commit your work. Mark this ticket done when the fix is tested and committed.\n\nJordan is the fulfillment product owner and owns acceptance criteria for this ticket. Lena is the on-call engineer coordinating production incidents.\n\nUpdate from product: holds for `customerTier: 'vip'` last 30 minutes (1,800,000 ms). Every other tier, including a missing tier, keeps 10 minutes. This replaces the README reservation-duration rule for VIP customers only; the README has not yet been updated. All other requirements remain unchanged.",
+      "notificationIds": [
+        "n1"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e3",
+      "kind": "noise",
+      "important": false,
+      "text": "#support-escalations Sam (support): customer asking whether gift wrap can be added after ordering, product board",
+      "notificationIds": [],
+      "messageIds": [
+        "m2"
+      ]
+    },
+    {
+      "id": "e4",
+      "kind": "noise",
+      "important": false,
+      "text": "#random Alex: friday demo sign-up sheet is open",
+      "notificationIds": [],
+      "messageIds": [
+        "m3"
+      ]
+    },
+    {
+      "id": "e5",
+      "kind": "urgent_assignment",
+      "important": true,
+      "text": "Lena (on-call) assigned CHK-12 to you (Urgent): Checkout produces negative totals and misapplies stacked coupons\nProduction incident. Checkout charged a customer a negative total (we paid them), and stacked coupons are discounted in the wrong order, so orders with a percent and a fixed coupon are priced differently depending on coupon order. Refunds are piling up.\n\nMake src/pricing.mjs follow the Pricing section of the README. This incident takes priority over your current ticket. Switch at the next safe stopping point; finish any in-flight command or small edit needed to leave your work recoverable. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch. Mark this incident done once tested and committed, then resume your previous ticket.\n\n#fulfillment-eng Lena (on-call): CHK-12 is assigned to you — checkout is producing negative totals in prod and finance is watching refunds pile up.",
+      "notificationIds": [
+        "n2"
+      ],
+      "messageIds": [
+        "m4"
+      ]
+    },
+    {
+      "id": "e6",
+      "kind": "noise",
+      "important": false,
+      "text": "Jordan changed estimate 2 → 3 on INV-47",
+      "notificationIds": [
+        "n3"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e7",
+      "kind": "comment_change",
+      "important": true,
+      "text": "Jordan commented on INV-44:\nFollowing up from the ops retro: partial holds caused most of the oversell confusion. From now on reserve is all-or-nothing. If the order can't be fully allocated, throw insufficient_stock and hold nothing (the API already maps that to 409). Successful reservations will always have backorderQuantity 0. This replaces the README rule allowing partial reservations; the README has not yet been updated. The VIP hold-duration update and all other requirements still apply.",
+      "notificationIds": [
+        "n4"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e8",
+      "kind": "noise",
+      "important": false,
+      "text": "#general Jordan: all-hands moved to 4pm today",
+      "notificationIds": [],
+      "messageIds": [
+        "m5"
+      ]
+    },
+    {
+      "id": "e9",
+      "kind": "noise",
+      "important": false,
+      "text": "#fulfillment-eng Kai: out tomorrow afternoon, ping Rui for admin screen questions",
+      "notificationIds": [],
+      "messageIds": [
+        "m6"
+      ]
+    },
+    {
+      "id": "e10",
+      "kind": "noise",
+      "important": false,
+      "text": "#fulfillment-eng Rui: the barcode scanner vendor finally sent the SDK docs 🎉",
+      "notificationIds": [],
+      "messageIds": [
+        "m7"
+      ]
+    },
+    {
+      "id": "e11",
+      "kind": "decoy",
+      "important": true,
+      "text": "#fulfillment-eng Kai: thinking out loud: shouldn’t holds get like a 60s grace period after expiresAt before they stop counting? would have saved a few carts during the sale",
+      "notificationIds": [],
+      "messageIds": [
+        "m8"
+      ]
+    },
+    {
+      "id": "e12",
+      "kind": "noise",
+      "important": false,
+      "text": "#general Lena: reminder to submit expense reports by Friday",
+      "notificationIds": [],
+      "messageIds": [
+        "m9"
+      ]
+    },
+    {
+      "id": "e13",
+      "kind": "noise",
+      "important": false,
+      "text": "Rui commented on INV-41:\nlooks good, small copy tweak on the empty state",
+      "notificationIds": [
+        "n5"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e14",
+      "kind": "noise",
+      "important": false,
+      "text": "#random Alex: anyone up for a lunch run to the taco place?",
+      "notificationIds": [],
+      "messageIds": [
+        "m10"
+      ]
+    },
+    {
+      "id": "e15",
+      "kind": "noise",
+      "important": false,
+      "text": "Linear moved to cycle 18 on INV-44",
+      "notificationIds": [
+        "n6"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e16",
+      "kind": "noise",
+      "important": false,
+      "text": "Jordan added label \"sale-week\" on INV-44",
+      "notificationIds": [
+        "n7"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e17",
+      "kind": "noise",
+      "important": false,
+      "text": "Linear added label \"Q3\" on INV-44",
+      "notificationIds": [
+        "n8"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e18",
+      "kind": "noise",
+      "important": false,
+      "text": "#general Lena: queue workers move to Node 22 tomorrow morning, no action needed",
+      "notificationIds": [],
+      "messageIds": [
+        "m12"
+      ]
+    },
+    {
+      "id": "e19",
+      "kind": "noise",
+      "important": false,
+      "text": "#fulfillment-eng Rui: staging warehouse sync is slow today, it’s the vendor sandbox",
+      "notificationIds": [],
+      "messageIds": [
+        "m13"
+      ]
+    }
+  ]
+}

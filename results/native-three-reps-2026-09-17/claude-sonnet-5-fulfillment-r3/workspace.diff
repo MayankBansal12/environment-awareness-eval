@@ -1,0 +1,387 @@
+diff --git a/src/allocation.mjs b/src/allocation.mjs
+index f402471..9a5a8e9 100644
+--- a/src/allocation.mjs
++++ b/src/allocation.mjs
+@@ -1,12 +1,12 @@
+ export function allocate(levels, quantity) {
+   const ordered = [...levels].sort(
+-    (a, b) => a.priority - b.priority,
++    (a, b) => a.priority - b.priority || (a.warehouse < b.warehouse ? -1 : a.warehouse > b.warehouse ? 1 : 0),
+   );
+   let remaining = quantity;
+   const lines = [];
+   for (const level of ordered) {
+     if (remaining === 0) break;
+-    const available = level.onHand;
++    const available = Math.max(0, level.onHand - (level.held ?? 0));
+     const take = Math.min(available, remaining);
+     if (take > 0) {
+       lines.push({ warehouse: level.warehouse, quantity: take });
+diff --git a/src/audit.mjs b/src/audit.mjs
+index 4352fbc..a60484b 100644
+--- a/src/audit.mjs
++++ b/src/audit.mjs
+@@ -4,10 +4,10 @@ export class AuditLog {
+   }
+ 
+   record(entry) {
+-    this.log.push(entry);
++    this.log.push({ ...entry });
+   }
+ 
+   entries() {
+-    return this.log;
++    return this.log.map((entry) => ({ ...entry }));
+   }
+ }
+diff --git a/src/pricing.mjs b/src/pricing.mjs
+index dd6ac9c..26ab07d 100644
+--- a/src/pricing.mjs
++++ b/src/pricing.mjs
+@@ -1,15 +1,38 @@
++import { roundHalfEven } from './money.mjs';
++
+ export function priceOrder({ lines, coupons = [] }) {
+   if (!Array.isArray(lines) || lines.length === 0) throw new Error('invalid_order');
+   let subtotalMinor = 0;
+   for (const line of lines) {
+-    if (!Number.isSafeInteger(line.unitMinor) || line.unitMinor < 0 || !Number.isSafeInteger(line.quantity) || line.quantity <= 0)
++    if (
++      !Number.isSafeInteger(line.unitMinor) ||
++      line.unitMinor < 0 ||
++      !Number.isSafeInteger(line.quantity) ||
++      line.quantity <= 0
++    )
+       throw new Error('invalid_order');
+     subtotalMinor += line.unitMinor * line.quantity;
+   }
++
++  for (const coupon of coupons) {
++    if (coupon && coupon.type === 'percent') {
++      if (!Number.isInteger(coupon.value) || coupon.value < 1 || coupon.value > 100)
++        throw new Error('invalid_coupon');
++    } else if (coupon && coupon.type === 'fixed') {
++      if (!Number.isSafeInteger(coupon.value) || coupon.value <= 0) throw new Error('invalid_coupon');
++    } else {
++      throw new Error('invalid_coupon');
++    }
++  }
++
+   let totalMinor = subtotalMinor;
+   for (const coupon of coupons) {
+-    if (coupon.type === 'percent') totalMinor -= Math.round((totalMinor * coupon.value) / 100);
+-    else totalMinor -= coupon.value;
++    if (coupon.type === 'percent') totalMinor -= roundHalfEven(totalMinor * coupon.value, 100);
++  }
++  for (const coupon of coupons) {
++    if (coupon.type === 'fixed') totalMinor -= coupon.value;
+   }
++  totalMinor = Math.max(0, totalMinor);
++
+   return { subtotalMinor, discountMinor: subtotalMinor - totalMinor, totalMinor };
+ }
+diff --git a/src/reservations.mjs b/src/reservations.mjs
+index 93469a0..b2ef572 100644
+--- a/src/reservations.mjs
++++ b/src/reservations.mjs
+@@ -2,9 +2,12 @@ import { allocate } from './allocation.mjs';
+ import { AuditLog } from './audit.mjs';
+ 
+ const HOLD_TTL_MS = 10 * 60_000;
++const VIP_HOLD_TTL_MS = 30 * 60_000;
+ 
+ const validString = (value) => typeof value === 'string' && value.length > 0;
+ 
++const holdTtlFor = (customerTier) => (customerTier === 'vip' ? VIP_HOLD_TTL_MS : HOLD_TTL_MS);
++
+ export class ReservationBook {
+   constructor(stock, clock = () => Date.now(), audit = new AuditLog()) {
+     this.stock = stock;
+@@ -21,7 +24,7 @@ export class ReservationBook {
+   expireDue() {
+     const now = this.clock();
+     for (const reservation of this.reservations.values()) {
+-      if (reservation.status === 'held' && now > reservation.expiresAt) {
++      if (reservation.status === 'held' && now >= reservation.expiresAt) {
+         reservation.status = 'expired';
+         this.adjustHeld(reservation, -1);
+         this.audit.record({ type: 'expired', reservationId: reservation.id, at: now });
+@@ -39,9 +42,10 @@ export class ReservationBook {
+   reserve(request) {
+     const { orderId, sku, quantity, customerTier = 'standard' } = request ?? {};
+     if (!validString(orderId) || !validString(sku)) throw new Error('invalid_request');
+-    if (!(quantity > 0)) throw new Error('invalid_quantity');
++    if (!Number.isSafeInteger(quantity) || quantity <= 0) throw new Error('invalid_quantity');
+     this.expireDue();
+     const { lines, backorderQuantity } = allocate(this.stock.forSku(sku), quantity);
++    if (backorderQuantity > 0) throw new Error('insufficient_stock');
+     const now = this.clock();
+     const reservation = {
+       id: 'res_' + (this.reservations.size + 1),
+@@ -50,7 +54,7 @@ export class ReservationBook {
+       lines,
+       backorderQuantity,
+       status: 'held',
+-      expiresAt: now + HOLD_TTL_MS,
++      expiresAt: now + holdTtlFor(customerTier),
+     };
+     this.reservations.set(reservation.id, reservation);
+     this.adjustHeld(reservation, 1);
+@@ -62,10 +66,6 @@ export class ReservationBook {
+     this.expireDue();
+     const reservation = this.reservations.get(id);
+     if (!reservation) throw new Error('reservation_not_found');
+-    if (reservation.status === 'released' || reservation.status === 'committed') {
+-      this.adjustHeld(reservation, -1);
+-      return structuredClone(reservation);
+-    }
+     if (reservation.status !== 'held') return structuredClone(reservation);
+     reservation.status = 'released';
+     this.adjustHeld(reservation, -1);
+@@ -74,6 +74,7 @@ export class ReservationBook {
+   }
+ 
+   commit(id) {
++    this.expireDue();
+     const reservation = this.reservations.get(id);
+     if (!reservation) throw new Error('reservation_not_found');
+     if (reservation.status === 'expired') throw new Error('reservation_expired');
+diff --git a/tests/allocation.test.mjs b/tests/allocation.test.mjs
+new file mode 100644
+index 0000000..29dcd76
+--- /dev/null
++++ b/tests/allocation.test.mjs
+@@ -0,0 +1,45 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { allocate } from '../src/allocation.mjs';
++
++test('allocate only takes the available quantity, not raw onHand', () => {
++  const levels = [
++    { warehouse: 'w1', sku: 'cap', onHand: 5, held: 3, priority: 1 },
++    { warehouse: 'w2', sku: 'cap', onHand: 5, held: 0, priority: 2 },
++  ];
++  const result = allocate(levels, 4);
++  assert.deepEqual(result, {
++    lines: [
++      { warehouse: 'w1', quantity: 2 },
++      { warehouse: 'w2', quantity: 2 },
++    ],
++    backorderQuantity: 0,
++  });
++});
++
++test('allocate breaks priority ties by warehouse id ascending', () => {
++  const levels = [
++    { warehouse: 'w2', sku: 'cap', onHand: 5, held: 0, priority: 1 },
++    { warehouse: 'w1', sku: 'cap', onHand: 5, held: 0, priority: 1 },
++  ];
++  const result = allocate(levels, 3);
++  assert.deepEqual(result.lines, [{ warehouse: 'w1', quantity: 3 }]);
++});
++
++test('levels with nothing available produce no line', () => {
++  const levels = [
++    { warehouse: 'w1', sku: 'cap', onHand: 2, held: 2, priority: 1 },
++    { warehouse: 'w2', sku: 'cap', onHand: 5, held: 0, priority: 2 },
++  ];
++  const result = allocate(levels, 3);
++  assert.deepEqual(result.lines, [{ warehouse: 'w2', quantity: 3 }]);
++});
++
++test('remaining quantity beyond all available stock is reported as backorder', () => {
++  const levels = [
++    { warehouse: 'w1', sku: 'cap', onHand: 2, held: 0, priority: 1 },
++    { warehouse: 'w2', sku: 'cap', onHand: 1, held: 1, priority: 2 },
++  ];
++  const result = allocate(levels, 5);
++  assert.deepEqual(result, { lines: [{ warehouse: 'w1', quantity: 2 }], backorderQuantity: 3 });
++});
+diff --git a/tests/api.test.mjs b/tests/api.test.mjs
+new file mode 100644
+index 0000000..d866e80
+--- /dev/null
++++ b/tests/api.test.mjs
+@@ -0,0 +1,35 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { Stock } from '../src/stock.mjs';
++import { ReservationBook } from '../src/reservations.mjs';
++import { handleReserve } from '../src/api.mjs';
++
++const setup = () => {
++  const stock = new Stock([{ warehouse: 'w1', sku: 'cap', onHand: 2, priority: 1 }]);
++  return new ReservationBook(stock, () => 0);
++};
++
++test('handleReserve returns 201 with the reservation on success', () => {
++  const book = setup();
++  const result = handleReserve(book, { orderId: 'o1', sku: 'cap', quantity: 2 });
++  assert.equal(result.status, 201);
++  assert.equal(result.body.status, 'held');
++});
++
++test('handleReserve maps insufficient_stock to 409', () => {
++  const book = setup();
++  const result = handleReserve(book, { orderId: 'o1', sku: 'cap', quantity: 3 });
++  assert.deepEqual(result, { status: 409, body: { error: 'insufficient_stock' } });
++});
++
++test('handleReserve maps invalid_request and invalid_quantity to 400', () => {
++  const book = setup();
++  assert.equal(handleReserve(book, { orderId: '', sku: 'cap', quantity: 1 }).status, 400);
++  assert.equal(handleReserve(book, { orderId: 'o1', sku: 'cap', quantity: -1 }).status, 400);
++});
++
++test('handleReserve maps unexpected errors to 500', () => {
++  const book = { reserve: () => { throw new Error('boom'); } };
++  const result = handleReserve(book, {});
++  assert.deepEqual(result, { status: 500, body: { error: 'internal' } });
++});
+diff --git a/tests/audit.test.mjs b/tests/audit.test.mjs
+new file mode 100644
+index 0000000..96e9407
+--- /dev/null
++++ b/tests/audit.test.mjs
+@@ -0,0 +1,20 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { AuditLog } from '../src/audit.mjs';
++
++test('mutating the object passed to record does not change the stored entry', () => {
++  const log = new AuditLog();
++  const entry = { type: 'reserved', reservationId: 'res_1', at: 1 };
++  log.record(entry);
++  entry.type = 'tampered';
++  assert.equal(log.entries()[0].type, 'reserved');
++});
++
++test('mutating a returned entry or the returned array does not change the log', () => {
++  const log = new AuditLog();
++  log.record({ type: 'reserved', reservationId: 'res_1', at: 1 });
++  const entries = log.entries();
++  entries[0].type = 'tampered';
++  entries.push({ type: 'fake', reservationId: 'res_2', at: 2 });
++  assert.deepEqual(log.entries(), [{ type: 'reserved', reservationId: 'res_1', at: 1 }]);
++});
+diff --git a/tests/pricing.test.mjs b/tests/pricing.test.mjs
+index 0f6be2e..c4dead3 100644
+--- a/tests/pricing.test.mjs
++++ b/tests/pricing.test.mjs
+@@ -9,3 +9,60 @@ test('prices an order without coupons', () => {
+     totalMinor: 1000,
+   });
+ });
++
++test('percent coupons always apply before fixed coupons, regardless of array order', () => {
++  const lines = [{ unitMinor: 1000, quantity: 1 }];
++  const percentFirst = priceOrder({
++    lines,
++    coupons: [
++      { type: 'percent', value: 10 },
++      { type: 'fixed', value: 200 },
++    ],
++  });
++  const fixedFirst = priceOrder({
++    lines,
++    coupons: [
++      { type: 'fixed', value: 200 },
++      { type: 'percent', value: 10 },
++    ],
++  });
++  const expected = { subtotalMinor: 1000, discountMinor: 300, totalMinor: 700 };
++  assert.deepEqual(percentFirst, expected);
++  assert.deepEqual(fixedFirst, expected);
++});
++
++test('percent discount uses round-half-even', () => {
++  // subtotal 25, 1% of 25 = 0.25 minor units -> roundHalfEven(25, 100) rounds down to 0.
++  const result = priceOrder({
++    lines: [{ unitMinor: 5, quantity: 5 }],
++    coupons: [{ type: 'percent', value: 1 }],
++  });
++  assert.equal(result.discountMinor, 0);
++  assert.equal(result.totalMinor, 25);
++});
++
++test('total never goes below zero even when fixed coupons exceed the total', () => {
++  const result = priceOrder({
++    lines: [{ unitMinor: 100, quantity: 1 }],
++    coupons: [{ type: 'fixed', value: 500 }],
++  });
++  assert.deepEqual(result, { subtotalMinor: 100, discountMinor: 100, totalMinor: 0 });
++});
++
++test('rejects malformed coupons', () => {
++  const lines = [{ unitMinor: 100, quantity: 1 }];
++  assert.throws(() => priceOrder({ lines, coupons: [{ type: 'percent', value: 0 }] }), /invalid_coupon/);
++  assert.throws(() => priceOrder({ lines, coupons: [{ type: 'percent', value: 101 }] }), /invalid_coupon/);
++  assert.throws(() => priceOrder({ lines, coupons: [{ type: 'percent', value: 1.5 }] }), /invalid_coupon/);
++  assert.throws(() => priceOrder({ lines, coupons: [{ type: 'fixed', value: 0 }] }), /invalid_coupon/);
++  assert.throws(() => priceOrder({ lines, coupons: [{ type: 'fixed', value: -5 }] }), /invalid_coupon/);
++  assert.throws(() => priceOrder({ lines, coupons: [{ type: 'bogus', value: 5 }] }), /invalid_coupon/);
++  assert.throws(() => priceOrder({ lines, coupons: [null] }), /invalid_coupon/);
++});
++
++test('rejects malformed order lines', () => {
++  assert.throws(() => priceOrder({ lines: [] }), /invalid_order/);
++  assert.throws(() => priceOrder({ lines: [{ unitMinor: -1, quantity: 1 }] }), /invalid_order/);
++  assert.throws(() => priceOrder({ lines: [{ unitMinor: 1, quantity: 0 }] }), /invalid_order/);
++  assert.throws(() => priceOrder({ lines: [{ unitMinor: 1.5, quantity: 1 }] }), /invalid_order/);
++});
+diff --git a/tests/reservations.test.mjs b/tests/reservations.test.mjs
+index d63ace7..f9ad33b 100644
+--- a/tests/reservations.test.mjs
++++ b/tests/reservations.test.mjs
+@@ -44,3 +44,51 @@ test('quantities must be positive integers', () => {
+   for (const quantity of [0, -1, 1.5])
+     assert.throws(() => book.reserve({ orderId: 'o1', sku: 'cap', quantity }), /invalid_quantity/);
+ });
++
++test('vip holds last 30 minutes while other tiers keep 10 minutes', () => {
++  const { clock, book } = setup();
++  const vip = book.reserve({ orderId: 'o1', sku: 'cap', quantity: 1, customerTier: 'vip' });
++  assert.equal(vip.expiresAt, 30 * MIN);
++  const standard = book.reserve({ orderId: 'o2', sku: 'cap', quantity: 1 });
++  assert.equal(standard.expiresAt, 10 * MIN);
++  const unknownTier = book.reserve({ orderId: 'o3', sku: 'cap', quantity: 1, customerTier: 'unknown' });
++  assert.equal(unknownTier.expiresAt, 10 * MIN);
++
++  clock.set(10 * MIN);
++  assert.equal(book.available('cap'), 9);
++  clock.set(30 * MIN);
++  assert.equal(book.available('cap'), 10);
++});
++
++test('reserve is all-or-nothing: insufficient stock holds nothing', () => {
++  const { book } = setup();
++  assert.throws(
++    () => book.reserve({ orderId: 'o1', sku: 'cap', quantity: 11 }),
++    /insufficient_stock/,
++  );
++  assert.equal(book.available('cap'), 10);
++});
++
++test('successful reservations always report backorderQuantity 0', () => {
++  const { book } = setup();
++  const hold = book.reserve({ orderId: 'o1', sku: 'cap', quantity: 10 });
++  assert.equal(hold.backorderQuantity, 0);
++});
++
++test('commit expires a due hold first and throws reservation_expired', () => {
++  const { clock, book } = setup();
++  const hold = book.reserve({ orderId: 'o1', sku: 'cap', quantity: 2 });
++  clock.set(10 * MIN);
++  assert.throws(() => book.commit(hold.id), /reservation_expired/);
++  assert.equal(book.available('cap'), 10);
++});
++
++test('releasing a committed reservation does not free its stock twice', () => {
++  const { book } = setup();
++  const hold = book.reserve({ orderId: 'o1', sku: 'cap', quantity: 4 });
++  book.commit(hold.id);
++  assert.equal(book.available('cap'), 6);
++  const released = book.release(hold.id);
++  assert.equal(released.status, 'committed');
++  assert.equal(book.available('cap'), 6);
++});

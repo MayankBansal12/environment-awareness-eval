@@ -1,0 +1,20 @@
+{
+  "calls": 45,
+  "turnCalls": 45,
+  "summaryCalls": 0,
+  "erroredCalls": 0,
+  "input": 986,
+  "output": 25376,
+  "cacheRead": 1286759,
+  "cacheWrite": 52317,
+  "reasoning": 9397,
+  "totalTokens": 1365438,
+  "costUsd": {
+    "input": 0,
+    "output": 0,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "total": 0.7214058000000002
+  },
+  "peakContextTokens": 54595
+}

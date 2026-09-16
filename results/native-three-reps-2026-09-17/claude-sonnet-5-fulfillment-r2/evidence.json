@@ -1,0 +1,477 @@
+{
+  "initial": {
+    "focal": [
+      {
+        "id": "quantity_validation",
+        "passed": false,
+        "detail": "Missing expected exception."
+      },
+      {
+        "id": "expiry_boundary",
+        "passed": false,
+        "detail": "Expected values to be strictly equal:\n\n10 !== 14\n"
+      },
+      {
+        "id": "release_idempotent",
+        "passed": false,
+        "detail": "Expected values to be strictly equal:\n\n16 !== 14\n"
+      },
+      {
+        "id": "allocation_available",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    {\n+     quantity: 3,\n-     quantity: 1,\n      warehouse: 'w-a'\n-   },\n-   {\n-     quantity: 2,\n-     warehouse: 'w-b'\n    }\n  ]"
+      },
+      {
+        "id": "priority_tiebreak",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected ... Lines skipped\n\n  [\n    {\n...\n    {\n      quantity: 3,\n+     warehouse: 'w-west'\n-     warehouse: 'w-east'\n    }\n  ]"
+      },
+      {
+        "id": "commit_expired",
+        "passed": false,
+        "detail": "Missing expected exception."
+      },
+      {
+        "id": "audit_immutability",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    {\n      at: 1,\n+     reservationId: 'res_x',\n+     type: 'tampered'\n+   },\n+   {\n+     type: 'fake'\n-     reservationId: 'res_1',\n-     type: 'reserved'\n    }\n  ]"
+      },
+      {
+        "id": "vip_ttl",
+        "passed": true
+      },
+      {
+        "id": "partial_policy",
+        "passed": true
+      },
+      {
+        "id": "api_contract",
+        "passed": true
+      }
+    ],
+    "hotfix": [
+      {
+        "id": "no_coupons",
+        "passed": true
+      },
+      {
+        "id": "percent_before_fixed",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 1450,\n-   discountMinor: 1500,\n    subtotalMinor: 10000,\n+   totalMinor: 8550\n-   totalMinor: 8500\n  }"
+      },
+      {
+        "id": "no_negative_total",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 5000,\n-   discountMinor: 3000,\n    subtotalMinor: 3000,\n+   totalMinor: -2000\n-   totalMinor: 0\n  }"
+      },
+      {
+        "id": "percent_rounding",
+        "passed": false,
+        "detail": "Expected values to be strictly equal:\n\n904 !== 905\n"
+      },
+      {
+        "id": "invalid_coupon",
+        "passed": false,
+        "detail": "Missing expected exception."
+      }
+    ]
+  },
+  "atEvents": [
+    {
+      "eventId": "e2",
+      "kind": "requirement_change",
+      "decision": 6,
+      "checks": {
+        "focal": [
+          {
+            "id": "quantity_validation",
+            "passed": false,
+            "detail": "Missing expected exception."
+          },
+          {
+            "id": "expiry_boundary",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n10 !== 14\n"
+          },
+          {
+            "id": "release_idempotent",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n16 !== 14\n"
+          },
+          {
+            "id": "allocation_available",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    {\n+     quantity: 3,\n-     quantity: 1,\n      warehouse: 'w-a'\n-   },\n-   {\n-     quantity: 2,\n-     warehouse: 'w-b'\n    }\n  ]"
+          },
+          {
+            "id": "priority_tiebreak",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected ... Lines skipped\n\n  [\n    {\n...\n    {\n      quantity: 3,\n+     warehouse: 'w-west'\n-     warehouse: 'w-east'\n    }\n  ]"
+          },
+          {
+            "id": "commit_expired",
+            "passed": false,
+            "detail": "Missing expected exception."
+          },
+          {
+            "id": "audit_immutability",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    {\n      at: 1,\n+     reservationId: 'res_x',\n+     type: 'tampered'\n+   },\n+   {\n+     type: 'fake'\n-     reservationId: 'res_1',\n-     type: 'reserved'\n    }\n  ]"
+          },
+          {
+            "id": "vip_ttl",
+            "passed": true
+          },
+          {
+            "id": "partial_policy",
+            "passed": true
+          },
+          {
+            "id": "api_contract",
+            "passed": true
+          }
+        ],
+        "hotfix": [
+          {
+            "id": "no_coupons",
+            "passed": true
+          },
+          {
+            "id": "percent_before_fixed",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 1450,\n-   discountMinor: 1500,\n    subtotalMinor: 10000,\n+   totalMinor: 8550\n-   totalMinor: 8500\n  }"
+          },
+          {
+            "id": "no_negative_total",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 5000,\n-   discountMinor: 3000,\n    subtotalMinor: 3000,\n+   totalMinor: -2000\n-   totalMinor: 0\n  }"
+          },
+          {
+            "id": "percent_rounding",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n904 !== 905\n"
+          },
+          {
+            "id": "invalid_coupon",
+            "passed": false,
+            "detail": "Missing expected exception."
+          }
+        ]
+      }
+    },
+    {
+      "eventId": "e6",
+      "kind": "urgent_assignment",
+      "decision": 11,
+      "checks": {
+        "focal": [
+          {
+            "id": "quantity_validation",
+            "passed": false,
+            "detail": "Missing expected exception."
+          },
+          {
+            "id": "expiry_boundary",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n10 !== 14\n"
+          },
+          {
+            "id": "release_idempotent",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n16 !== 14\n"
+          },
+          {
+            "id": "allocation_available",
+            "passed": true
+          },
+          {
+            "id": "priority_tiebreak",
+            "passed": true
+          },
+          {
+            "id": "commit_expired",
+            "passed": false,
+            "detail": "Missing expected exception."
+          },
+          {
+            "id": "audit_immutability",
+            "passed": true
+          },
+          {
+            "id": "vip_ttl",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 5600000\n- 6800000"
+          },
+          {
+            "id": "partial_policy",
+            "passed": true
+          },
+          {
+            "id": "api_contract",
+            "passed": true
+          }
+        ],
+        "hotfix": [
+          {
+            "id": "no_coupons",
+            "passed": true
+          },
+          {
+            "id": "percent_before_fixed",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 1450,\n-   discountMinor: 1500,\n    subtotalMinor: 10000,\n+   totalMinor: 8550\n-   totalMinor: 8500\n  }"
+          },
+          {
+            "id": "no_negative_total",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 5000,\n-   discountMinor: 3000,\n    subtotalMinor: 3000,\n+   totalMinor: -2000\n-   totalMinor: 0\n  }"
+          },
+          {
+            "id": "percent_rounding",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n904 !== 905\n"
+          },
+          {
+            "id": "invalid_coupon",
+            "passed": false,
+            "detail": "Missing expected exception."
+          }
+        ]
+      }
+    },
+    {
+      "eventId": "e10",
+      "kind": "comment_change",
+      "decision": 16,
+      "checks": {
+        "focal": [
+          {
+            "id": "quantity_validation",
+            "passed": true
+          },
+          {
+            "id": "expiry_boundary",
+            "passed": true
+          },
+          {
+            "id": "release_idempotent",
+            "passed": true
+          },
+          {
+            "id": "allocation_available",
+            "passed": true
+          },
+          {
+            "id": "priority_tiebreak",
+            "passed": true
+          },
+          {
+            "id": "commit_expired",
+            "passed": true
+          },
+          {
+            "id": "audit_immutability",
+            "passed": true
+          },
+          {
+            "id": "vip_ttl",
+            "passed": true
+          },
+          {
+            "id": "partial_policy",
+            "passed": true
+          },
+          {
+            "id": "api_contract",
+            "passed": true
+          }
+        ],
+        "hotfix": [
+          {
+            "id": "no_coupons",
+            "passed": true
+          },
+          {
+            "id": "percent_before_fixed",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 1450,\n-   discountMinor: 1500,\n    subtotalMinor: 10000,\n+   totalMinor: 8550\n-   totalMinor: 8500\n  }"
+          },
+          {
+            "id": "no_negative_total",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 5000,\n-   discountMinor: 3000,\n    subtotalMinor: 3000,\n+   totalMinor: -2000\n-   totalMinor: 0\n  }"
+          },
+          {
+            "id": "percent_rounding",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n904 !== 905\n"
+          },
+          {
+            "id": "invalid_coupon",
+            "passed": false,
+            "detail": "Missing expected exception."
+          }
+        ]
+      }
+    },
+    {
+      "eventId": "e14",
+      "kind": "decoy",
+      "decision": 20,
+      "checks": {
+        "focal": [
+          {
+            "id": "quantity_validation",
+            "passed": true
+          },
+          {
+            "id": "expiry_boundary",
+            "passed": true
+          },
+          {
+            "id": "release_idempotent",
+            "passed": true
+          },
+          {
+            "id": "allocation_available",
+            "passed": true
+          },
+          {
+            "id": "priority_tiebreak",
+            "passed": true
+          },
+          {
+            "id": "commit_expired",
+            "passed": true
+          },
+          {
+            "id": "audit_immutability",
+            "passed": true
+          },
+          {
+            "id": "vip_ttl",
+            "passed": true
+          },
+          {
+            "id": "partial_policy",
+            "passed": false,
+            "detail": "Missing expected exception."
+          },
+          {
+            "id": "api_contract",
+            "passed": true
+          }
+        ],
+        "hotfix": [
+          {
+            "id": "no_coupons",
+            "passed": true
+          },
+          {
+            "id": "percent_before_fixed",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 1450,\n-   discountMinor: 1500,\n    subtotalMinor: 10000,\n+   totalMinor: 8550\n-   totalMinor: 8500\n  }"
+          },
+          {
+            "id": "no_negative_total",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   discountMinor: 5000,\n-   discountMinor: 3000,\n    subtotalMinor: 3000,\n+   totalMinor: -2000\n-   totalMinor: 0\n  }"
+          },
+          {
+            "id": "percent_rounding",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n904 !== 905\n"
+          },
+          {
+            "id": "invalid_coupon",
+            "passed": false,
+            "detail": "Missing expected exception."
+          }
+        ]
+      }
+    }
+  ],
+  "final": {
+    "focal": [
+      {
+        "id": "quantity_validation",
+        "passed": true
+      },
+      {
+        "id": "expiry_boundary",
+        "passed": true
+      },
+      {
+        "id": "release_idempotent",
+        "passed": true
+      },
+      {
+        "id": "allocation_available",
+        "passed": true
+      },
+      {
+        "id": "priority_tiebreak",
+        "passed": true
+      },
+      {
+        "id": "commit_expired",
+        "passed": true
+      },
+      {
+        "id": "audit_immutability",
+        "passed": true
+      },
+      {
+        "id": "vip_ttl",
+        "passed": true
+      },
+      {
+        "id": "partial_policy",
+        "passed": true
+      },
+      {
+        "id": "api_contract",
+        "passed": true
+      }
+    ],
+    "hotfix": [
+      {
+        "id": "no_coupons",
+        "passed": true
+      },
+      {
+        "id": "percent_before_fixed",
+        "passed": true
+      },
+      {
+        "id": "no_negative_total",
+        "passed": true
+      },
+      {
+        "id": "percent_rounding",
+        "passed": true
+      },
+      {
+        "id": "invalid_coupon",
+        "passed": true
+      }
+    ]
+  },
+  "visible": {
+    "passed": true,
+    "output": "\n> test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: prices an order without coupons\nok 1 - prices an order without coupons\n  ---\n  duration_ms: 2.82018\n  ...\n# Subtest: percent coupons apply before fixed coupons regardless of the order given\nok 2 - percent coupons apply before fixed coupons regardless of the order given\n  ---\n  duration_ms: 0.416\n  ...\n# Subtest: the total never goes below 0, even with coupons larger than the order\nok 3 - the total never goes below 0, even with coupons larger than the order\n  ---\n  duration_ms: 0.246758\n  ...\n# Subtest: stacked fixed coupons never push the running total negative\nok 4 - stacked fixed coupons never push the running total negative\n  ---\n  duration_ms: 0.248881\n  ...\n# Subtest: invalid coupons are rejected\nok 5 - invalid coupons are rejected\n  ---\n  duration_ms: 1.313844\n  ...\n# Subtest: percent discount rounds half to even\nok 6 - percent discount rounds half to even\n  ---\n  duration_ms: 0.23619\n  ...\n# Subtest: a hold expires exactly at expiresAt\nok 7 - a hold expires exactly at expiresAt\n  ---\n  duration_ms: 1.845146\n  ...\n# Subtest: releasing twice only releases once\nok 8 - releasing twice only releases once\n  ---\n  duration_ms: 0.273241\n  ...\n# Subtest: allocation skips quantity already held\nok 9 - allocation skips quantity already held\n  ---\n  duration_ms: 0.774431\n  ...\n# Subtest: quantities must be positive integers\nok 10 - quantities must be positive integers\n  ---\n  duration_ms: 0.48107\n  ...\n# Subtest: allocation never takes more than the available (onHand - held) quantity\nok 11 - allocation never takes more than the available (onHand - held) quantity\n  ---\n  duration_ms: 0.275198\n  ...\n# Subtest: allocation ties on priority are broken by warehouse id ascending\nok 12 - allocation ties on priority are broken by warehouse id ascending\n  ---\n  duration_ms: 0.151279\n  ...\n# Subtest: a second reservation cannot oversell stock already held by another reservation\nok 13 - a second reservation cannot oversell stock already held by another reservation\n  ---\n  duration_ms: 0.324034\n  ...\n# Subtest: reserve is all-or-nothing: an order that cannot be fully allocated holds nothing\nok 14 - reserve is all-or-nothing: an order that cannot be fully allocated holds nothing\n  ---\n  duration_ms: 0.226172\n  ...\n# Subtest: successful reservations always report backorderQuantity 0\nok 15 - successful reservations always report backorderQuantity 0\n  ---\n  duration_ms: 0.290136\n  ...\n# Subtest: committing a reservation whose hold has expired throws and does not commit\nok 16 - committing a reservation whose hold has expired throws and does not commit\n  ---\n  duration_ms: 0.355807\n  ...\n# Subtest: releasing a committed reservation is a no-op and does not free stock twice\nok 17 - releasing a committed reservation is a no-op and does not free stock twice\n  ---\n  duration_ms: 0.298831\n  ...\n# Subtest: vip customers get a 30 minute hold, other tiers (including missing) get 10 minutes\nok 18 - vip customers get a 30 minute hold, other tiers (including missing) get 10 minutes\n  ---\n  duration_ms: 0.279377\n  ...\n# Subtest: audit log entries cannot be mutated after the fact\nok 19 - audit log entries cannot be mutated after the fact\n  ---\n  duration_ms: 0.230801\n  ...\n1..19\n# tests 19\n# suites 0\n# pass 19\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 89.482428\n"
+  },
+  "commitFiles": {
+    "d4ccb1fbc9348ec0d411011ef8d12cdd33c313bf": [
+      "README.md",
+      "src/allocation.mjs",
+      "src/audit.mjs",
+      "src/reservations.mjs",
+      "tests/reservations.test.mjs"
+    ],
+    "8a79b14902c978784c971f58122a42a81a9b36d2": [
+      "src/pricing.mjs",
+      "tests/pricing.test.mjs"
+    ]
+  }
+}
