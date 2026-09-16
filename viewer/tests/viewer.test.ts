@@ -249,8 +249,9 @@ describe('restored cockpit on v4 artifacts', () => {
     expect(comparison.match(/class="compare-decision"/g)).toHaveLength(
       r.summary.usage.turnCalls,
     );
-    expect(comparison.indexOf('edit src/money.mjs')).toBeLessThan(
-      comparison.indexOf('Requirement change fired'),
+    expect(comparison.indexOf('Requirement change fired')).toBeGreaterThanOrEqual(0);
+    expect(comparison.indexOf('Requirement change fired')).toBeLessThan(
+      comparison.indexOf('edit src/money.mjs'),
     );
   });
 });

@@ -36,7 +36,7 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
       ],
       [
         toolCall('call_issue', 'linear_get_issue', { id: family.focal.id }),
-        toolCall('call_test', 'bash', { command: 'npm test' }),
+        toolCall('call_test', 'bash', { command: 'cat src/fees.mjs' }),
       ],
       [toolCall('call_reread', 'linear_get_issue', { id: family.focal.id })],
       [{ type: 'text', text: 'Finished.' }],
@@ -177,7 +177,7 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
       ).toEqual(
         expect.arrayContaining(['call_list', 'call_write', 'call_issue', 'call_test']),
       );
-      // script-2.0: first important requirement update fires on the first test run (D2 settle),
+      // script-3.0: first requirement update fires on source inspection (D2 settle),
       // before the next decision's input (D3).
       const update = trace.find((e) => e.type === 'environment_event');
       expect(update?.decision).toBe(2);

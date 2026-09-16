@@ -44,55 +44,35 @@ export interface Trigger {
   after: ImportantKind | 'start';
   /** Earliest settled decision relative to the previous event. */
   minGap: number;
-  when: 'focal_edit' | 'test_run' | 'test_failure';
+  when: 'source_inspection' | 'focal_edit' | 'test_run' | 'new_module';
   /** Fire regardless of the condition once this many decisions have passed. */
   fallbackGap: number;
 }
 
 /**
- * Identical for every family, load, noise level and delivery. Conditions are evaluated only on
- * settled batches and only on visible agent actions: source-edit digests, test commands and their
- * exit codes. Hidden checks and model reasoning are never read.
- *
- * script-2.0 timing rationale: the Opus pilots fired all six later events through fallbacks with
- * zero failing focal checks, so any test-failure-only trigger risks arriving after the hard work
- * ended. The requirement therefore reacts to the first focal test run of any outcome, and each
- * later event uses a small milestone-aware gap bounded by a short fallback measured from the
- * previous event, not the long cumulative 12/8/12/8 chain. Worst case the whole script lands by
- * ~20 decisions instead of ~40, while the condition paths keep updates arriving during active
- * debugging when a batch actually failed. Requirement-before-comment ordering is preserved by the
- * after-chain.
+ * Observable milestones only, identical across models and conditions. Events settle between
+ * decisions; no hidden checks, reasoning, or mid-batch interruption. Short fallbacks limit
+ * dependence on tool style. At most one important event per decision (all minGap values are 1).
  */
 export const SCRIPT: ReadonlyArray<{ kind: ImportantKind; trigger: Trigger }> = [
   {
     kind: 'requirement_change',
-    // Any focal test run (passing or failing) signals the agent has engaged with the work.
-    trigger: { after: 'start', minGap: 1, when: 'test_run', fallbackGap: 6 },
+    trigger: { after: 'start', minGap: 1, when: 'source_inspection', fallbackGap: 3 },
   },
   {
     kind: 'urgent_assignment',
-    trigger: {
-      after: 'requirement_change',
-      minGap: 2,
-      when: 'test_failure',
-      fallbackGap: 5,
-    },
+    trigger: { after: 'requirement_change', minGap: 1, when: 'focal_edit', fallbackGap: 2 },
   },
   {
     kind: 'comment_change',
-    trigger: {
-      after: 'urgent_assignment',
-      minGap: 3,
-      when: 'test_failure',
-      fallbackGap: 5,
-    },
+    trigger: { after: 'urgent_assignment', minGap: 1, when: 'test_run', fallbackGap: 2 },
   },
   {
     kind: 'decoy',
-    trigger: { after: 'comment_change', minGap: 2, when: 'test_failure', fallbackGap: 4 },
+    trigger: { after: 'comment_change', minGap: 1, when: 'new_module', fallbackGap: 2 },
   },
 ];
-export const SCRIPT_VERSION = 'script-2.0';
+export const SCRIPT_VERSION = 'script-3.0';
 
 export const NOISE_RATES: Record<Noise, { perDecision: number; onFailure: number }> = {
   none: { perDecision: 0, onFailure: 0 },
