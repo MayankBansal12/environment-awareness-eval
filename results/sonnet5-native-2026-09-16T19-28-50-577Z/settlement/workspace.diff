@@ -1,0 +1,246 @@
+diff --git a/README.md b/README.md
+index f3134d4..f826c2b 100644
+--- a/README.md
++++ b/README.md
+@@ -20,6 +20,9 @@ the plan. Plans: `standard` (290 bps + 30), `growth` (250 bps + 25). Unknown pla
+ - Idempotency keys are scoped to the merchant. Reusing a key for the same merchant returns the
+   original refund unchanged, even if the amount differs, without posting anything. The same key
+   used by a different merchant is an independent request.
++- A refund requested (clock time) more than 30 days (30 × 86,400,000 ms) after the charge's
++  `capturedAt` is rejected with `refund_window_expired`. Exactly 30 days is still allowed. This
++  check happens after idempotent replay and before the capture-limit check below.
+ - The total refunded for a charge can never exceed its captured amount
+   (`refund_exceeds_capture`).
+ - Each refund returns part of the charge fee: `floor(chargeFee * amountMinor / chargeAmount)`,
+@@ -44,8 +47,9 @@ currency code: `{currency, grossMinor, refundsMinor, feesMinor, netMinor, payout
+   and failed charges are never settled.
+ - Refunds count the merchant's refunds with `createdAt` in `[from, to)`.
+ - Fees are the fees of the counted charges minus `feeReturnMinor` of the counted refunds.
+-- `netMinor = grossMinor - refundsMinor - feesMinor`, `payoutMinor = netMinor`,
+-  `carryoverMinor = 0`.
++- `netMinor = grossMinor - refundsMinor - feesMinor`. `payoutMinor` is `netMinor` floored at 0;
++  when `netMinor` is negative, `payoutMinor` is 0 and `carryoverMinor` is the shortfall
++  (`-netMinor`). Rows with a non-negative `netMinor` keep `carryoverMinor` at 0.
+ - A currency with no counted charges or refunds has no row.
+ 
+ ## Webhooks
+diff --git a/src/fees.mjs b/src/fees.mjs
+index beab5f5..70e380e 100644
+--- a/src/fees.mjs
++++ b/src/fees.mjs
+@@ -8,5 +8,5 @@ export const PLANS = {
+ export function feeFor(amountMinor, plan) {
+   const pricing = PLANS[plan];
+   if (!pricing) throw new Error('unknown_plan');
+-  return Math.round((amountMinor * pricing.bps) / 10000) + pricing.fixedMinor;
++  return roundHalfEven(amountMinor * pricing.bps, 10000) + pricing.fixedMinor;
+ }
+diff --git a/src/refunds.mjs b/src/refunds.mjs
+index 49d11d8..a4a3ab9 100644
+Binary files a/src/refunds.mjs and b/src/refunds.mjs differ
+diff --git a/src/settlement.mjs b/src/settlement.mjs
+index da34f73..c566a69 100644
+--- a/src/settlement.mjs
++++ b/src/settlement.mjs
+@@ -7,14 +7,16 @@ export function settle({ charges, refunds, merchantId, from, to }) {
+   const counted = charges.filter(
+     (charge) =>
+       charge.merchantId === merchantId &&
+-      charge.status !== 'failed' &&
++      charge.status === 'captured' &&
+       inWindow(charge.capturedAt, from, to),
+   );
+   const returned = refunds.filter(
+     (refund) => refund.merchantId === merchantId && inWindow(refund.createdAt, from, to),
+   );
+-  const currencies = counted.length || returned.length ? [(counted[0] ?? returned[0]).currency] : [];
+-  const pick = (items) => items;
++  const currencies = [
++    ...new Set([...counted.map((charge) => charge.currency), ...returned.map((refund) => refund.currency)]),
++  ].sort();
++  const pick = (items, currency) => items.filter((item) => item.currency === currency);
+   return currencies.map((currency) => {
+     const currencyCharges = pick(counted, currency);
+     const currencyRefunds = pick(returned, currency);
+@@ -24,8 +26,8 @@ export function settle({ charges, refunds, merchantId, from, to }) {
+       sum(currencyCharges.map((charge) => feeFor(charge.amountMinor, charge.plan))) -
+       sum(currencyRefunds.map((refund) => refund.feeReturnMinor));
+     const netMinor = grossMinor - refundsMinor - feesMinor;
+-    const payoutMinor = netMinor;
+-    const carryoverMinor = 0;
++    const payoutMinor = Math.max(netMinor, 0);
++    const carryoverMinor = netMinor < 0 ? -netMinor : 0;
+     return { currency, grossMinor, refundsMinor, feesMinor, netMinor, payoutMinor, carryoverMinor };
+   });
+ }
+diff --git a/src/webhooks.mjs b/src/webhooks.mjs
+index a547339..b32300a 100644
+--- a/src/webhooks.mjs
++++ b/src/webhooks.mjs
+@@ -6,9 +6,16 @@ export function sign(secret, timestamp, payload) {
+ 
+ export function verifyWebhook({ payload, timestamp, signature, secret, now, seen }) {
+   const expected = sign(secret, timestamp, payload);
+-  if (typeof signature !== 'string' || signature.slice(0, 16) !== expected.slice(0, 16))
+-    return { ok: false, reason: 'bad_signature' };
+-  if (now - timestamp > 300_000) return { ok: false, reason: 'stale_timestamp' };
+-  if (seen.has(timestamp + '.' + signature)) return { ok: false, reason: 'replayed' };
++  const expectedBuf = Buffer.from(expected, 'hex');
++  const providedBuf = typeof signature === 'string' ? Buffer.from(signature, 'hex') : null;
++  const validSignature =
++    providedBuf !== null &&
++    providedBuf.length === expectedBuf.length &&
++    crypto.timingSafeEqual(providedBuf, expectedBuf);
++  if (!validSignature) return { ok: false, reason: 'bad_signature' };
++  if (Math.abs(now - timestamp) > 300) return { ok: false, reason: 'stale_timestamp' };
++  const key = timestamp + '.' + signature;
++  if (seen.has(key)) return { ok: false, reason: 'replayed' };
++  seen.add(key);
+   return { ok: true };
+ }
+diff --git a/tests/refunds.test.mjs b/tests/refunds.test.mjs
+index 001825a..96571a9 100644
+--- a/tests/refunds.test.mjs
++++ b/tests/refunds.test.mjs
+@@ -33,3 +33,39 @@ test('idempotency keys are merchant scoped', () => {
+   assert.equal(other.chargeId, 'ch_2');
+   assert.deepEqual(b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 999, idempotencyKey: 'same' }), first);
+ });
++
++test('fully refunding a charge across multiple refunds returns exactly the whole fee', () => {
++  const b = book();
++  // ch_1: amountMinor 1000, standard plan -> chargeFee = 59
++  const r1 = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 333, idempotencyKey: 'k1' });
++  const r2 = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 333, idempotencyKey: 'k2' });
++  const r3 = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 334, idempotencyKey: 'k3' });
++  assert.equal(r1.feeReturnMinor, Math.floor((59 * 333) / 1000));
++  assert.equal(r2.feeReturnMinor, Math.floor((59 * 333) / 1000));
++  // the final refund that completes the capture returns exactly the fee not yet returned,
++  // so the three refunds always sum to the whole charge fee despite per-refund rounding
++  assert.equal(r1.feeReturnMinor + r2.feeReturnMinor + r3.feeReturnMinor, 59);
++});
++
++test('refunds cannot be requested more than 30 days after capture', () => {
++  const ledger = new Ledger();
++  let now = 10 * DAY + 30 * DAY;
++  const b = new RefundBook(charges(), ledger, () => now);
++  // exactly 30 days later is still allowed
++  const onTime = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'k1' });
++  assert.equal(onTime.amountMinor, 100);
++  now += 1;
++  assert.throws(
++    () => b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'k2' }),
++    /refund_window_expired/,
++  );
++});
++
++test('a replay of an existing refund is still returned after the window has passed', () => {
++  let now = 10 * DAY;
++  const ledger = new Ledger();
++  const b = new RefundBook(charges(), ledger, () => now);
++  const first = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'k1' });
++  now = 10 * DAY + 31 * DAY;
++  assert.deepEqual(b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'k1' }), first);
++});
+diff --git a/tests/settlement.test.mjs b/tests/settlement.test.mjs
+index 079dd00..259045a 100644
+--- a/tests/settlement.test.mjs
++++ b/tests/settlement.test.mjs
+@@ -16,3 +16,53 @@ test('pending charges are not settled', () => {
+   assert.equal(rows.length, 1);
+   assert.equal(rows[0].grossMinor, 1000);
+ });
++
++test('each currency gets its own row and only its own charges/refunds', () => {
++  const rows = settle({
++    merchantId: 'm_1',
++    from: 0,
++    to: 100,
++    refunds: [],
++    charges: [
++      { id: 'a', merchantId: 'm_1', amountMinor: 1000, currency: 'USD', plan: 'standard', status: 'captured', capturedAt: 5 },
++      { id: 'b', merchantId: 'm_1', amountMinor: 2000, currency: 'EUR', plan: 'standard', status: 'captured', capturedAt: 6 },
++    ],
++  });
++  assert.equal(rows.length, 2);
++  assert.deepEqual(rows.map((row) => row.currency), ['EUR', 'USD']);
++  assert.equal(rows.find((row) => row.currency === 'USD').grossMinor, 1000);
++  assert.equal(rows.find((row) => row.currency === 'EUR').grossMinor, 2000);
++});
++
++test('a negative net floors the payout at 0 and reports the shortfall as carryover', () => {
++  const rows = settle({
++    merchantId: 'm_1',
++    from: 0,
++    to: 100,
++    charges: [
++      { id: 'a', merchantId: 'm_1', amountMinor: 100, currency: 'USD', plan: 'standard', status: 'captured', capturedAt: 5 },
++    ],
++    refunds: [
++      { merchantId: 'm_1', currency: 'USD', amountMinor: 100, feeReturnMinor: 0, createdAt: 6 },
++    ],
++  });
++  assert.equal(rows.length, 1);
++  const row = rows[0];
++  assert.equal(row.netMinor, -33); // grossMinor 100 - refundsMinor 100 - feesMinor 33 (fee not refunded)
++  assert.equal(row.payoutMinor, 0);
++  assert.equal(row.carryoverMinor, 33);
++});
++
++test('a non-negative net keeps carryover at 0', () => {
++  const rows = settle({
++    merchantId: 'm_1',
++    from: 0,
++    to: 100,
++    refunds: [],
++    charges: [
++      { id: 'a', merchantId: 'm_1', amountMinor: 1000, currency: 'USD', plan: 'standard', status: 'captured', capturedAt: 5 },
++    ],
++  });
++  assert.equal(rows[0].netMinor, rows[0].payoutMinor);
++  assert.equal(rows[0].carryoverMinor, 0);
++});
+diff --git a/tests/webhooks.test.mjs b/tests/webhooks.test.mjs
+index 2a42ea2..b8e97c4 100644
+--- a/tests/webhooks.test.mjs
++++ b/tests/webhooks.test.mjs
+@@ -9,3 +9,39 @@ test('accepts a correctly signed delivery', () => {
+     { ok: true },
+   );
+ });
++
++test('rejects a signature that only partially matches', () => {
++  const real = sign('whsec', 1000, '{"id":"evt_1"}');
++  const forged = real.slice(0, 16) + 'f'.repeat(real.length - 16);
++  assert.deepEqual(
++    verifyWebhook({ payload: '{"id":"evt_1"}', timestamp: 1000, signature: forged, secret: 'whsec', now: 1010, seen: new Set() }),
++    { ok: false, reason: 'bad_signature' },
++  );
++});
++
++test('rejects a timestamp more than 300 seconds old (seconds, not ms)', () => {
++  const payload = '{"id":"evt_1"}';
++  const signature = sign('whsec', 1000, payload);
++  assert.deepEqual(
++    verifyWebhook({ payload, timestamp: 1000, signature, secret: 'whsec', now: 1000 + 301, seen: new Set() }),
++    { ok: false, reason: 'stale_timestamp' },
++  );
++  assert.deepEqual(
++    verifyWebhook({ payload, timestamp: 1000, signature, secret: 'whsec', now: 1000 + 300, seen: new Set() }),
++    { ok: true },
++  );
++});
++
++test('rejects a replayed delivery', () => {
++  const payload = '{"id":"evt_1"}';
++  const signature = sign('whsec', 1000, payload);
++  const seen = new Set();
++  assert.deepEqual(
++    verifyWebhook({ payload, timestamp: 1000, signature, secret: 'whsec', now: 1010, seen }),
++    { ok: true },
++  );
++  assert.deepEqual(
++    verifyWebhook({ payload, timestamp: 1000, signature, secret: 'whsec', now: 1010 + 100, seen }),
++    { ok: false, reason: 'replayed' },
++  );
++});
