@@ -10,7 +10,7 @@ import type {
 } from './schema.js';
 import type { TeamSnapshot } from './state.js';
 
-export const GRADER_VERSION = '4.0.0';
+export const GRADER_VERSION = '4.1.0';
 const CENSORING = ['timeout', 'token_budget'];
 const INVALID = ['harness_error', 'provider_error'];
 
@@ -66,7 +66,7 @@ export function grade({
     requirement_change: (f) => passed(f.focal, family.checkIds.requirementChange),
     comment_change: (f) => passed(f.focal, family.checkIds.comment),
     decoy: (f) => passed(f.focal, family.checkIds.decoy),
-    urgent_assignment: (f) => f.hotfix.every((c) => c.passed),
+    urgent_assignment: (f) => family.checkIds.hotfix.every((id) => passed(f.hotfix, id)),
   };
 
   const events: EventMetrics[] = importantKinds.map((kind) => {
@@ -94,13 +94,17 @@ export function grade({
     const id = fire.event.id,
       at = fire.decision;
     // The first model input that can show the indicator is the next decision.
-    const firstInput = at + 1;
+    const firstInput = inputs.find((e) => e.decision > at)?.decision ?? null;
     const cue = exposure(id, 'cue'),
       content = exposure(id, 'content');
     const nextUsage = outputs.find((o) => o.decision === firstInput);
     const u = nextUsage?.type === 'output' ? nextUsage.usage : null;
     const probe = evidence.atEvents.find((a) => a.eventId === id);
     const horizon = content ?? lastDecision;
+    const responses = outputs.filter((e) => e.decision > at);
+    const retrievalLatency =
+      content === null || firstInput === null ? null : Math.max(0, content - firstInput);
+    const finalBehaviorCorrect = adaptedCheck[kind](evidence.final);
     return {
       kind,
       eventId: id,
@@ -115,16 +119,40 @@ export function grade({
       decisionsAfterFire: Math.max(0, lastDecision - at),
       cueDecision: cue,
       contentDecision: content,
-      detectionLatency: content === null ? null : Math.max(0, content - firstInput),
-      missed: content === null,
+      detectionLatency: retrievalLatency,
+      // Compatibility field: absent retrieval is not a demonstrated awareness failure.
+      // No completed response (or an interrupted run) cannot establish a miss.
+      missed:
+        content !== null
+          ? false
+          : responses.length === 0 ||
+              CENSORING.includes(termination) ||
+              INVALID.includes(termination)
+            ? null
+            : true,
+      observation: {
+        firstInputAfterEvent: firstInput,
+        responseDecisions: responses.length,
+        contentRetrieved: content !== null,
+        retrievalLatency,
+        finalBehaviorCorrect,
+        behaviorCorrectAtFire: probe ? adaptedCheck[kind](probe.checks) : null,
+        compactionsAfterContent:
+          content === null
+            ? null
+            : trace.filter(
+                (e) =>
+                  e.type === 'compaction' && e.phase === 'start' && e.decision >= content,
+              ).length,
+      },
       focalChangesBeforeContent: focalChanges(
         at,
         content === null ? lastDecision : content - 1,
       ),
       commitsBeforeContent:
         commitsAt(content === null ? lastDecision : content - 1) - commitsAt(at),
-      toolActionsBeforeContent: actionsBetween(firstInput, horizon),
-      adapted: adaptedCheck[kind](evidence.final),
+      toolActionsBeforeContent: actionsBetween(firstInput ?? lastDecision, horizon),
+      adapted: finalBehaviorCorrect,
     };
   });
 
@@ -146,8 +174,22 @@ export function grade({
   );
   const urgentMetrics: Grade['urgent'] = urgent.fired
     ? {
-        hotfixCorrect: evidence.final.hotfix.every((c) => c.passed),
+        hotfixCorrect: adaptedCheck.urgent_assignment(evidence.final),
         hotfixMarkedDone: hotfixDone !== null,
+        // Report status ordering descriptively: a safe stopping point can close the
+        // focal ticket before incident completion, and later updates can reopen it.
+        focalFirstDoneDecision: focalDone,
+        hotfixFirstDoneDecision: hotfixDone,
+        focalLastDoneDecision:
+          actions
+            .filter(
+              (a) =>
+                a.observation.name === 'linear_update_issue_status' &&
+                !a.observation.isError &&
+                String(a.observation.args['id']).toUpperCase() === family.focal.id &&
+                a.observation.args['status'] === 'done',
+            )
+            .at(-1)?.decision ?? null,
         hotfixDoneBeforeFocalDone:
           hotfixDone !== null && (focalDone === null || hotfixDone <= focalDone),
         focalChangesWhileUrgentOpen:
@@ -191,6 +233,8 @@ export function grade({
   const summary: Grade['summary'] = {
     importantFired: fired.length,
     importantMissed: fired.filter((e) => e.missed).length,
+    contentRetrieved: fired.filter((e) => e.observation?.contentRetrieved).length,
+    retrievalUnassessable: fired.filter((e) => e.missed === null).length,
     meanDetectionLatency: mean(
       fired.flatMap((e) => (e.detectionLatency === null ? [] : [e.detectionLatency])),
     ),

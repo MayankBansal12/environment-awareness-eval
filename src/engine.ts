@@ -266,7 +266,7 @@ export class Engine {
     return published;
   }
 
-  close() {
+  close(note = 'Pi runtime context seam; no provider wire-payload claim.') {
     const complete = this.inputs > 0 && this.inputs === this.outputs;
     this.capture({
       type: 'audit',
@@ -274,7 +274,7 @@ export class Engine {
       outputs: this.outputs,
       complete,
       partialContent: this.partial,
-      note: 'Pi runtime context seam; no provider wire-payload claim.',
+      note,
     });
     return { complete, partialContent: this.partial };
   }

@@ -2,7 +2,6 @@ import { getAgentDir, ModelRuntime } from '@earendil-works/pi-coding-agent';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import { createClaudeRuntime } from './claude-auth.js';
 import {
   assertFreeModel,
   FREE_MODEL,
@@ -50,12 +49,6 @@ const CLAUDE_BASE_URL = 'https://api.anthropic.com';
 const CLAUDE_CATALOG = 'https://pi.dev/api/models/providers/anthropic';
 const CLAUDE_DEFAULT_SOURCE =
   'https://platform.claude.com/docs/en/build-with-claude/effort#recommended-effort-levels-for-claude-opus-5';
-// Anthropic documents Opus 5's API default as high, equivalent to omitted effort.
-// Resolve independently of DEFAULT_SELECTION and Pi's defaults.
-export function resolvedThinking(selection: ModelSelection): 'medium' | 'high' {
-  return selection.provider === 'anthropic' ? 'high' : selection.thinking;
-}
-
 export function selectModel(values: {
   provider?: string;
   model?: string;
@@ -98,6 +91,7 @@ export function assertSelectedModel(
   selection: ModelSelection,
 ): void {
   const requested = modelSelectionSchema.parse(selection);
+  const thinking = requested.provider === 'anthropic' ? 'high' : requested.thinking;
   if (requested.provider === FREE_PROVIDER) {
     assertFreeModel(actual);
     return;
@@ -112,8 +106,8 @@ export function assertSelectedModel(
       record(actual.compat)?.['forceAdaptiveThinking'] !== true) ||
     !validPaidCost(actual.cost) ||
     !actual.reasoning ||
-    (actual.thinkingLevelMap?.[resolvedThinking(requested)] !== undefined &&
-      actual.thinkingLevelMap[resolvedThinking(requested)] !== resolvedThinking(requested))
+    (actual.thinkingLevelMap?.[thinking] !== undefined &&
+      actual.thinkingLevelMap[thinking] !== thinking)
   )
     throw new Error(
       'Inference refused: model identity differs from the explicit selection',
@@ -146,6 +140,16 @@ export function matchesRuntimeIdentity(value: unknown): boolean {
     identity['maxOutputTokens'] !== MAX_OUTPUT_TOKENS
   )
     return false;
+  if (identity['agent'] === 'claude-code') {
+    return (
+      selection.provider === 'anthropic' &&
+      identity['api'] === 'claude-code-agent-sdk' &&
+      typeof identity['agentVersion'] === 'string' &&
+      identity['authSource'] === 'claude-code' &&
+      identity['outputBudgetTransport'] === 'CLAUDE_CODE_MAX_OUTPUT_TOKENS' &&
+      identity['contextCapture'] === 'claude-code-hooks'
+    );
+  }
   if (selection.provider === FREE_PROVIDER) {
     return (
       identity['api'] === 'openai-responses' &&
@@ -153,6 +157,7 @@ export function matchesRuntimeIdentity(value: unknown): boolean {
       identity['pricing'] === 'free'
     );
   }
+  // Keep auditing historical Pi-hosted Opus results with their original identity.
   const cost = record(identity['catalogCost']);
   const claude = selection.provider === 'anthropic';
   return (
@@ -210,22 +215,19 @@ async function configuredCodexAuthentication(): Promise<string | undefined> {
 export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTION) {
   // Capture the selection before awaits so caller mutation cannot change authorization.
   const requested = modelSelectionSchema.parse(selection);
+  if (requested.provider === 'anthropic')
+    throw new Error('Opus runs through Claude Code, not the Pi model runtime');
   let configured;
   if (requested.provider === FREE_PROVIDER) {
     configured = await freeRuntime();
   } else {
-    // Preserve native coordinated OAuth refresh where configured. The Claude CLI
-    // bridge instead leaves refresh with Claude Code and refuses expired tokens.
+    // Preserve native coordinated OAuth refresh where configured.
     // Ignore user model overrides and keep the fetched model catalog in memory.
-    const claude = requested.provider === 'anthropic';
-    const claudeRuntime = claude ? await createClaudeRuntime() : undefined;
-    const runtime =
-      claudeRuntime?.runtime ??
-      (await ModelRuntime.create({ modelsPath: null, refreshOnCreate: false }));
+    const runtime = await ModelRuntime.create({ modelsPath: null, refreshOnCreate: false });
     // Some installations resolve subscription credentials through models.json's
     // apiKey command. Retain that authentication setting while excluding model,
     // endpoint, headers, and transport overrides. Pi resolves it without logging.
-    const apiKey = claude ? undefined : await configuredCodexAuthentication();
+    const apiKey = await configuredCodexAuthentication();
     if (apiKey !== undefined) runtime.registerProvider(requested.provider, { apiKey });
     const refresh = await runtime.refresh({
       providers: [requested.provider],
@@ -243,9 +245,8 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
     if (
       !catalogModel.reasoning ||
       catalogModel.maxTokens < MAX_OUTPUT_TOKENS ||
-      (catalogModel.thinkingLevelMap?.[resolvedThinking(requested)] !== undefined &&
-        catalogModel.thinkingLevelMap[resolvedThinking(requested)] !==
-          resolvedThinking(requested))
+      (catalogModel.thinkingLevelMap?.[requested.thinking] !== undefined &&
+        catalogModel.thinkingLevelMap[requested.thinking] !== requested.thinking)
     )
       throw new Error('Selected model cannot honor the reasoning/output budget');
     if (!(await runtime.checkAuth(requested.provider)))
@@ -262,23 +263,14 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
         pricing: 'provider-account',
         catalogCost: structuredClone(catalogModel.cost),
         verifiedAt: new Date().toISOString(),
-        catalogSource: claude ? CLAUDE_CATALOG : CODEX_CATALOG,
-        ...(claude
-          ? {
-              authSource: claudeRuntime!.authSource,
-              resolvedThinking: 'high',
-              thinkingMode: 'adaptive',
-              reasoningDefaultSource: CLAUDE_DEFAULT_SOURCE,
-              effortTransport: 'explicit-high-equivalent-to-api-default',
-            }
-          : {}),
+        catalogSource: CODEX_CATALOG,
         maxOutputTokens: MAX_OUTPUT_TOKENS,
         // Pi 0.84.4's Codex request builder does not serialize maxTokens. Keep
         // the requested cap explicit without claiming that the backend enforces it.
         requestedMaxOutputTokens: MAX_OUTPUT_TOKENS,
-        maxOutputTokensEnforced: claude,
+        maxOutputTokensEnforced: false,
         providerMaxOutputTokens: catalogModel.maxTokens,
-        outputBudgetTransport: claude ? 'anthropic-max_tokens' : 'not-sent-by-pi-codex',
+        outputBudgetTransport: 'not-sent-by-pi-codex',
       },
     };
   }
@@ -287,29 +279,17 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
   const stream = runtime.streamSimple.bind(runtime);
   runtime.streamSimple = (actual, context, options) => {
     assertSelectedModel(actual, requested);
-    const reasoning =
-      options?.reasoning ??
-      (requested.provider === 'anthropic' ? resolvedThinking(requested) : undefined);
-    if (reasoning !== resolvedThinking(requested))
+    if (options?.reasoning !== requested.thinking)
       throw new Error('Inference refused: reasoning differs from the explicit selection');
     const maxTokens = options?.maxTokens ?? MAX_OUTPUT_TOKENS;
-    if (
-      actual.maxTokens !== MAX_OUTPUT_TOKENS ||
-      (requested.provider === 'anthropic'
-        ? !Number.isInteger(maxTokens) || maxTokens <= 0 || maxTokens > MAX_OUTPUT_TOKENS
-        : maxTokens !== MAX_OUTPUT_TOKENS)
-    )
+    if (actual.maxTokens !== MAX_OUTPUT_TOKENS || maxTokens !== MAX_OUTPUT_TOKENS)
       throw new Error('Inference refused: output budget differs from the frozen limit');
-    const guardedOptions = { ...options, reasoning, maxTokens };
-    // Pi may pass a previously resolved token to its summary calls. Resolve again
-    // through the credential store so the Claude bridge checks expiry every time.
-    if (requested.provider === 'anthropic') delete guardedOptions.apiKey;
-    return stream(actual, context, guardedOptions);
+    return stream(actual, context, { ...options, maxTokens });
   };
   return {
     runtime,
     model,
-    thinking: resolvedThinking(requested),
+    thinking: requested.thinking,
     verification: {
       ...configured.verification,
       thinking: requested.thinking,

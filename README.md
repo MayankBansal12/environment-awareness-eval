@@ -3,7 +3,7 @@
 Does a coding agent notice and act on workplace updates while it is busy debugging, and does that
 get worse as the work gets harder?
 
-An agent (Pi harness + model) gets a sandboxed repository, a simulated Linear and Slack, and a
+An agent (Claude Code for Opus, Pi for the other models) gets a sandboxed repository, a simulated Linear and Slack, and a
 neutral prompt. While it works, the environment pushes requirement changes, an urgent hotfix, a
 buried comment and a decoy opinion, often right after a failing test run, mixed with seeded noise.
 Focal difficulty (2, 4 or 7 interacting bugs) is the load manipulation. See
@@ -11,7 +11,8 @@ Focal difficulty (2, 4 or 7 interacting bugs) is the load manipulation. See
 
 ## Setup
 
-Node.js ≥ 22.19, pnpm, `bwrap` with unprivileged user namespaces, and an authenticated Pi provider.
+Node.js ≥ 22.19, pnpm, `bwrap` with unprivileged user namespaces, and either an authenticated
+Claude Code installation (2.1.266+) or an authenticated Pi provider.
 
 ```sh
 pnpm install
@@ -32,8 +33,13 @@ pnpm eval compare experiments/sweep.json                                   # res
 Each run writes `results/…/<run>/` with `report.md` (update detection, outcome, tokens and cost),
 `summary.json`, `trace.jsonl`, `context.jsonl`, `usage.json` and an integrity-sealed audit.
 
-For exact Claude Opus 5 with its documented default reasoning, authentication
-readiness and pilot commands, see [the Opus 5 integration notes](docs/claude-opus-5.md).
+To run Opus through Claude Code:
+
+```sh
+pnpm eval run --family settlement --load high --provider anthropic --model claude-opus-5
+```
+
+See [the Claude Code integration notes](docs/claude-opus-5.md) for setup and verification.
 
 ## Develop
 

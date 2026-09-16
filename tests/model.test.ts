@@ -60,16 +60,7 @@ describe('explicit model runtime', () => {
     model: 'claude-opus-5',
     thinking: 'default',
   } as const;
-  const opusModel: Model = {
-    ...catalogModel,
-    id: 'claude-opus-5',
-    provider: 'anthropic',
-    api: 'anthropic-messages',
-    baseUrl: 'https://api.anthropic.com',
-    compat: { forceAdaptiveThinking: true },
-  };
-
-  it('selects the documented Claude default independently of the existing high default', () => {
+  it('selects the native Claude Code default independently of the Pi high default', () => {
     expect(selectModel({ provider: 'anthropic', model: 'claude-opus-5' })).toEqual(
       opusSelection,
     );
@@ -84,75 +75,30 @@ describe('explicit model runtime', () => {
       expect(() => selectModel({ ...opusSelection, ...change })).toThrow();
   });
 
-  it('audits Claude identity and default provenance and refuses altered routes or thinking modes', async () => {
-    const fake = mockRuntime(opusModel);
-    const result = await createRuntime(opusSelection);
-    expect(result.thinking).toBe('high');
-    expect(result.verification).toMatchObject({
+  it('routes Opus to Claude Code and audits its agent identity', async () => {
+    const fake = mockRuntime();
+    await expect(createRuntime(opusSelection)).rejects.toThrow('Claude Code');
+    expect(fake.create).not.toHaveBeenCalled();
+    const identity = {
       ...opusSelection,
-      resolvedThinking: 'high',
-      thinkingMode: 'adaptive',
-      effortTransport: 'explicit-high-equivalent-to-api-default',
-      maxOutputTokensEnforced: true,
-      outputBudgetTransport: 'anthropic-max_tokens',
-    });
-    expect(matchesRuntimeIdentity(result.verification)).toBe(true);
+      requested: opusSelection,
+      agent: 'claude-code',
+      agentVersion: '2.1.266 (Claude Code)',
+      api: 'claude-code-agent-sdk',
+      authSource: 'claude-code',
+      maxOutputTokens: 8192,
+      outputBudgetTransport: 'CLAUDE_CODE_MAX_OUTPUT_TOKENS',
+      contextCapture: 'claude-code-hooks',
+    };
+    expect(matchesRuntimeIdentity(identity)).toBe(true);
     for (const change of [
-      { model: 'claude-opus-4-8' },
-      { thinking: 'high' },
-      { resolvedThinking: 'medium' },
-      { thinkingMode: 'disabled' },
-      { reasoningDefaultSource: undefined },
-      { effortTransport: undefined },
-      { authSource: undefined },
-      { api: 'openai-responses' },
-      { baseUrl: 'https://proxy.invalid' },
-      { catalogSource: 'https://proxy.invalid' },
-      { maxOutputTokensEnforced: false },
-      { outputBudgetTransport: 'not-sent-by-pi-codex' },
+      { agent: 'pi' },
+      { api: 'anthropic-messages' },
+      { authSource: 'claude-code-read-only' },
+      { agentVersion: undefined },
+      { contextCapture: undefined },
     ])
-      expect(matchesRuntimeIdentity({ ...result.verification, ...change })).toBe(false);
-    for (const change of [
-      { id: 'claude-opus-4-8' },
-      { provider: 'openrouter' },
-      { baseUrl: 'https://proxy.invalid' },
-      { api: 'openai-responses' as const },
-      { compat: {} },
-      { reasoning: false },
-      { thinkingLevelMap: { high: 'medium' } },
-      { cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } },
-    ])
-      expect(() => assertSelectedModel({ ...opusModel, ...change }, opusSelection)).toThrow(
-        'identity',
-      );
-    expect(fake.stream).not.toHaveBeenCalled();
-  });
-
-  it('keeps omitted summary reasoning adaptive/high and honors smaller compaction budgets within the cap', async () => {
-    const fake = mockRuntime(opusModel);
-    const result = await createRuntime(opusSelection);
-    result.runtime.streamSimple(result.model, context, {
-      maxTokens: 2048,
-      apiKey: 'stale-summary-token',
-    });
-    expect(fake.stream).toHaveBeenLastCalledWith(result.model, context, {
-      reasoning: 'high',
-      maxTokens: 2048,
-      apiKey: undefined,
-    });
-    result.runtime.streamSimple(result.model, context, { reasoning: result.thinking });
-    expect(fake.stream).toHaveBeenLastCalledWith(result.model, context, {
-      reasoning: 'high',
-      maxTokens: 8192,
-      apiKey: undefined,
-    });
-    for (const maxTokens of [0, -1, 8193, NaN, 2.5])
-      expect(() =>
-        result.runtime.streamSimple(result.model, context, { maxTokens }),
-      ).toThrow('output budget');
-    expect(() =>
-      result.runtime.streamSimple(result.model, context, { reasoning: 'medium' }),
-    ).toThrow('reasoning');
+      expect(matchesRuntimeIdentity({ ...identity, ...change })).toBe(false);
   });
 
   it('retains Muse/high by default and accepts only the authorized provider/model tuples', () => {
