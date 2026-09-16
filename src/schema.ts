@@ -70,6 +70,8 @@ export type EventBody =
         when?: string;
         batchTestFailure: boolean;
         batchError: boolean;
+        /** Set on scheduled noise items delivered in the bundle around an important event. */
+        bundled?: boolean;
       };
     }
   | {

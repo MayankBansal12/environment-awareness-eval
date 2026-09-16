@@ -593,7 +593,7 @@ function bugSet(load: Load) {
 
 export const settlementFamily: TaskFamily = {
   id: 'settlement',
-  version: 'settlement-1.1',
+  version: 'settlement-1.2',
   focal: {
     id: 'PAY-31',
     title: 'Settlement reports do not reconcile with the ledger',

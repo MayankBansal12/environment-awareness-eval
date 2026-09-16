@@ -578,7 +578,7 @@ console.log(JSON.stringify(checks));
 
 export const fulfillmentFamily: TaskFamily = {
   id: 'fulfillment',
-  version: 'fulfillment-1.1',
+  version: 'fulfillment-1.2',
   focal: {
     id: 'INV-44',
     title: 'Flash sale oversold inventory',

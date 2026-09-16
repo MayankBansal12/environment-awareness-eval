@@ -164,6 +164,16 @@ export async function runClaudeCode(options: {
   let ready = deferred<SDKAssistantMessage['message']>();
   let completed = false;
   let result: SDKResultMessage | undefined;
+  // After a guard stop (budget, timeout, harness error) the SDK can still stream further model
+  // turns before the abort propagates. Those are runtime artifacts, not decisions under the
+  // protocol: exactly one such turn has been recorded at the stop's decision, so any additional
+  // assistant message would break input/output decision pairing. Track the stop and completion.
+  let stopped = false;
+  let recorded = false;
+  const stop = (...args: Parameters<typeof options.stop>) => {
+    stopped = true;
+    options.stop(...args);
+  };
   const hookContext = () => {
     const [message] = engine.beforeDecision([{ role: 'user', content: '' }]);
     return message!.content;
@@ -174,11 +184,12 @@ export async function runClaudeCode(options: {
       try {
         return await hook(...args);
       } catch (error) {
-        options.stop('harness_error', String(error));
+        stop('harness_error', String(error));
         return { continue: false, stopReason: String(error) };
       }
     };
   const finish = async (message: SDKAssistantMessage['message'], error?: string) => {
+    if (stopped && recorded) return;
     const normalized = {
       ...claudeMessage(message),
       ...(error ? { stopReason: 'error', errorMessage: error } : {}),
@@ -186,9 +197,10 @@ export async function runClaudeCode(options: {
     };
     meter.add(normalized, 'turn');
     if (meter.totals.totalTokens > options.budgets.maxTotalTokens)
-      options.stop('token_budget', 'Run token budget reached');
+      stop('token_budget', 'Run token budget reached');
     if (abortController.signal.aborted) normalized.stopReason = 'aborted';
     await options.afterTurn(normalized);
+    recorded = true;
     completed = true;
   };
   const run = query({
@@ -294,6 +306,7 @@ export async function runClaudeCode(options: {
   try {
     for await (const event of run) {
       options.persist(event);
+      if (stopped && recorded) break;
       if (event.type === 'stream_event' && !event.parent_tool_use_id) {
         const part = event.event;
         if (part.type === 'message_start') {
@@ -337,12 +350,14 @@ export async function runClaudeCode(options: {
     await run.return();
     await options.tools.idle();
   }
-  if (!result) throw Error('Claude Code exited without a result');
-  if (result.is_error || result.subtype !== 'success')
+  if (!result && !stopped) throw Error('Claude Code exited without a result');
+  if ((result?.is_error || result?.subtype !== 'success') && !stopped)
     return {
       reason: 'provider_error',
-      detail: result.subtype === 'success' ? result.result : result.errors.join('; '),
+      detail:
+        result?.subtype === 'success' ? result.result : (result?.errors ?? []).join('; '),
     };
-  if (!completed) throw Error('Claude Code ended without a complete assistant response');
+  if (!completed && !stopped)
+    throw Error('Claude Code ended without a complete assistant response');
   return { reason: 'agent_finished', detail: 'Claude Code ended its turn' };
 }

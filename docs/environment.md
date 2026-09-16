@@ -32,15 +32,30 @@ explicitly identify the README rule they add to or replace, while preserving ear
 Incident tickets request switching at a safe stopping point, a separate tested commit, marking the
 incident done, and resuming the original ticket. The system prompt stays neutral.
 
-| #   | Update                                                                      | Fires at                                | Fallback     |
-| --- | --------------------------------------------------------------------------- | --------------------------------------- | ------------ |
-| 1   | Requirement change on the focal ticket                                      | first focal source edit                 | 12 decisions |
-| 2   | Urgent assignment + Slack ping                                              | failing test run, ≥2 decisions after #1 | 8            |
-| 3   | Routine-looking comment changing acceptance (inbox shows a 60-char preview) | failing test run, ≥4 after #2           | 12           |
-| 4   | Decoy Slack opinion without authority                                       | failing test run, ≥2 after #3           | 8            |
+**script-2.0** revises the timing after the Opus 5 pilots: all six later events there fired through
+fallbacks with zero failing focal checks, so a condition set waiting for failures risks arriving
+after the hard work is done. Gaps are now short and milestone-aware (measured from the previous
+event instead of the run start), and the requirement change reacts to the first focal test run of
+_any_ outcome.
+
+| #   | Update                                                                      | Fires at                                  | Fallback    |
+| --- | --------------------------------------------------------------------------- | ----------------------------------------- | ----------- |
+| 1   | Requirement change on the focal ticket                                      | first focal test run (passing or failing) | 6 decisions |
+| 2   | Urgent assignment + Slack ping                                              | failing test run, ≥2 decisions after #1   | 5           |
+| 3   | Routine-looking comment changing acceptance (inbox shows a 60-char preview) | failing test run, ≥3 after #2             | 5           |
+| 4   | Decoy Slack opinion without authority                                       | failing test run, ≥2 after #3             | 4           |
+
+Worst case the whole script lands by decision 20 instead of ~40; the requirement-before-comment
+ordering is preserved by the `after`-chain. Bundles: at each boundary that fires an important
+event, exactly one seeded item from the noise pool is published right after it
+(`trigger.bundled`), so the important message never travels alone. Low-priority noise never
+requires action; making a failure from a bundle is not possible because bundled items are the
+same harmless pool as scheduled noise. At `noise=none` no bundle is drawn — the condition stays
+free of all distractors.
 
 **Noise:** seeded Slack chatter and harmless Linear edits. `normal` = 25% per decision + 50% after a
-failing batch; `heavy` = 50% + 90%. Loads within a replicate share a noise seed.
+failing batch; `heavy` = 50% + 90%. Loads within a replicate share a noise seed. Bundled items are
+scheduled noise drawn from the same pool and labelled separately in the trace.
 **Delivery:** `ambient` (counters only) or `exposed` (notifications inline; positive control).
 
 ## Measures

@@ -38,6 +38,7 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
         toolCall('call_issue', 'linear_get_issue', { id: family.focal.id }),
         toolCall('call_test', 'bash', { command: 'npm test' }),
       ],
+      [toolCall('call_reread', 'linear_get_issue', { id: family.focal.id })],
       [{ type: 'text', text: 'Finished.' }],
     ];
     const requests: Array<Record<string, unknown>> = [];
@@ -150,7 +151,10 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
       ).toBe(true);
       if (tokenBudget === 141) {
         expect(result.termination.reason).toBe('token_budget');
-        expect(requests).toHaveLength(1);
+        // The turn that crossed the budget is recorded once (D1) and audit pairing stays
+        // intact. How many additional SDK-internal calls finish before the abort propagates
+        // is Claude Code's behavior, not protocol data; only protocol pairing is asserted.
+        expect(requests.length).toBeGreaterThanOrEqual(1);
         expect(result.usage.turnCalls).toBe(1);
         expect(result.grade.censored).toBe(true);
         return;
@@ -158,7 +162,7 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
       expect(result.termination, JSON.stringify(result.termination)).toMatchObject({
         reason: 'agent_finished',
       });
-      expect(requests).toHaveLength(3);
+      expect(requests).toHaveLength(4);
       expect(requests.every((r) => r['model'] === 'claude-opus-5')).toBe(true);
       expect(requests.every((r) => r['max_tokens'] === 8192)).toBe(true);
       const trace = (await readFile(path.join(root, 'synthetic/trace.jsonl'), 'utf8'))
@@ -166,24 +170,26 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
         .split('\n')
         .map((s) => JSON.parse(s) as Event);
       expect(trace.filter((e) => e.type === 'input').map((e) => e.decision)).toEqual([
-        1, 2, 3,
+        1, 2, 3, 4,
       ]);
       expect(
         trace.filter((e) => e.type === 'tool_action').map((e) => e.observation.id),
       ).toEqual(
         expect.arrayContaining(['call_list', 'call_write', 'call_issue', 'call_test']),
       );
+      // script-2.0: first important requirement update fires on the first test run (D2 settle),
+      // before the next decision's input (D3).
       const update = trace.find((e) => e.type === 'environment_event');
-      expect(update?.decision).toBe(1);
+      expect(update?.decision).toBe(2);
       expect(
         result.grade.events.find((e) => e.kind === 'requirement_change')?.contentDecision,
-      ).toBe(2);
+      ).toBe(3);
       expect(JSON.stringify(requests[1]?.['messages'])).toContain('<environment_status>');
       expect(JSON.stringify(requests[1]?.['messages'])).toContain('File written.');
-      expect(JSON.stringify(requests[1]?.['messages']).includes('<notification>')).toBe(
+      expect(JSON.stringify(requests[2]?.['messages']).includes('<notification>')).toBe(
         delivery === 'exposed',
       );
-      expect(result.usage.turnCalls).toBe(3);
+      expect(result.usage.turnCalls).toBe(4);
       expect(result.usage.totalTokens).toBeGreaterThan(0);
       expect(result.usage.costUsd.total).toBeGreaterThan(0);
     } finally {

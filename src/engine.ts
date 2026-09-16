@@ -222,6 +222,9 @@ export class Engine {
     );
     const batchError = batch.some((o) => o.isError);
     const focalEdit = repo.focalDigest !== this.last.focalDigest;
+    const batchTestRun = batch.some(
+      (o) => o.name === 'bash' && TEST_COMMAND.test(String(o.args['command'] ?? '')),
+    );
     this.last = repo;
     // A terminal response has no following decision in which to observe new events.
     if (!canContinue) return [];
@@ -232,7 +235,12 @@ export class Engine {
         step.trigger.after === 'start' ? 0 : this.fired.get(step.trigger.after)?.decision;
       if (anchor === undefined) break;
       const gap = this.decision - anchor;
-      const met = step.trigger.when === 'focal_edit' ? focalEdit : batchTestFailure;
+      const met =
+        step.trigger.when === 'focal_edit'
+          ? focalEdit
+          : step.trigger.when === 'test_run'
+            ? batchTestRun
+            : batchTestFailure;
       const mode =
         gap >= step.trigger.minGap && met
           ? 'condition'
@@ -252,8 +260,24 @@ export class Engine {
           trigger: { mode, when: step.trigger.when, batchTestFailure, batchError },
         });
         published.push(event);
+        // Mixed-priority bundle: the important message shares the boundary with one seeded
+        // low-priority item. Empty at noise=none; ordered after the important event so retrieval
+        // semantics (requirement-before-comment, important cue first) stay untouched.
+        for (const item of this.noise.bundle()) {
+          const bundled = this.state.publishNoise(item);
+          this.emit({
+            type: 'environment_event',
+            event: bundled,
+            trigger: {
+              mode: 'noise',
+              when: step.trigger.when,
+              batchTestFailure,
+              batchError,
+              bundled: true,
+            },
+          });
+        }
       }
-      break;
     }
     for (const item of this.noise.draw(batchTestFailure || batchError)) {
       const event = this.state.publishNoise(item);

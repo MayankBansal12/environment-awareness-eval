@@ -11,11 +11,12 @@ import {
 } from './free-model.js';
 
 const thinkingSchema = z.enum(['medium', 'high']);
+export const CLAUDE_MODELS = ['claude-opus-5', 'claude-sonnet-5'] as const;
 export const modelSelectionSchema = z.union([
   z
     .object({
       provider: z.literal('anthropic'),
-      model: z.literal('claude-opus-5'),
+      model: z.enum(CLAUDE_MODELS),
       thinking: z.literal('default'),
     })
     .strict(),
@@ -216,7 +217,7 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
   // Capture the selection before awaits so caller mutation cannot change authorization.
   const requested = modelSelectionSchema.parse(selection);
   if (requested.provider === 'anthropic')
-    throw new Error('Opus runs through Claude Code, not the Pi model runtime');
+    throw new Error('Claude models run through Claude Code, not the Pi model runtime');
   let configured;
   if (requested.provider === FREE_PROVIDER) {
     configured = await freeRuntime();

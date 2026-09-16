@@ -1,8 +1,9 @@
 # Claude Code eval
 
-Selecting `--provider anthropic --model claude-opus-5` runs the installed **Claude Code
-agent** through the official Agent SDK. Claude Code owns authentication, the agent loop,
-reasoning, retries, compaction, and fallback behavior.
+Selecting `--provider anthropic --model claude-opus-5` (or `claude-sonnet-5`, see
+[claude-sonnet-5.md](claude-sonnet-5.md)) runs the installed **Claude Code agent** through the
+official Agent SDK. Claude Code owns authentication, the agent loop, reasoning, retries,
+compaction, and fallback behavior.
 
 ## Setup and run
 
