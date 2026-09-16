@@ -1,0 +1,307 @@
+{
+  "eligible": true,
+  "checks": [
+    {
+      "id": "required_records",
+      "passed": true
+    },
+    {
+      "id": "chronology",
+      "passed": true
+    },
+    {
+      "id": "decision_pairing",
+      "passed": true
+    },
+    {
+      "id": "selected_model_identity",
+      "passed": true
+    },
+    {
+      "id": "neutral_prompt",
+      "passed": true
+    },
+    {
+      "id": "indicator_delivery",
+      "passed": true
+    },
+    {
+      "id": "exposure_after_event",
+      "passed": true
+    },
+    {
+      "id": "events_between_decisions",
+      "passed": true
+    },
+    {
+      "id": "team_events_recorded",
+      "passed": true
+    },
+    {
+      "id": "delivery_mode",
+      "passed": true
+    },
+    {
+      "id": "hash:trace.jsonl",
+      "passed": true
+    },
+    {
+      "id": "hash:context.jsonl",
+      "passed": true
+    },
+    {
+      "id": "hash:team-state.json",
+      "passed": true
+    },
+    {
+      "id": "hash:workspace.diff",
+      "passed": true
+    },
+    {
+      "id": "hash:evidence.json",
+      "passed": true
+    },
+    {
+      "id": "hash:runtime.json",
+      "passed": true
+    },
+    {
+      "id": "hash:usage.json",
+      "passed": true
+    },
+    {
+      "id": "hash:claude-code.jsonl",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/README.md",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/package.json",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/allocation.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/api.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/audit.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/money.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/pricing.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/reservations.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/stock.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/tests/pricing.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/tests/reservations.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/README.md",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/package.json",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/src/allocation.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/src/api.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/src/audit.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/src/money.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/src/pricing.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/src/reservations.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/src/stock.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/tests/pricing.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e5/tests/reservations.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/README.md",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/package.json",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/src/allocation.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/src/api.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/src/audit.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/src/money.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/src/pricing.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/src/reservations.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/src/stock.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/tests/pricing.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e7/tests/reservations.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/README.md",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/package.json",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/src/allocation.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/src/api.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/src/audit.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/src/money.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/src/pricing.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/src/reservations.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/src/stock.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/tests/pricing.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e10/tests/reservations.test.mjs",
+      "passed": true
+    }
+  ],
+  "hashes": {
+    "trace.jsonl": "dfc96526cd8fc7901bbd574283991daff05a691bb7631704d5bfc84c6058bb46",
+    "context.jsonl": "76422375d0048c4f7d3cba049ab03c592faefd29570a800ee2968b821c7a6168",
+    "team-state.json": "bf397ac73aebf185e9d3dd994ce74718b5e1a54bd1a17f3090b603f3da1f066e",
+    "workspace.diff": "95d8537d2e10bed2ce9acd256152dd18db892dc0558595891e174eb3f27b974c",
+    "evidence.json": "fb32cb93ad579ee473ca98ec23b3a09c1a649729aaadaebc25187a8afc5ad90a",
+    "runtime.json": "58bbf387884c879df99bdbbf0f93041f6445d6004e2e1558e3e2ad4555318f79",
+    "usage.json": "c2549fc3823c3a3b6bcdc99caaf3ef167df98a87b93b193b60800b5248bb1b22",
+    "claude-code.jsonl": "affbc936f32facd540c5e9bd1ddaff248bb02f5b1867b741c126e2f84cf0888a",
+    "at-events/e3/README.md": "008f4cfe48857476f257a5893620ca45ed0e2bb0f2ca9af51b51c67b6b62e474",
+    "at-events/e3/package.json": "8ead0f7b1f19e75e6f96c6ab73dfedf482844df7d15aad342c726862892a5429",
+    "at-events/e3/src/allocation.mjs": "f89bf382d51d94e9980cd783ae1a2933336cebf361ac15d7ac2a5c9a5d1fd29a",
+    "at-events/e3/src/api.mjs": "98699c3c58e1678e7066581fa585af6c1ec63a60be836ca4708378b264212ba2",
+    "at-events/e3/src/audit.mjs": "4dd9557dc7f5e60c0da25c09053aa66c0cf523bc19eebef0e54dbb1f60fe165c",
+    "at-events/e3/src/money.mjs": "878d04f7eade845acc22a1f6c51c34ca83db96e67df4de5ba5ffd0e6446f69e8",
+    "at-events/e3/src/pricing.mjs": "60a7079e1c83b7f6fcd0f59c28ee697941064750ef4a62f7f43067dc134c9bc5",
+    "at-events/e3/src/reservations.mjs": "ad731da2b1cb43db07a442124558fffe3c0992c378566e075a92c2aa4f8feda8",
+    "at-events/e3/src/stock.mjs": "fdee9d0f153fd9d7a06f5403562651e104fd2c6162b70f64feba9a31bc9877f5",
+    "at-events/e3/tests/pricing.test.mjs": "af474a1b7b8d8a2ee23694a0a2a5283ac31358612daf4380e9ff43fa13764ef1",
+    "at-events/e3/tests/reservations.test.mjs": "1d9d7ae0f662339a5b70770f087f5cd246dad760abb9dec07bd777b72d91c7f9",
+    "at-events/e5/README.md": "008f4cfe48857476f257a5893620ca45ed0e2bb0f2ca9af51b51c67b6b62e474",
+    "at-events/e5/package.json": "8ead0f7b1f19e75e6f96c6ab73dfedf482844df7d15aad342c726862892a5429",
+    "at-events/e5/src/allocation.mjs": "f89bf382d51d94e9980cd783ae1a2933336cebf361ac15d7ac2a5c9a5d1fd29a",
+    "at-events/e5/src/api.mjs": "98699c3c58e1678e7066581fa585af6c1ec63a60be836ca4708378b264212ba2",
+    "at-events/e5/src/audit.mjs": "4dd9557dc7f5e60c0da25c09053aa66c0cf523bc19eebef0e54dbb1f60fe165c",
+    "at-events/e5/src/money.mjs": "878d04f7eade845acc22a1f6c51c34ca83db96e67df4de5ba5ffd0e6446f69e8",
+    "at-events/e5/src/pricing.mjs": "60a7079e1c83b7f6fcd0f59c28ee697941064750ef4a62f7f43067dc134c9bc5",
+    "at-events/e5/src/reservations.mjs": "ad731da2b1cb43db07a442124558fffe3c0992c378566e075a92c2aa4f8feda8",
+    "at-events/e5/src/stock.mjs": "fdee9d0f153fd9d7a06f5403562651e104fd2c6162b70f64feba9a31bc9877f5",
+    "at-events/e5/tests/pricing.test.mjs": "af474a1b7b8d8a2ee23694a0a2a5283ac31358612daf4380e9ff43fa13764ef1",
+    "at-events/e5/tests/reservations.test.mjs": "1d9d7ae0f662339a5b70770f087f5cd246dad760abb9dec07bd777b72d91c7f9",
+    "at-events/e7/README.md": "008f4cfe48857476f257a5893620ca45ed0e2bb0f2ca9af51b51c67b6b62e474",
+    "at-events/e7/package.json": "8ead0f7b1f19e75e6f96c6ab73dfedf482844df7d15aad342c726862892a5429",
+    "at-events/e7/src/allocation.mjs": "f89bf382d51d94e9980cd783ae1a2933336cebf361ac15d7ac2a5c9a5d1fd29a",
+    "at-events/e7/src/api.mjs": "98699c3c58e1678e7066581fa585af6c1ec63a60be836ca4708378b264212ba2",
+    "at-events/e7/src/audit.mjs": "4dd9557dc7f5e60c0da25c09053aa66c0cf523bc19eebef0e54dbb1f60fe165c",
+    "at-events/e7/src/money.mjs": "878d04f7eade845acc22a1f6c51c34ca83db96e67df4de5ba5ffd0e6446f69e8",
+    "at-events/e7/src/pricing.mjs": "60a7079e1c83b7f6fcd0f59c28ee697941064750ef4a62f7f43067dc134c9bc5",
+    "at-events/e7/src/reservations.mjs": "ad731da2b1cb43db07a442124558fffe3c0992c378566e075a92c2aa4f8feda8",
+    "at-events/e7/src/stock.mjs": "fdee9d0f153fd9d7a06f5403562651e104fd2c6162b70f64feba9a31bc9877f5",
+    "at-events/e7/tests/pricing.test.mjs": "af474a1b7b8d8a2ee23694a0a2a5283ac31358612daf4380e9ff43fa13764ef1",
+    "at-events/e7/tests/reservations.test.mjs": "1d9d7ae0f662339a5b70770f087f5cd246dad760abb9dec07bd777b72d91c7f9",
+    "at-events/e10/README.md": "008f4cfe48857476f257a5893620ca45ed0e2bb0f2ca9af51b51c67b6b62e474",
+    "at-events/e10/package.json": "8ead0f7b1f19e75e6f96c6ab73dfedf482844df7d15aad342c726862892a5429",
+    "at-events/e10/src/allocation.mjs": "f89bf382d51d94e9980cd783ae1a2933336cebf361ac15d7ac2a5c9a5d1fd29a",
+    "at-events/e10/src/api.mjs": "98699c3c58e1678e7066581fa585af6c1ec63a60be836ca4708378b264212ba2",
+    "at-events/e10/src/audit.mjs": "4dd9557dc7f5e60c0da25c09053aa66c0cf523bc19eebef0e54dbb1f60fe165c",
+    "at-events/e10/src/money.mjs": "878d04f7eade845acc22a1f6c51c34ca83db96e67df4de5ba5ffd0e6446f69e8",
+    "at-events/e10/src/pricing.mjs": "60a7079e1c83b7f6fcd0f59c28ee697941064750ef4a62f7f43067dc134c9bc5",
+    "at-events/e10/src/reservations.mjs": "ad731da2b1cb43db07a442124558fffe3c0992c378566e075a92c2aa4f8feda8",
+    "at-events/e10/src/stock.mjs": "fdee9d0f153fd9d7a06f5403562651e104fd2c6162b70f64feba9a31bc9877f5",
+    "at-events/e10/tests/pricing.test.mjs": "af474a1b7b8d8a2ee23694a0a2a5283ac31358612daf4380e9ff43fa13764ef1",
+    "at-events/e10/tests/reservations.test.mjs": "1d9d7ae0f662339a5b70770f087f5cd246dad760abb9dec07bd777b72d91c7f9"
+  }
+}
