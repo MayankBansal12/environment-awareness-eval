@@ -1,19 +1,16 @@
 import { useState } from 'react';
-import { filterRuns, LOADS, NO_FILTERS, type RunFilters } from '../derive.js';
+import { filterRuns, NO_FILTERS, type RunFilters } from '../derive.js';
 import { modelName, modelResults, type ModelResult } from '../derive/results.js';
 import { minutes, tokens, usd } from '../format.js';
 import type { ViewerIndex } from '../model.js';
 import { href } from './App.js';
 import { prefetchRun } from '../data.js';
 
-const OPTIONS: Record<keyof RunFilters, string[]> = {
+type VisibleFilter = 'scenario' | 'family' | 'delivery';
+const OPTIONS: Record<VisibleFilter, string[]> = {
   scenario: ['updates', 'task-cancellation', 'urgency-downgrade', 'delayed-relevance'],
-  experiment: [],
   family: ['settlement', 'fulfillment'],
-  load: [...LOADS],
-  noise: ['none', 'normal', 'heavy'],
-  delivery: ['ambient', 'exposed', 'interrupt'],
-  updates: ['enabled', 'disabled'],
+  delivery: ['ambient', 'interrupt'],
 };
 type SortKey = keyof ModelResult;
 const sortValue = (r: ModelResult, k: SortKey): string | number =>
@@ -21,16 +18,17 @@ const sortValue = (r: ModelResult, k: SortKey): string | number =>
 
 export function RunList({ index, query }: { index: ViewerIndex; query: URLSearchParams }) {
   const filters: RunFilters = { ...NO_FILTERS };
-  for (const k of Object.keys(NO_FILTERS) as Array<keyof RunFilters>)
-    filters[k] = query.get(k) ?? '';
+  for (const k of Object.keys(OPTIONS) as VisibleFilter[]) {
+    const value = query.get(k) ?? '';
+    filters[k] = OPTIONS[k].includes(value) ? value : '';
+  }
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'model', dir: 1 });
-  const setFilter = (k: keyof RunFilters, v: string) => {
+  const setFilter = (k: VisibleFilter, v: string) => {
     const next = Object.fromEntries(
       Object.entries({ ...filters, [k]: v }).filter(([, value]) => value),
     );
     location.hash = href.runs(next);
   };
-  const experiments = [...new Set(index.runs.map((r) => r.experiment ?? 'dev'))].sort();
   const rows = filterRuns(index.runs, filters);
   const models = modelResults(rows).sort((a, b) => {
     const x = sortValue(a, sort.key),
@@ -69,10 +67,7 @@ export function RunList({ index, query }: { index: ViewerIndex; query: URLSearch
       <header className="page-heading">
         <div>
           <h2>Evaluation results</h2>
-          <p>
-            Saved and new runs. Filter by experiment and scenario to compare like
-            conditions.
-          </p>
+          <p>Filter by scenario, task family, and delivery to compare like conditions.</p>
         </div>
         <span className="count-label">
           {models.length} {models.length === 1 ? 'model' : 'models'} · {rows.length}{' '}
@@ -101,13 +96,15 @@ export function RunList({ index, query }: { index: ViewerIndex; query: URLSearch
         </div>
       </div>
       <div className="controls index-controls">
-        {(Object.keys(OPTIONS) as Array<keyof RunFilters>).map((k) => (
+        {(Object.keys(OPTIONS) as VisibleFilter[]).map((k) => (
           <label key={k}>
             {k}
             <select value={filters[k]} onChange={(e) => setFilter(k, e.target.value)}>
               <option value="">all</option>
-              {(k === 'experiment' ? experiments : OPTIONS[k]).map((o) => (
-                <option key={o}>{o}</option>
+              {OPTIONS[k].map((o) => (
+                <option key={o} value={o}>
+                  {o === 'interrupt' ? 'interrupted' : o}
+                </option>
               ))}
             </select>
           </label>

@@ -218,7 +218,8 @@ describe('rendering', () => {
     const list = renderToStaticMarkup(
       createElement(RunList, { index, query: new URLSearchParams('noise=heavy') }),
     );
-    expect(list).toContain('2 of 33 runs');
+    // Old links must not retain filters that users can no longer clear.
+    expect(list).toContain('33 of 33 runs');
     const missed = details.find((d) => d.summary.grade.events.some((e) => e.missed))!;
     const cockpit = renderToStaticMarkup(
       createElement(RunView, { run: missed, decision: 2 }),
