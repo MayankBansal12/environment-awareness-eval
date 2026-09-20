@@ -2,22 +2,16 @@ import { useEffect, useState } from 'react';
 import { useIndex } from '../data.js';
 import { Cockpit } from './Cockpit.js';
 import { ExperimentView } from './ExperimentView.js';
-import { Compare } from './Compare.js';
 import { RunList } from './RunList.js';
 
 export type Route =
   | { name: 'runs'; query: URLSearchParams }
   | { name: 'run'; key: string; decision: number | null }
-  | { name: 'experiment'; id: string }
-  | { name: 'compare'; a: string | null; b: string | null };
+  | { name: 'experiment'; id: string };
 
 export function parseRoute(hash: string): Route {
   const [pathPart = '', search = ''] = hash.replace(/^#\/?/, '').split('?');
   const [head, ...rest] = pathPart.split('/').map(decodeURIComponent);
-  if (head === 'compare') {
-    const q = new URLSearchParams(search);
-    return { name: 'compare', a: q.get('a'), b: q.get('b') };
-  }
   if (head === 'run' && rest.length) {
     const last = rest.at(-1)!;
     const decision = /^d\d+$/.test(last) ? Number(last.slice(1)) : null;
@@ -32,9 +26,6 @@ export const href = {
     '#/' + (query ? '?' + new URLSearchParams(query).toString() : ''),
   run: (key: string, decision?: number | null) =>
     `#/run/${key.split('/').map(encodeURIComponent).join('/')}${decision ? `/d${decision}` : ''}`,
-  compare: (a?: string, b?: string) =>
-    '#/compare?' +
-    new URLSearchParams({ ...(a ? { a } : {}), ...(b ? { b } : {}) }).toString(),
   experiment: (id: string) => `#/experiment/${encodeURIComponent(id)}`,
 };
 
@@ -55,18 +46,6 @@ export function App() {
           <a className={route.name === 'runs' ? 'active' : ''} href={href.runs()}>
             Results
           </a>
-          <a className={route.name === 'compare' ? 'active' : ''} href={href.compare()}>
-            Compare
-          </a>
-          {index.data?.experiments.map((e) => (
-            <a
-              key={e.id}
-              className={route.name === 'experiment' && route.id === e.id ? 'active' : ''}
-              href={href.experiment(e.id)}
-            >
-              {e.id}
-            </a>
-          ))}
         </div>
         <div className="spacer" />
         <div className="meta">
@@ -96,13 +75,6 @@ export function App() {
               runKey={route.key}
               decision={route.decision}
               siblings={index.data.runs}
-            />
-          ) : route.name === 'compare' ? (
-            <Compare
-              key={location.hash}
-              index={index.data}
-              initialA={route.a}
-              initialB={route.b}
             />
           ) : route.name === 'experiment' ? (
             <div className="v4-experiment">

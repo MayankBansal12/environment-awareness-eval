@@ -81,43 +81,6 @@
   padding: 16px;
   border-radius: 8px;
 }
-.aligned-compare {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-.aligned-compare h4 {
-  padding: 12px;
-  overflow-wrap: anywhere;
-}
-.compare-decision {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: subgrid;
-  border-top: 1px solid var(--line);
-}
-.compare-cell {
-  min-width: 0;
-  padding: 10px;
-  overflow-wrap: anywhere;
-}
-.compare-cell + .compare-cell {
-  border-left: 1px solid var(--line);
-}
-.compare-cell .cmp-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-height: 25px;
-}
-.compare-cell.blank {
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 6px,
-    var(--panel) 6px,
-    var(--panel) 8px
-  );
-}
 .controls select {
   max-width: 100%;
 }
