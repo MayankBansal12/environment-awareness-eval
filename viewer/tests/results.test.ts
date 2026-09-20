@@ -119,7 +119,7 @@ describe('model results', () => {
   });
 
   it('shows empty filters and unavailable update rates without implying success', () => {
-    expect(render('experiment=missing')).toContain('No runs match these filters.');
+    expect(render('scenario=delayed-relevance')).toContain('No runs match these filters.');
     const html = render('', { ...index, runs: [runs[2]!] });
     expect(html).toContain('<td class="num">0/1</td>');
     expect(html).toContain('<td class="num">—</td>');

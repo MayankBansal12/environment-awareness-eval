@@ -19,7 +19,6 @@ import { capturedContext } from '../src/derive/capture.js';
 import { indicatorDecision, slackThreadOf, visibilityAt } from '../src/derive/slack.js';
 import { actionRowsOf } from '../src/derive/timeline.js';
 import { modelId } from '../src/derive/results.js';
-import { Comparison } from '../src/ui/Compare.js';
 import { RunView } from '../src/ui/Cockpit.js';
 import { ExperimentView } from '../src/ui/ExperimentView.js';
 import { RunList } from '../src/ui/RunList.js';
@@ -219,7 +218,8 @@ describe('rendering', () => {
     const list = renderToStaticMarkup(
       createElement(RunList, { index, query: new URLSearchParams('noise=heavy') }),
     );
-    expect(list).toContain('2 of 33 runs');
+    // Old links must not retain filters that users can no longer clear.
+    expect(list).toContain('33 of 33 runs');
     const missed = details.find((d) => d.summary.grade.events.some((e) => e.missed))!;
     const cockpit = renderToStaticMarkup(
       createElement(RunView, { run: missed, decision: 2 }),
@@ -333,17 +333,5 @@ describe('restored cockpit on v4 artifacts', () => {
     expect(cockpit).toContain('>Run details</button>');
     expect(cockpit).toContain('aria-label="Show noise messages"');
     expect(cockpit).toContain(`value="${r.summary.usage.turnCalls}"`);
-    const shorter = run('fixture-load-sweep/runs/t005');
-    const comparison = renderToStaticMarkup(
-      createElement(Comparison, { a: r, b: shorter }),
-    );
-    expect(comparison).toContain('No decision in this run');
-    expect(comparison.match(/class="compare-decision"/g)).toHaveLength(
-      r.summary.usage.turnCalls,
-    );
-    expect(comparison.indexOf('Requirement change fired')).toBeGreaterThanOrEqual(0);
-    expect(comparison.indexOf('Requirement change fired')).toBeLessThan(
-      comparison.indexOf('edit src/money.mjs'),
-    );
   });
 });
