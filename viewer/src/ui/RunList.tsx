@@ -91,6 +91,10 @@ export function RunList({ index, query }: { index: ViewerIndex; query: URLSearch
           <div className="k">Missed updates</div>
         </div>
         <div className="card">
+          <div className="n">{tokens(rows.reduce((n, r) => n + r.totalTokens, 0))}</div>
+          <div className="k">Total tokens</div>
+        </div>
+        <div className="card">
           <div className="n">{usd(rows.reduce((n, r) => n + r.costUsd, 0))}</div>
           <div className="k">Total cost</div>
         </div>
