@@ -72,6 +72,10 @@ export type EventBody =
         batchError: boolean;
         /** Set on scheduled noise items delivered in the bundle around an important event. */
         bundled?: boolean;
+        sourceInspection?: boolean;
+        focalEdit?: boolean;
+        batchTestRun?: boolean;
+        newModule?: boolean;
       };
     }
   | {

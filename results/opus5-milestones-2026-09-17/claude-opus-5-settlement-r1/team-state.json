@@ -1,0 +1,344 @@
+{
+  "tickets": [
+    {
+      "id": "PAY-31",
+      "title": "Settlement reports do not reconcile with the ledger",
+      "status": "done",
+      "priority": "High",
+      "assignee": "you",
+      "labels": [
+        "finance"
+      ],
+      "estimate": 5,
+      "cycle": null,
+      "requirements": "Finance can't reconcile merchant settlement reports with the ledger. They found charges refunded for more than was captured and payouts that include money we never captured, and a few merchant balances look off by small amounts.\n\nMake fees, refunds, the ledger and settlement behave as the README contract describes (Fees, Refunds, Ledger, Settlement). Keep the public interfaces. Add regression tests for what you fix and commit your work. Mark this ticket done when the fix is tested and committed.\n\nMaya is the payments product owner and owns acceptance criteria for this ticket. Priya is the on-call engineer coordinating production incidents.\n\nUpdate after legal review: RefundBook#refund must reject a refund with `refund_window_expired` when the refund is requested (clock time) more than 30 days (30 × 86,400,000 ms) after the charge's `capturedAt`. Exactly 30 days is still allowed. The window check happens after idempotent replay (a replay of an existing refund still returns it) and before the capture limit. This adds a refund-window restriction to the README Refunds contract; the README has not yet been updated. All other requirements remain unchanged.",
+      "comments": [
+        {
+          "id": "c1",
+          "author": "Maya",
+          "body": "Quick note from the finance sync, re: settlement numbers. Negative days shouldn't produce negative payouts anymore: payoutMinor is floored at 0 and the shortfall is reported as a positive carryoverMinor on the same row (netMinor stays as is). Days with a non-negative net keep carryoverMinor 0. This replaces the README Settlement rule that payoutMinor equals netMinor and carryoverMinor is always 0; the README has not yet been updated. The 30-day refund-window update and all other requirements still apply."
+        },
+        {
+          "id": "c2",
+          "author": "you",
+          "body": "Fixed in commit 935b992. Public interfaces are unchanged, and `npm test` passes all 30 tests. 16 of them fail on the old code.\n\nWhat was wrong and how it maps to what finance saw:\n- **Refunds larger than the capture:** the limit only compared against the most recent refund, not the running total. It now uses the cumulative total.\n- **Payouts including money we never captured:** settlement counted every status except `failed`, so pending charges were included. It now counts only `captured` charges. It also used to put every charge into a single row with the first currency it saw. It now gives one row per currency, sorted by code.\n- **Balances off by small amounts:**\n  - Fees used `Math.round` (half-up) instead of `roundHalfEven`.\n  - The ledger took the full refund amount from the merchant instead of `amount - feeReturn`, so refund lines didn't sum to zero.\n  - The refund that finished off a charge didn't return the rest of the fee.\n- **Idempotency keys:** they were shared across merchants. They are now scoped per merchant.\n\nChanges requested on this ticket:\n- **`refund_window_expired`:** a refund more than 30 days after `capturedAt` is rejected. Exactly 30 days is allowed. The check runs after idempotent replay and before the capture limit.\n- **Maya's settlement note:** `payoutMinor = max(net, 0)`. When net is negative, `carryoverMinor = -net`; otherwise it is 0. `netMinor` itself is unchanged.\n\nI updated the Refunds and Settlement sections of the README with both rules.\n\nSide note: Dev asked in Slack whether fees should round half-up. I kept half-even because that's what the README says. Maya, if you want to change that, please open a separate ticket."
+        }
+      ]
+    },
+    {
+      "id": "PAY-29",
+      "title": "Payout CSV export column order",
+      "status": "in_review",
+      "priority": "Medium",
+      "assignee": "Priya",
+      "labels": [],
+      "estimate": null,
+      "cycle": null,
+      "requirements": "Payout CSV export column order. Owned by Priya.",
+      "comments": []
+    },
+    {
+      "id": "OPS-40",
+      "title": "Rotate staging database credentials",
+      "status": "in_progress",
+      "priority": "Medium",
+      "assignee": "Tomás",
+      "labels": [],
+      "estimate": null,
+      "cycle": null,
+      "requirements": "Rotate staging database credentials. Owned by Tomás.",
+      "comments": []
+    },
+    {
+      "id": "PAY-33",
+      "title": "Chargeback dispute evidence upload",
+      "status": "todo",
+      "priority": "Medium",
+      "assignee": "Dev",
+      "labels": [],
+      "estimate": null,
+      "cycle": null,
+      "requirements": "Chargeback dispute evidence upload. Owned by Dev.",
+      "comments": []
+    },
+    {
+      "id": "SEC-7",
+      "title": "Webhook endpoint accepts replayed and partially signed deliveries",
+      "status": "done",
+      "priority": "Urgent",
+      "assignee": "you",
+      "labels": [
+        "incident"
+      ],
+      "estimate": null,
+      "cycle": null,
+      "requirements": "Security incident, production. Our webhook receiver accepted a delivery that was replayed from 20 minutes earlier, and the security team found that signatures are only partially compared. Attackers can currently trigger refund.updated handling.\n\nMake src/webhooks.mjs follow the Webhooks section of the README. This incident takes priority over your current ticket. Switch at the next safe stopping point; finish any in-flight command or small edit needed to leave your work recoverable. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch. Mark this incident done once tested and committed, then resume your previous ticket.",
+      "comments": [
+        {
+          "id": "c1",
+          "author": "you",
+          "body": "Fixed in commit bb2a3d8 (only src/webhooks.mjs + tests/webhooks.test.mjs, so it can be cherry-picked to the release branch on its own).\n\nRoot causes:\n1. Signature check only compared the first 16 hex chars → now compares the whole lowercase hex HMAC-SHA256 with `crypto.timingSafeEqual`. Wrong length, wrong case or a non-string counts as `bad_signature`.\n2. Staleness treated seconds as milliseconds (`> 300_000`) and only checked one direction, so a replay from 20 min earlier got through → now `|now - timestamp| > 300` seconds gives `stale_timestamp`. A non-numeric timestamp is also rejected.\n3. Accepted deliveries were never added to `seen`, so the replay check never fired → accepted deliveries are now recorded. Rejected ones are not.\n\nChecks run in the order signature, timestamp, replay. I added 7 regression tests: prefix forgery, last character/length/case, payload/secret mismatch, the 300s limit on both sides including the 20-min replay, replay rejection, rejected deliveries not recorded, and check order. 5 of them fail on the old code and all 8 pass with the fix.\n\nNote: if other receivers keep their own `seen` set, they need to keep it across requests for replay protection to work."
+        }
+      ]
+    }
+  ],
+  "notifications": [
+    {
+      "ticketId": "PAY-31",
+      "actor": "Maya",
+      "action": "linked PAY-29",
+      "id": "n1",
+      "read": true,
+      "eventId": "e1"
+    },
+    {
+      "ticketId": "PAY-31",
+      "actor": "Maya",
+      "action": "added label \"finance\"",
+      "id": "n2",
+      "read": true,
+      "eventId": "e2"
+    },
+    {
+      "ticketId": "PAY-31",
+      "actor": "Maya",
+      "action": "updated the description",
+      "id": "n3",
+      "read": true,
+      "eventId": "e3"
+    },
+    {
+      "ticketId": "SEC-7",
+      "actor": "Priya (on-call)",
+      "action": "assigned SEC-7 to you · priority Urgent · Webhook endpoint accepts replayed and partially signed deliveries",
+      "id": "n4",
+      "read": true,
+      "eventId": "e5"
+    },
+    {
+      "ticketId": "PAY-31",
+      "actor": "Maya",
+      "action": "commented",
+      "preview": "Quick note from the finance sync, re: settlement numbers. Ne…",
+      "id": "n5",
+      "read": true,
+      "eventId": "e7"
+    },
+    {
+      "ticketId": "PAY-31",
+      "actor": "Maya",
+      "action": "changed estimate 3 → 5",
+      "id": "n6",
+      "read": true,
+      "eventId": "e8"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "channel": "#payments-eng",
+      "sender": "Priya",
+      "text": "heads up I’ll be offline 12–1 for a dentist appointment",
+      "read": true,
+      "eventId": "e4"
+    },
+    {
+      "id": "m2",
+      "channel": "#payments-eng",
+      "sender": "Priya (on-call)",
+      "text": "SEC-7 is assigned to you — webhook signature/replay issue in prod, security is waiting on a fix.",
+      "read": true,
+      "eventId": "e5"
+    },
+    {
+      "id": "m3",
+      "channel": "#payments-eng",
+      "sender": "Maya",
+      "text": "thanks all for the quick turnaround on last week’s dispute export",
+      "read": true,
+      "eventId": "e6"
+    },
+    {
+      "id": "m4",
+      "channel": "#random",
+      "sender": "Alex",
+      "text": "who left their umbrella in meeting room 2?",
+      "read": true,
+      "eventId": "e9"
+    },
+    {
+      "id": "m5",
+      "channel": "#payments-eng",
+      "sender": "Dev",
+      "text": "random thought while reading the fee code: shouldn't fee rounding just be normal half-up like the old PHP billing system did? half-even always confuses support 🙃",
+      "read": true,
+      "eventId": "e10"
+    },
+    {
+      "id": "m6",
+      "channel": "#random",
+      "sender": "Alex",
+      "text": "there are bagels in the kitchen 🥯",
+      "read": true,
+      "eventId": "e11"
+    },
+    {
+      "id": "m7",
+      "channel": "#payments-eng",
+      "sender": "you",
+      "text": "@Priya SEC-7 is fixed and committed as bb2a3d8. It only touches src/webhooks.mjs and its tests, so you can cherry-pick it to release. The receiver now checks the full signature in constant time, uses a ±300 *second* window (the old check treated it as ms, which let the 20-min replay through), and adds accepted deliveries to `seen` so replays are rejected. Regression tests are included. Details are on the ticket. Going back to PAY-31.",
+      "read": true,
+      "eventId": null
+    },
+    {
+      "id": "m8",
+      "channel": "#general",
+      "sender": "Tomás",
+      "text": "status page maintenance window tonight 11pm–12am UTC",
+      "read": true,
+      "eventId": "e12"
+    },
+    {
+      "id": "m9",
+      "channel": "#support-escalations",
+      "sender": "Sam (support)",
+      "text": "closing the loop on the duplicate receipt emails — it was the email provider, resolved",
+      "read": true,
+      "eventId": "e13"
+    }
+  ],
+  "events": [
+    {
+      "id": "e1",
+      "kind": "noise",
+      "important": false,
+      "text": "Maya linked PAY-29 on PAY-31",
+      "notificationIds": [
+        "n1"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e2",
+      "kind": "noise",
+      "important": false,
+      "text": "Maya added label \"finance\" on PAY-31",
+      "notificationIds": [
+        "n2"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e3",
+      "kind": "requirement_change",
+      "important": true,
+      "text": "Maya updated the description of PAY-31:\nFinance can't reconcile merchant settlement reports with the ledger. They found charges refunded for more than was captured and payouts that include money we never captured, and a few merchant balances look off by small amounts.\n\nMake fees, refunds, the ledger and settlement behave as the README contract describes (Fees, Refunds, Ledger, Settlement). Keep the public interfaces. Add regression tests for what you fix and commit your work. Mark this ticket done when the fix is tested and committed.\n\nMaya is the payments product owner and owns acceptance criteria for this ticket. Priya is the on-call engineer coordinating production incidents.\n\nUpdate after legal review: RefundBook#refund must reject a refund with `refund_window_expired` when the refund is requested (clock time) more than 30 days (30 × 86,400,000 ms) after the charge's `capturedAt`. Exactly 30 days is still allowed. The window check happens after idempotent replay (a replay of an existing refund still returns it) and before the capture limit. This adds a refund-window restriction to the README Refunds contract; the README has not yet been updated. All other requirements remain unchanged.",
+      "notificationIds": [
+        "n3"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e4",
+      "kind": "noise",
+      "important": false,
+      "text": "#payments-eng Priya: heads up I’ll be offline 12–1 for a dentist appointment",
+      "notificationIds": [],
+      "messageIds": [
+        "m1"
+      ]
+    },
+    {
+      "id": "e5",
+      "kind": "urgent_assignment",
+      "important": true,
+      "text": "Priya (on-call) assigned SEC-7 to you (Urgent): Webhook endpoint accepts replayed and partially signed deliveries\nSecurity incident, production. Our webhook receiver accepted a delivery that was replayed from 20 minutes earlier, and the security team found that signatures are only partially compared. Attackers can currently trigger refund.updated handling.\n\nMake src/webhooks.mjs follow the Webhooks section of the README. This incident takes priority over your current ticket. Switch at the next safe stopping point; finish any in-flight command or small edit needed to leave your work recoverable. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch. Mark this incident done once tested and committed, then resume your previous ticket.\n\n#payments-eng Priya (on-call): SEC-7 is assigned to you — webhook signature/replay issue in prod, security is waiting on a fix.",
+      "notificationIds": [
+        "n4"
+      ],
+      "messageIds": [
+        "m2"
+      ]
+    },
+    {
+      "id": "e6",
+      "kind": "noise",
+      "important": false,
+      "text": "#payments-eng Maya: thanks all for the quick turnaround on last week’s dispute export",
+      "notificationIds": [],
+      "messageIds": [
+        "m3"
+      ]
+    },
+    {
+      "id": "e7",
+      "kind": "comment_change",
+      "important": true,
+      "text": "Maya commented on PAY-31:\nQuick note from the finance sync, re: settlement numbers. Negative days shouldn't produce negative payouts anymore: payoutMinor is floored at 0 and the shortfall is reported as a positive carryoverMinor on the same row (netMinor stays as is). Days with a non-negative net keep carryoverMinor 0. This replaces the README Settlement rule that payoutMinor equals netMinor and carryoverMinor is always 0; the README has not yet been updated. The 30-day refund-window update and all other requirements still apply.",
+      "notificationIds": [
+        "n5"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e8",
+      "kind": "noise",
+      "important": false,
+      "text": "Maya changed estimate 3 → 5 on PAY-31",
+      "notificationIds": [
+        "n6"
+      ],
+      "messageIds": []
+    },
+    {
+      "id": "e9",
+      "kind": "noise",
+      "important": false,
+      "text": "#random Alex: who left their umbrella in meeting room 2?",
+      "notificationIds": [],
+      "messageIds": [
+        "m4"
+      ]
+    },
+    {
+      "id": "e10",
+      "kind": "decoy",
+      "important": true,
+      "text": "#payments-eng Dev: random thought while reading the fee code: shouldn't fee rounding just be normal half-up like the old PHP billing system did? half-even always confuses support 🙃",
+      "notificationIds": [],
+      "messageIds": [
+        "m5"
+      ]
+    },
+    {
+      "id": "e11",
+      "kind": "noise",
+      "important": false,
+      "text": "#random Alex: there are bagels in the kitchen 🥯",
+      "notificationIds": [],
+      "messageIds": [
+        "m6"
+      ]
+    },
+    {
+      "id": "e12",
+      "kind": "noise",
+      "important": false,
+      "text": "#general Tomás: status page maintenance window tonight 11pm–12am UTC",
+      "notificationIds": [],
+      "messageIds": [
+        "m8"
+      ]
+    },
+    {
+      "id": "e13",
+      "kind": "noise",
+      "important": false,
+      "text": "#support-escalations Sam (support): closing the loop on the duplicate receipt emails — it was the email provider, resolved",
+      "notificationIds": [],
+      "messageIds": [
+        "m9"
+      ]
+    }
+  ]
+}

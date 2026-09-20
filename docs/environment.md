@@ -32,26 +32,35 @@ explicitly identify the README rule they add to or replace, while preserving ear
 Incident tickets request switching at a safe stopping point, a separate tested commit, marking the
 incident done, and resuming the original ticket. The system prompt stays neutral.
 
-**script-2.0** revises the timing after the Opus 5 pilots: all six later events there fired through
-fallbacks with zero failing focal checks, so a condition set waiting for failures risks arriving
-after the hard work is done. Gaps are now short and milestone-aware (measured from the previous
-event instead of the run start), and the requirement change reacts to the first focal test run of
-_any_ outcome.
+**script-3.0** moves updates onto observable work milestones. The same policy applies to
+all models and conditions; hidden checks never drive scheduling.
 
-| #   | Update                                                                      | Fires at                                  | Fallback    |
-| --- | --------------------------------------------------------------------------- | ----------------------------------------- | ----------- |
-| 1   | Requirement change on the focal ticket                                      | first focal test run (passing or failing) | 6 decisions |
-| 2   | Urgent assignment + Slack ping                                              | failing test run, ≥2 decisions after #1   | 5           |
-| 3   | Routine-looking comment changing acceptance (inbox shows a 60-char preview) | failing test run, ≥3 after #2             | 5           |
-| 4   | Decoy Slack opinion without authority                                       | failing test run, ≥2 after #3             | 4           |
+| Update | Milestone | Fallback gap |
+| --- | --- | --- |
+| Requirement change | successful source inspection | 3 decisions from start |
+| Urgent assignment | focal source digest changes after requirement | 2 after requirement |
+| Acceptance comment | test command, passing or failing, after urgent | 2 after urgent |
+| Decoy | first observed access to another, previously unseen source module after comment | 2 after comment |
 
-Worst case the whole script lands by decision 20 instead of ~40; the requirement-before-comment
-ordering is preserved by the `after`-chain. Bundles: at each boundary that fires an important
-event, exactly one seeded item from the noise pool is published right after it
-(`trigger.bundled`), so the important message never travels alone. Low-priority noise never
-requires action; making a failure from a bundle is not possible because bundled items are the
-same harmless pool as scheduled noise. At `noise=none` no bundle is drawn — the condition stays
-free of all distractors.
+Each event waits at least one decision after its predecessor. With no milestones,
+events land at decisions 3/5/7/9. Source inspection recognizes successful `read`/`grep`
+on family source paths and shell inspection commands (`cat`, `sed`, `head`, `tail`,
+`rg`, `grep`) mentioning those paths or `src/*`. Shell recognition is a heuristic;
+custom scripts may use deadlines. Module access uses the same paths plus `edit`/`write`.
+A test command need not be focal; it is an observable work milestone, not a claim
+about which tests ran. Trigger facts are saved in the trace.
+
+Events still settle only between decisions, never inside a tool batch or after a
+terminal response. An agent can read and fix multiple files in one batch before an
+update appears. The first-update target is before editing, not a guarantee.
+Noise stays unchanged: exactly one seeded harmless item accompanies each important
+event, plus the existing normal background stream; `noise=none` has no bundles.
+
+Evaluate environment adequacy separately from agent performance: use archived
+`focalChecksFailingAtFire` and response opportunities. An event with no unresolved
+focal checks gives insufficient evidence of awareness under ongoing focal debugging,
+not an agent failure. Remaining failures are a workload proxy, not proof of cognitive
+load. Keep retrieval/adaptation findings even when that load condition is absent.
 
 **Noise:** seeded Slack chatter and harmless Linear edits. `normal` = 25% per decision + 50% after a
 failing batch; `heavy` = 50% + 90%. Loads within a replicate share a noise seed. Bundled items are

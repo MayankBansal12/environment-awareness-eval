@@ -83,6 +83,7 @@ export class Engine {
   private outputs = 0;
   private partial = false;
   private last: RepoSnapshot;
+  private seenModules = new Set<string>();
   private noise: NoiseStream;
   constructor(
     readonly state: TeamState,
@@ -225,6 +226,46 @@ export class Engine {
     const batchTestRun = batch.some(
       (o) => o.name === 'bash' && TEST_COMMAND.test(String(o.args['command'] ?? '')),
     );
+    // Successful explicit source reads/searches, or shell inspection commands mentioning source.
+    // Shell recognition is deliberately heuristic; deadlines cover opaque/custom commands.
+    const paths = [...this.state.family.focal.paths, ...this.state.family.hotfix.paths];
+    const successful = batch.filter(
+      (o) =>
+        !o.isError &&
+        (o.name !== 'bash' || (o.value as { exitCode?: number })?.exitCode === 0),
+    );
+    const touchedModules = (o: ToolObservation): string[] => {
+      const target = String(o.args['path'] ?? '')
+        .replace(/^\/workspace\/repo\//, '')
+        .replace(/^\.\//, '');
+      if (['read', 'edit', 'write', 'grep'].includes(o.name))
+        return paths.filter(
+          (p) =>
+            p === target ||
+            (o.name === 'grep' &&
+              (target === '.' || target === '' || p.startsWith(target + '/'))),
+        );
+      if (
+        o.name === 'bash' &&
+        /\b(cat|sed|head|tail|rg|grep)\b/.test(String(o.args['command'] ?? ''))
+      )
+        return paths.filter(
+          (p) =>
+            String(o.args['command']).includes(p) ||
+            String(o.args['command']).includes('src/*'),
+        );
+      return [];
+    };
+    const modules = new Set(successful.flatMap(touchedModules));
+    const sourceInspection = successful.some(
+      (o) =>
+        ['read', 'grep', 'bash'].includes(o.name) &&
+        touchedModules(o).length > 0 &&
+        (o.name !== 'bash' ||
+          /\b(cat|sed|head|tail|rg|grep)\b/.test(String(o.args['command'] ?? ''))),
+    );
+    const newModule = [...modules].some((p) => !this.seenModules.has(p));
+    for (const p of modules) this.seenModules.add(p);
     this.last = repo;
     // A terminal response has no following decision in which to observe new events.
     if (!canContinue) return [];
@@ -236,11 +277,13 @@ export class Engine {
       if (anchor === undefined) break;
       const gap = this.decision - anchor;
       const met =
-        step.trigger.when === 'focal_edit'
-          ? focalEdit
-          : step.trigger.when === 'test_run'
-            ? batchTestRun
-            : batchTestFailure;
+        step.trigger.when === 'source_inspection'
+          ? sourceInspection
+          : step.trigger.when === 'focal_edit'
+            ? focalEdit
+            : step.trigger.when === 'test_run'
+              ? batchTestRun
+              : newModule;
       const mode =
         gap >= step.trigger.minGap && met
           ? 'condition'
@@ -257,7 +300,16 @@ export class Engine {
         this.emit({
           type: 'environment_event',
           event,
-          trigger: { mode, when: step.trigger.when, batchTestFailure, batchError },
+          trigger: {
+            mode,
+            when: step.trigger.when,
+            batchTestFailure,
+            batchError,
+            sourceInspection,
+            focalEdit,
+            batchTestRun,
+            newModule,
+          },
         });
         published.push(event);
         // Mixed-priority bundle: the important message shares the boundary with one seeded
