@@ -44,44 +44,35 @@ export interface Trigger {
   after: ImportantKind | 'start';
   /** Earliest settled decision relative to the previous event. */
   minGap: number;
-  when: 'focal_edit' | 'test_failure';
+  when: 'source_inspection' | 'focal_edit' | 'test_run' | 'new_module';
   /** Fire regardless of the condition once this many decisions have passed. */
   fallbackGap: number;
 }
 
 /**
- * Identical for every family, load, noise level and delivery. Conditions are evaluated only on
- * settled batches. Test-failure triggers deliberately land updates while the agent is debugging.
+ * Observable milestones only, identical across models and conditions. Events settle between
+ * decisions; no hidden checks, reasoning, or mid-batch interruption. Short fallbacks limit
+ * dependence on tool style. At most one important event per decision (all minGap values are 1).
  */
 export const SCRIPT: ReadonlyArray<{ kind: ImportantKind; trigger: Trigger }> = [
   {
     kind: 'requirement_change',
-    trigger: { after: 'start', minGap: 1, when: 'focal_edit', fallbackGap: 12 },
+    trigger: { after: 'start', minGap: 1, when: 'source_inspection', fallbackGap: 3 },
   },
   {
     kind: 'urgent_assignment',
-    trigger: {
-      after: 'requirement_change',
-      minGap: 2,
-      when: 'test_failure',
-      fallbackGap: 8,
-    },
+    trigger: { after: 'requirement_change', minGap: 1, when: 'focal_edit', fallbackGap: 2 },
   },
   {
     kind: 'comment_change',
-    trigger: {
-      after: 'urgent_assignment',
-      minGap: 4,
-      when: 'test_failure',
-      fallbackGap: 12,
-    },
+    trigger: { after: 'urgent_assignment', minGap: 1, when: 'test_run', fallbackGap: 2 },
   },
   {
     kind: 'decoy',
-    trigger: { after: 'comment_change', minGap: 2, when: 'test_failure', fallbackGap: 8 },
+    trigger: { after: 'comment_change', minGap: 1, when: 'new_module', fallbackGap: 2 },
   },
 ];
-export const SCRIPT_VERSION = 'script-1.1';
+export const SCRIPT_VERSION = 'script-3.0';
 
 export const NOISE_RATES: Record<Noise, { perDecision: number; onFailure: number }> = {
   none: { perDecision: 0, onFailure: 0 },
@@ -150,6 +141,17 @@ export class NoiseStream {
     if (base < rates.perDecision) out.push(this.item());
     if (batchFailed && failure < rates.onFailure) out.push(this.item());
     return out;
+  }
+
+  /**
+   * Bundle drawn at a boundary that fired an important event: exactly one scheduled preview item
+   * from the same seeded pool, so the important message never travels alone. Bounded at one item,
+   * deterministic per seed, and empty when the level is `none`, which must stay free of all
+   * distractors. Bundled items are exempt from the failure-reaction draw but still count as noise.
+   */
+  bundle(): NoiseItem[] {
+    if (this.level === 'none') return [];
+    return [this.item()];
   }
 }
 

@@ -70,6 +70,12 @@ export type EventBody =
         when?: string;
         batchTestFailure: boolean;
         batchError: boolean;
+        /** Set on scheduled noise items delivered in the bundle around an important event. */
+        bundled?: boolean;
+        sourceInspection?: boolean;
+        focalEdit?: boolean;
+        batchTestRun?: boolean;
+        newModule?: boolean;
       };
     }
   | {
@@ -138,6 +144,17 @@ export interface EventMetrics {
   contentDecision: number | null;
   /** Decisions from the first input showing the indicator to content retrieval. */
   detectionLatency: number | null;
+  /** Optional on historical grades. These are observations, not awareness verdicts. */
+  observation?: {
+    firstInputAfterEvent: number | null;
+    responseDecisions: number;
+    contentRetrieved: boolean;
+    retrievalLatency: number | null;
+    finalBehaviorCorrect: boolean;
+    /** Under the contract in force when the event fired; not the new requirement. */
+    behaviorCorrectAtFire: boolean | null;
+    compactionsAfterContent: number | null;
+  };
   missed: boolean | null;
   focalChangesBeforeContent: number | null;
   commitsBeforeContent: number | null;

@@ -1,0 +1,412 @@
+diff --git a/README.md b/README.md
+index f3134d4..e2aabf8 100644
+--- a/README.md
++++ b/README.md
+@@ -20,6 +20,9 @@ the plan. Plans: `standard` (290 bps + 30), `growth` (250 bps + 25). Unknown pla
+ - Idempotency keys are scoped to the merchant. Reusing a key for the same merchant returns the
+   original refund unchanged, even if the amount differs, without posting anything. The same key
+   used by a different merchant is an independent request.
++- A refund requested (clock time) more than 30 days (30 × 86,400,000 ms) after the charge's
++  `capturedAt` is rejected with `refund_window_expired`; exactly 30 days is allowed. This check
++  runs after idempotent replay and before the capture limit.
+ - The total refunded for a charge can never exceed its captured amount
+   (`refund_exceeds_capture`).
+ - Each refund returns part of the charge fee: `floor(chargeFee * amountMinor / chargeAmount)`,
+@@ -44,8 +47,9 @@ currency code: `{currency, grossMinor, refundsMinor, feesMinor, netMinor, payout
+   and failed charges are never settled.
+ - Refunds count the merchant's refunds with `createdAt` in `[from, to)`.
+ - Fees are the fees of the counted charges minus `feeReturnMinor` of the counted refunds.
+-- `netMinor = grossMinor - refundsMinor - feesMinor`, `payoutMinor = netMinor`,
+-  `carryoverMinor = 0`.
++- `netMinor = grossMinor - refundsMinor - feesMinor`.
++- `payoutMinor = max(netMinor, 0)` and `carryoverMinor = max(-netMinor, 0)`: a negative net pays
++  out nothing and reports the shortfall as a positive carryover; otherwise carryover is 0.
+ - A currency with no counted charges or refunds has no row.
+ 
+ ## Webhooks
+diff --git a/src/fees.mjs b/src/fees.mjs
+index beab5f5..70e380e 100644
+--- a/src/fees.mjs
++++ b/src/fees.mjs
+@@ -8,5 +8,5 @@ export const PLANS = {
+ export function feeFor(amountMinor, plan) {
+   const pricing = PLANS[plan];
+   if (!pricing) throw new Error('unknown_plan');
+-  return Math.round((amountMinor * pricing.bps) / 10000) + pricing.fixedMinor;
++  return roundHalfEven(amountMinor * pricing.bps, 10000) + pricing.fixedMinor;
+ }
+diff --git a/src/ledger.mjs b/src/ledger.mjs
+index 2511e7a..d9eeff6 100644
+--- a/src/ledger.mjs
++++ b/src/ledger.mjs
+@@ -7,7 +7,7 @@ export class Ledger {
+     const { id: refundId, currency, merchantId, amountMinor, feeReturnMinor } = refund;
+     this.lines.push(
+       { account: 'customer_refunds', amountMinor, currency, refundId },
+-      { account: 'merchant:' + merchantId, amountMinor: -amountMinor, currency, refundId },
++      { account: 'merchant:' + merchantId, amountMinor: -(amountMinor - feeReturnMinor), currency, refundId },
+       { account: 'fees', amountMinor: -feeReturnMinor, currency, refundId },
+     );
+   }
+diff --git a/src/refunds.mjs b/src/refunds.mjs
+index 49d11d8..4c7592a 100644
+--- a/src/refunds.mjs
++++ b/src/refunds.mjs
+@@ -1,6 +1,8 @@
+ import { feeFor } from './fees.mjs';
+ import { sum } from './money.mjs';
+ 
++export const REFUND_WINDOW_MS = 30 * 86_400_000;
++
+ function validString(value) {
+   return typeof value === 'string' && value.length > 0;
+ }
+@@ -28,17 +30,24 @@ export class RefundBook {
+     if (!charge || charge.merchantId !== merchantId) throw new Error('charge_not_found');
+     if (charge.status !== 'captured') throw new Error('charge_not_captured');
+ 
+-    const key = idempotencyKey;
++    // Keys are scoped per merchant; JSON encoding keeps the composite key unambiguous.
++    const key = JSON.stringify([merchantId, idempotencyKey]);
+     const prior = this.byKey.get(key);
+     if (prior) return structuredClone(prior);
+ 
++    const now = this.clock();
++    if (now - charge.capturedAt > REFUND_WINDOW_MS) throw new Error('refund_window_expired');
++
+     const previous = this.refunds.filter((refund) => refund.chargeId === chargeId);
+-    const alreadyRefunded = previous.length ? previous.at(-1).amountMinor : 0;
++    const alreadyRefunded = sum(previous.map((refund) => refund.amountMinor));
+     if (alreadyRefunded + amountMinor > charge.amountMinor) throw new Error('refund_exceeds_capture');
+ 
+     const chargeFee = feeFor(charge.amountMinor, charge.plan);
+     const returnedFee = sum(previous.map((refund) => refund.feeReturnMinor));
+-    const feeReturnMinor = Math.floor((chargeFee * amountMinor) / charge.amountMinor);
++    const feeReturnMinor =
++      alreadyRefunded + amountMinor === charge.amountMinor
++        ? chargeFee - returnedFee
++        : Math.floor((chargeFee * amountMinor) / charge.amountMinor);
+ 
+     const refund = {
+       id: 'rf_' + (this.refunds.length + 1),
+@@ -47,7 +56,7 @@ export class RefundBook {
+       amountMinor,
+       feeReturnMinor,
+       currency: charge.currency,
+-      createdAt: this.clock(),
++      createdAt: now,
+     };
+     this.refunds.push(refund);
+     this.ledger.postRefund(refund);
+diff --git a/src/settlement.mjs b/src/settlement.mjs
+index da34f73..8f09ca4 100644
+--- a/src/settlement.mjs
++++ b/src/settlement.mjs
+@@ -7,14 +7,14 @@ export function settle({ charges, refunds, merchantId, from, to }) {
+   const counted = charges.filter(
+     (charge) =>
+       charge.merchantId === merchantId &&
+-      charge.status !== 'failed' &&
++      charge.status === 'captured' &&
+       inWindow(charge.capturedAt, from, to),
+   );
+   const returned = refunds.filter(
+     (refund) => refund.merchantId === merchantId && inWindow(refund.createdAt, from, to),
+   );
+-  const currencies = counted.length || returned.length ? [(counted[0] ?? returned[0]).currency] : [];
+-  const pick = (items) => items;
++  const currencies = [...new Set([...counted, ...returned].map((item) => item.currency))].sort();
++  const pick = (items, currency) => items.filter((item) => item.currency === currency);
+   return currencies.map((currency) => {
+     const currencyCharges = pick(counted, currency);
+     const currencyRefunds = pick(returned, currency);
+@@ -24,8 +24,9 @@ export function settle({ charges, refunds, merchantId, from, to }) {
+       sum(currencyCharges.map((charge) => feeFor(charge.amountMinor, charge.plan))) -
+       sum(currencyRefunds.map((refund) => refund.feeReturnMinor));
+     const netMinor = grossMinor - refundsMinor - feesMinor;
+-    const payoutMinor = netMinor;
+-    const carryoverMinor = 0;
++    // Payouts are never negative; a shortfall is carried over as a positive amount.
++    const payoutMinor = Math.max(netMinor, 0);
++    const carryoverMinor = Math.max(-netMinor, 0);
+     return { currency, grossMinor, refundsMinor, feesMinor, netMinor, payoutMinor, carryoverMinor };
+   });
+ }
+diff --git a/src/webhooks.mjs b/src/webhooks.mjs
+index a547339..acf40b2 100644
+--- a/src/webhooks.mjs
++++ b/src/webhooks.mjs
+@@ -1,14 +1,29 @@
+ import crypto from 'node:crypto';
+ 
++const TOLERANCE_SECONDS = 300;
++
+ export function sign(secret, timestamp, payload) {
+   return crypto.createHmac('sha256', secret).update(timestamp + '.' + payload).digest('hex');
+ }
+ 
++function signatureMatches(signature, expected) {
++  if (typeof signature !== 'string') return false;
++  const given = Buffer.from(signature, 'utf8');
++  const wanted = Buffer.from(expected, 'utf8');
++  // timingSafeEqual requires equal lengths; compare against itself to keep timing uniform.
++  if (given.length !== wanted.length) {
++    crypto.timingSafeEqual(wanted, wanted);
++    return false;
++  }
++  return crypto.timingSafeEqual(given, wanted);
++}
++
+ export function verifyWebhook({ payload, timestamp, signature, secret, now, seen }) {
+   const expected = sign(secret, timestamp, payload);
+-  if (typeof signature !== 'string' || signature.slice(0, 16) !== expected.slice(0, 16))
+-    return { ok: false, reason: 'bad_signature' };
+-  if (now - timestamp > 300_000) return { ok: false, reason: 'stale_timestamp' };
+-  if (seen.has(timestamp + '.' + signature)) return { ok: false, reason: 'replayed' };
++  if (!signatureMatches(signature, expected)) return { ok: false, reason: 'bad_signature' };
++  if (Math.abs(now - timestamp) > TOLERANCE_SECONDS) return { ok: false, reason: 'stale_timestamp' };
++  const deliveryId = timestamp + '.' + signature;
++  if (seen.has(deliveryId)) return { ok: false, reason: 'replayed' };
++  seen.add(deliveryId);
+   return { ok: true };
+ }
+diff --git a/tests/fees.test.mjs b/tests/fees.test.mjs
+index d2963c2..e025b05 100644
+--- a/tests/fees.test.mjs
++++ b/tests/fees.test.mjs
+@@ -10,3 +10,15 @@ test('fee rounding ties go to even', () => {
+   assert.equal(feeFor(100, 'growth'), 27);
+   assert.equal(feeFor(60, 'growth'), 27);
+ });
++
++test('fee rounding uses half-even, not half-up', () => {
++  // 1050 * 290 / 10000 = 30.45 -> 30; 1500 * 290 / 10000 = 43.5 -> 44 (even); 500 * 250 / 10000 = 12.5 -> 12 (even)
++  assert.equal(feeFor(1050, 'standard'), 60);
++  assert.equal(feeFor(1500, 'standard'), 74);
++  assert.equal(feeFor(500, 'growth'), 37);
++  assert.equal(feeFor(300, 'growth'), 33); // 7.5 -> 8 (even)
++});
++
++test('unknown plan throws', () => {
++  assert.throws(() => feeFor(1000, 'enterprise'), /unknown_plan/);
++});
+diff --git a/tests/refunds.test.mjs b/tests/refunds.test.mjs
+index 001825a..bbc8616 100644
+--- a/tests/refunds.test.mjs
++++ b/tests/refunds.test.mjs
+@@ -33,3 +33,87 @@ test('idempotency keys are merchant scoped', () => {
+   assert.equal(other.chargeId, 'ch_2');
+   assert.deepEqual(b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 999, idempotencyKey: 'same' }), first);
+ });
++
++test('cumulative refunds cannot exceed the captured amount', () => {
++  const b = book();
++  b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 400, idempotencyKey: 'k1' });
++  b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 400, idempotencyKey: 'k2' });
++  // 400 + 400 + 300 = 1100 > 1000, even though the last refund alone plus 300 fits.
++  assert.throws(
++    () => b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 300, idempotencyKey: 'k3' }),
++    /refund_exceeds_capture/,
++  );
++  const last = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 200, idempotencyKey: 'k4' });
++  assert.equal(last.amountMinor, 200);
++  assert.throws(
++    () => b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 1, idempotencyKey: 'k5' }),
++    /refund_exceeds_capture/,
++  );
++});
++
++test('same idempotency key for a different merchant is an independent refund', () => {
++  const ledger = new Ledger();
++  const b = new RefundBook(charges(), ledger, () => 11 * DAY);
++  const first = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'same' });
++  const other = b.refund({ merchantId: 'm_2', chargeId: 'ch_2', amountMinor: 50, idempotencyKey: 'same' });
++  assert.notEqual(other.id, first.id);
++  assert.equal(other.merchantId, 'm_2');
++  assert.equal(other.amountMinor, 50);
++  assert.equal(ledger.balance('customer_refunds', 'USD'), 150);
++  // Replay for the original merchant posts nothing.
++  b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 999, idempotencyKey: 'same' });
++  assert.equal(ledger.balance('customer_refunds', 'USD'), 150);
++});
++
++test('fully refunding a charge in parts returns the whole fee', () => {
++  const b = book();
++  // Fee for 1000 standard = 59. Three refunds of 333/333/334.
++  const r1 = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 333, idempotencyKey: 'a' });
++  const r2 = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 333, idempotencyKey: 'b' });
++  const r3 = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 334, idempotencyKey: 'c' });
++  assert.equal(r1.feeReturnMinor, 19);
++  assert.equal(r2.feeReturnMinor, 19);
++  assert.equal(r3.feeReturnMinor, 21);
++  assert.equal(r1.feeReturnMinor + r2.feeReturnMinor + r3.feeReturnMinor, 59);
++});
++
++test('ledger lines for a refund balance to zero', () => {
++  const ledger = new Ledger();
++  const b = new RefundBook(charges(), ledger, () => 11 * DAY);
++  const r = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 400, idempotencyKey: 'k1' });
++  assert.equal(ledger.balance('customer_refunds', 'USD'), 400);
++  assert.equal(ledger.balance('merchant:m_1', 'USD'), -(400 - r.feeReturnMinor));
++  assert.equal(ledger.balance('fees', 'USD'), -r.feeReturnMinor);
++  const lines = ledger.lines.filter((line) => line.refundId === r.id);
++  assert.equal(lines.reduce((t, line) => t + line.amountMinor, 0), 0);
++});
++
++test('returned refunds are copies', () => {
++  const b = book();
++  const r = b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'k1' });
++  r.amountMinor = 1;
++  assert.equal(b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'k1' }).amountMinor, 100);
++});
++
++test('refunds more than 30 days after capture are rejected', () => {
++  let now = 40 * DAY; // capturedAt is 10 * DAY
++  const ledger = new Ledger();
++  const b = new RefundBook(charges(), ledger, () => now);
++  assert.equal(
++    b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'edge' }).createdAt,
++    40 * DAY,
++  );
++  now = 40 * DAY + 1;
++  assert.throws(
++    () => b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'late' }),
++    /refund_window_expired/,
++  );
++  // Replay of an existing refund still returns it after the window.
++  assert.equal(b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 100, idempotencyKey: 'edge' }).id, 'rf_1');
++  // Window check comes before the capture limit.
++  assert.throws(
++    () => b.refund({ merchantId: 'm_1', chargeId: 'ch_1', amountMinor: 5000, idempotencyKey: 'big' }),
++    /refund_window_expired/,
++  );
++  assert.equal(ledger.balance('customer_refunds', 'USD'), 100);
++});
+diff --git a/tests/settlement.test.mjs b/tests/settlement.test.mjs
+index 079dd00..5343dbf 100644
+--- a/tests/settlement.test.mjs
++++ b/tests/settlement.test.mjs
+@@ -16,3 +16,68 @@ test('pending charges are not settled', () => {
+   assert.equal(rows.length, 1);
+   assert.equal(rows[0].grossMinor, 1000);
+ });
++
++const charge = (over) => ({ merchantId: 'm_1', amountMinor: 1000, currency: 'USD', plan: 'standard', status: 'captured', capturedAt: 5, ...over });
++
++test('only captured charges are settled', () => {
++  const rows = settle({
++    merchantId: 'm_1', from: 0, to: 100, refunds: [],
++    charges: [
++      charge({ id: 'a' }),
++      charge({ id: 'b', status: 'pending' }),
++      charge({ id: 'c', status: 'authorized' }),
++      charge({ id: 'd', status: 'failed' }),
++    ],
++  });
++  assert.equal(rows.length, 1);
++  assert.equal(rows[0].grossMinor, 1000);
++  assert.equal(rows[0].feesMinor, 59);
++});
++
++test('one row per currency, sorted by currency code', () => {
++  const rows = settle({
++    merchantId: 'm_1', from: 0, to: 100,
++    charges: [
++      charge({ id: 'a', currency: 'USD' }),
++      charge({ id: 'b', currency: 'EUR', amountMinor: 2000 }),
++      charge({ id: 'c', currency: 'USD', capturedAt: 100 }), // outside window
++      charge({ id: 'd', currency: 'GBP', merchantId: 'm_2' }), // other merchant
++    ],
++    refunds: [
++      { id: 'rf_1', merchantId: 'm_1', chargeId: 'x', amountMinor: 300, feeReturnMinor: 10, currency: 'CAD', createdAt: 0 },
++      { id: 'rf_2', merchantId: 'm_1', chargeId: 'a', amountMinor: 400, feeReturnMinor: 23, currency: 'USD', createdAt: 50 },
++    ],
++  });
++  assert.deepEqual(rows, [
++    { currency: 'CAD', grossMinor: 0, refundsMinor: 300, feesMinor: -10, netMinor: -290, payoutMinor: 0, carryoverMinor: 290 },
++    { currency: 'EUR', grossMinor: 2000, refundsMinor: 0, feesMinor: 88, netMinor: 1912, payoutMinor: 1912, carryoverMinor: 0 },
++    { currency: 'USD', grossMinor: 1000, refundsMinor: 400, feesMinor: 36, netMinor: 564, payoutMinor: 564, carryoverMinor: 0 },
++  ]);
++});
++
++test('no counted activity yields no rows', () => {
++  assert.deepEqual(settle({ merchantId: 'm_1', from: 0, to: 100, charges: [charge({ id: 'a', status: 'pending' })], refunds: [] }), []);
++});
++
++test('negative net floors payout at zero and reports carryover', () => {
++  const refunds = [
++    { id: 'rf_1', merchantId: 'm_1', chargeId: 'old', amountMinor: 1500, feeReturnMinor: 50, currency: 'USD', createdAt: 10 },
++  ];
++  const [negative] = settle({ merchantId: 'm_1', from: 0, to: 100, charges: [charge({ id: 'a' })], refunds });
++  // gross 1000, refunds 1500, fees 59 - 50 = 9 -> net -509
++  assert.deepEqual(negative, {
++    currency: 'USD', grossMinor: 1000, refundsMinor: 1500, feesMinor: 9, netMinor: -509, payoutMinor: 0, carryoverMinor: 509,
++  });
++  const [positive] = settle({ merchantId: 'm_1', from: 0, to: 100, charges: [charge({ id: 'a' })], refunds: [] });
++  assert.equal(positive.netMinor, 941);
++  assert.equal(positive.payoutMinor, 941);
++  assert.equal(positive.carryoverMinor, 0);
++  // Net of exactly zero pays nothing and carries nothing.
++  const [zero] = settle({
++    merchantId: 'm_1', from: 0, to: 100, charges: [charge({ id: 'a' })],
++    refunds: [{ id: 'rf_2', merchantId: 'm_1', chargeId: 'a', amountMinor: 1000, feeReturnMinor: 59, currency: 'USD', createdAt: 10 }],
++  });
++  assert.equal(zero.netMinor, 0);
++  assert.equal(zero.payoutMinor, 0);
++  assert.equal(zero.carryoverMinor, 0);
++});
+diff --git a/tests/webhooks.test.mjs b/tests/webhooks.test.mjs
+index 2a42ea2..0d24227 100644
+--- a/tests/webhooks.test.mjs
++++ b/tests/webhooks.test.mjs
+@@ -9,3 +9,50 @@ test('accepts a correctly signed delivery', () => {
+     { ok: true },
+   );
+ });
++
++const payload = '{"id":"evt_1"}';
++const secret = 'whsec';
++const verify = (over) =>
++  verifyWebhook({ payload, timestamp: 1000, signature: sign(secret, 1000, payload), secret, now: 1000, seen: new Set(), ...over });
++
++test('rejects signatures that only partially match', () => {
++  const good = sign(secret, 1000, payload);
++  const flippedTail = good.slice(0, -1) + (good.at(-1) === '0' ? '1' : '0');
++  assert.deepEqual(verify({ signature: flippedTail }), { ok: false, reason: 'bad_signature' });
++  assert.deepEqual(verify({ signature: good.slice(0, 16) }), { ok: false, reason: 'bad_signature' });
++  assert.deepEqual(verify({ signature: good + '00' }), { ok: false, reason: 'bad_signature' });
++  assert.deepEqual(verify({ signature: good.toUpperCase() }), { ok: false, reason: 'bad_signature' });
++  assert.deepEqual(verify({ signature: '' }), { ok: false, reason: 'bad_signature' });
++  assert.deepEqual(verify({ signature: undefined }), { ok: false, reason: 'bad_signature' });
++  assert.deepEqual(verify({ signature: sign('other', 1000, payload) }), { ok: false, reason: 'bad_signature' });
++  assert.deepEqual(verify({ payload: '{"id":"evt_2"}' }), { ok: false, reason: 'bad_signature' });
++});
++
++test('timestamp tolerance is 300 seconds in either direction', () => {
++  assert.deepEqual(verify({ now: 1300 }), { ok: true });
++  assert.deepEqual(verify({ now: 700 }), { ok: true });
++  assert.deepEqual(verify({ now: 1301 }), { ok: false, reason: 'stale_timestamp' });
++  assert.deepEqual(verify({ now: 699 }), { ok: false, reason: 'stale_timestamp' });
++  // A delivery replayed 20 minutes later is stale (seconds, not milliseconds).
++  assert.deepEqual(verify({ now: 1000 + 20 * 60 }), { ok: false, reason: 'stale_timestamp' });
++});
++
++test('replayed deliveries are rejected', () => {
++  const seen = new Set();
++  assert.deepEqual(verify({ seen }), { ok: true });
++  assert.ok(seen.has('1000.' + sign(secret, 1000, payload)));
++  assert.deepEqual(verify({ seen, now: 1100 }), { ok: false, reason: 'replayed' });
++});
++
++test('checks run in order signature, timestamp, replay', () => {
++  const seen = new Set();
++  assert.deepEqual(verify({ seen }), { ok: true });
++  // Stale and replayed -> stale; bad signature and stale -> bad_signature.
++  assert.deepEqual(verify({ seen, now: 5000 }), { ok: false, reason: 'stale_timestamp' });
++  assert.deepEqual(verify({ seen, now: 5000, signature: 'nope' }), { ok: false, reason: 'bad_signature' });
++  // Rejected deliveries are not recorded.
++  const fresh = new Set();
++  verify({ seen: fresh, now: 5000 });
++  verify({ seen: fresh, signature: 'nope' });
++  assert.equal(fresh.size, 0);
++});

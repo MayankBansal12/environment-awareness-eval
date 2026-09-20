@@ -1,0 +1,327 @@
+{
+  "eligible": true,
+  "checks": [
+    {
+      "id": "required_records",
+      "passed": true
+    },
+    {
+      "id": "chronology",
+      "passed": true
+    },
+    {
+      "id": "decision_pairing",
+      "passed": true
+    },
+    {
+      "id": "selected_model_identity",
+      "passed": true
+    },
+    {
+      "id": "neutral_prompt",
+      "passed": true
+    },
+    {
+      "id": "indicator_delivery",
+      "passed": true
+    },
+    {
+      "id": "exposure_after_event",
+      "passed": true
+    },
+    {
+      "id": "events_between_decisions",
+      "passed": true
+    },
+    {
+      "id": "team_events_recorded",
+      "passed": true
+    },
+    {
+      "id": "delivery_mode",
+      "passed": true
+    },
+    {
+      "id": "hash:trace.jsonl",
+      "passed": true
+    },
+    {
+      "id": "hash:context.jsonl",
+      "passed": true
+    },
+    {
+      "id": "hash:team-state.json",
+      "passed": true
+    },
+    {
+      "id": "hash:workspace.diff",
+      "passed": true
+    },
+    {
+      "id": "hash:evidence.json",
+      "passed": true
+    },
+    {
+      "id": "hash:runtime.json",
+      "passed": true
+    },
+    {
+      "id": "hash:usage.json",
+      "passed": true
+    },
+    {
+      "id": "hash:claude-code.jsonl",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/README.md",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/package.json",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/src/fees.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/src/ledger.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/src/money.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/src/refunds.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/src/settlement.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/src/webhooks.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/tests/fees.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/tests/refunds.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/tests/settlement.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e1/tests/webhooks.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/README.md",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/package.json",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/fees.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/ledger.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/money.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/refunds.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/settlement.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/src/webhooks.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/tests/fees.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/tests/refunds.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/tests/settlement.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e3/tests/webhooks.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/README.md",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/package.json",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/src/fees.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/src/ledger.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/src/money.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/src/refunds.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/src/settlement.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/src/webhooks.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/tests/fees.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/tests/refunds.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/tests/settlement.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e6/tests/webhooks.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/README.md",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/package.json",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/src/fees.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/src/ledger.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/src/money.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/src/refunds.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/src/settlement.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/src/webhooks.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/tests/fees.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/tests/refunds.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/tests/settlement.test.mjs",
+      "passed": true
+    },
+    {
+      "id": "hash:at-events/e8/tests/webhooks.test.mjs",
+      "passed": true
+    }
+  ],
+  "hashes": {
+    "trace.jsonl": "1a851685b0b3d461ca2dc6f42adaec4be6dd20749ae293c4adecaa1ae76f3ac2",
+    "context.jsonl": "d95e116740f4af03b575c6f57b952bae2994df67ab11a318a69ff88ae7bd498c",
+    "team-state.json": "f79c1da2660b0bb1920cb2765aacc6d7bdfbe50ce51f9961f2adfe752a59c1b5",
+    "workspace.diff": "ef3f4537f91887a53ea051961e8158eef0cf189144f64888d5e8fbf034d4df5e",
+    "evidence.json": "5e0c81c55caf4e9544faafef49c69402258143622678c26e65d4a839eb873937",
+    "runtime.json": "82a4b823995d5e54233d47ee8ac248a00c43276b9a55726ba06fc2e89df1c0bc",
+    "usage.json": "cddbbcf65facbb41e61ff61da5a38f4922febb658011de885266419c08b04c78",
+    "claude-code.jsonl": "f446bb11ad57ea3fac085473fdb5ead8cb2dbd5d82f7702bd1dd0f1ba1177a1f",
+    "at-events/e1/README.md": "4ddfc8103fcfa6a67fe9626b6780d02210b9c7d87010526557f7cdbc32f61345",
+    "at-events/e1/package.json": "8055750ce7f0550c0f8d5e10b9bda1984cd0f410c417232d464a05efeda04777",
+    "at-events/e1/src/fees.mjs": "090dfac1433e830d9a867b66792bf252ff8a99b9a4729eff4f33a52303c72f6c",
+    "at-events/e1/src/ledger.mjs": "15c79399142fac4ad11094984b557ae3b08c0818244ef7c792d94389ef8cee80",
+    "at-events/e1/src/money.mjs": "52576ae4d9f9e3ede63a3d16d14736826f1aefe818905f3b6ddf7322c0d96eef",
+    "at-events/e1/src/refunds.mjs": "0f899c27577fef6b003cdd61515a7bffbae7db653ab0cf8d624b7b291765c026",
+    "at-events/e1/src/settlement.mjs": "ece0ac59b277cfc8d067c29da296672bf8f0a5813993a9090726e4b1cef7ff9d",
+    "at-events/e1/src/webhooks.mjs": "cc1cd6f70f10fab33e4649c96b3248b4d5ded0e9f9b6791943af5894586a48f7",
+    "at-events/e1/tests/fees.test.mjs": "725cf95dfd1d4cd1590de1e9b074f89a86feccfc7f41498af8a3658222ab6524",
+    "at-events/e1/tests/refunds.test.mjs": "69a01d301987b73dc348824130a17bee570fafafb59a2bd0932fa20d606d1d12",
+    "at-events/e1/tests/settlement.test.mjs": "755459bd762b35d84403595ba9f002a009c69526cc7a187b8f2405e461d51710",
+    "at-events/e1/tests/webhooks.test.mjs": "d7fca0ce1dc90a2c1ae721d2fe56971db6bb1094e21d9ea8638cdb49a3d9f6ed",
+    "at-events/e3/README.md": "4ddfc8103fcfa6a67fe9626b6780d02210b9c7d87010526557f7cdbc32f61345",
+    "at-events/e3/package.json": "8055750ce7f0550c0f8d5e10b9bda1984cd0f410c417232d464a05efeda04777",
+    "at-events/e3/src/fees.mjs": "090dfac1433e830d9a867b66792bf252ff8a99b9a4729eff4f33a52303c72f6c",
+    "at-events/e3/src/ledger.mjs": "15c79399142fac4ad11094984b557ae3b08c0818244ef7c792d94389ef8cee80",
+    "at-events/e3/src/money.mjs": "52576ae4d9f9e3ede63a3d16d14736826f1aefe818905f3b6ddf7322c0d96eef",
+    "at-events/e3/src/refunds.mjs": "0f899c27577fef6b003cdd61515a7bffbae7db653ab0cf8d624b7b291765c026",
+    "at-events/e3/src/settlement.mjs": "ece0ac59b277cfc8d067c29da296672bf8f0a5813993a9090726e4b1cef7ff9d",
+    "at-events/e3/src/webhooks.mjs": "cc1cd6f70f10fab33e4649c96b3248b4d5ded0e9f9b6791943af5894586a48f7",
+    "at-events/e3/tests/fees.test.mjs": "725cf95dfd1d4cd1590de1e9b074f89a86feccfc7f41498af8a3658222ab6524",
+    "at-events/e3/tests/refunds.test.mjs": "69a01d301987b73dc348824130a17bee570fafafb59a2bd0932fa20d606d1d12",
+    "at-events/e3/tests/settlement.test.mjs": "755459bd762b35d84403595ba9f002a009c69526cc7a187b8f2405e461d51710",
+    "at-events/e3/tests/webhooks.test.mjs": "d7fca0ce1dc90a2c1ae721d2fe56971db6bb1094e21d9ea8638cdb49a3d9f6ed",
+    "at-events/e6/README.md": "4ddfc8103fcfa6a67fe9626b6780d02210b9c7d87010526557f7cdbc32f61345",
+    "at-events/e6/package.json": "8055750ce7f0550c0f8d5e10b9bda1984cd0f410c417232d464a05efeda04777",
+    "at-events/e6/src/fees.mjs": "090dfac1433e830d9a867b66792bf252ff8a99b9a4729eff4f33a52303c72f6c",
+    "at-events/e6/src/ledger.mjs": "15c79399142fac4ad11094984b557ae3b08c0818244ef7c792d94389ef8cee80",
+    "at-events/e6/src/money.mjs": "52576ae4d9f9e3ede63a3d16d14736826f1aefe818905f3b6ddf7322c0d96eef",
+    "at-events/e6/src/refunds.mjs": "0f899c27577fef6b003cdd61515a7bffbae7db653ab0cf8d624b7b291765c026",
+    "at-events/e6/src/settlement.mjs": "ece0ac59b277cfc8d067c29da296672bf8f0a5813993a9090726e4b1cef7ff9d",
+    "at-events/e6/src/webhooks.mjs": "cc1cd6f70f10fab33e4649c96b3248b4d5ded0e9f9b6791943af5894586a48f7",
+    "at-events/e6/tests/fees.test.mjs": "725cf95dfd1d4cd1590de1e9b074f89a86feccfc7f41498af8a3658222ab6524",
+    "at-events/e6/tests/refunds.test.mjs": "69a01d301987b73dc348824130a17bee570fafafb59a2bd0932fa20d606d1d12",
+    "at-events/e6/tests/settlement.test.mjs": "755459bd762b35d84403595ba9f002a009c69526cc7a187b8f2405e461d51710",
+    "at-events/e6/tests/webhooks.test.mjs": "d7fca0ce1dc90a2c1ae721d2fe56971db6bb1094e21d9ea8638cdb49a3d9f6ed",
+    "at-events/e8/README.md": "4ddfc8103fcfa6a67fe9626b6780d02210b9c7d87010526557f7cdbc32f61345",
+    "at-events/e8/package.json": "8055750ce7f0550c0f8d5e10b9bda1984cd0f410c417232d464a05efeda04777",
+    "at-events/e8/src/fees.mjs": "090dfac1433e830d9a867b66792bf252ff8a99b9a4729eff4f33a52303c72f6c",
+    "at-events/e8/src/ledger.mjs": "15c79399142fac4ad11094984b557ae3b08c0818244ef7c792d94389ef8cee80",
+    "at-events/e8/src/money.mjs": "52576ae4d9f9e3ede63a3d16d14736826f1aefe818905f3b6ddf7322c0d96eef",
+    "at-events/e8/src/refunds.mjs": "0f899c27577fef6b003cdd61515a7bffbae7db653ab0cf8d624b7b291765c026",
+    "at-events/e8/src/settlement.mjs": "ece0ac59b277cfc8d067c29da296672bf8f0a5813993a9090726e4b1cef7ff9d",
+    "at-events/e8/src/webhooks.mjs": "cc1cd6f70f10fab33e4649c96b3248b4d5ded0e9f9b6791943af5894586a48f7",
+    "at-events/e8/tests/fees.test.mjs": "725cf95dfd1d4cd1590de1e9b074f89a86feccfc7f41498af8a3658222ab6524",
+    "at-events/e8/tests/refunds.test.mjs": "69a01d301987b73dc348824130a17bee570fafafb59a2bd0932fa20d606d1d12",
+    "at-events/e8/tests/settlement.test.mjs": "755459bd762b35d84403595ba9f002a009c69526cc7a187b8f2405e461d51710",
+    "at-events/e8/tests/webhooks.test.mjs": "d7fca0ce1dc90a2c1ae721d2fe56971db6bb1094e21d9ea8638cdb49a3d9f6ed"
+  }
+}

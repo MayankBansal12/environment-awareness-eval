@@ -1,0 +1,828 @@
+[
+  {
+    "id": "claude-opus-5-settlement-r1",
+    "directory": "results/native-three-reps-2026-09-17/claude-opus-5-settlement-r1",
+    "model": "claude-opus-5",
+    "family": "settlement",
+    "repetition": 1,
+    "seed": 1,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 4,
+        "trigger": "condition",
+        "contentDecision": 6,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 9,
+        "trigger": "fallback",
+        "contentDecision": 11,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 14,
+        "trigger": "fallback",
+        "contentDecision": 16,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 18,
+        "trigger": "fallback",
+        "contentDecision": 19,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      }
+    ],
+    "decisions": 21,
+    "minutes": 2.56,
+    "estimatedCostUsd": 0.9797269999999999,
+    "mainModelRecords": {
+      "claude-opus-5": 65
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-opus-5"
+    ],
+    "malformedSDKLines": [
+      1481,
+      1582,
+      1613,
+      1623,
+      1637
+    ],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-opus-5-fulfillment-r1",
+    "directory": "results/native-three-reps-2026-09-17/claude-opus-5-fulfillment-r1",
+    "model": "claude-opus-5",
+    "family": "fulfillment",
+    "repetition": 1,
+    "seed": 1,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 4,
+        "trigger": "condition",
+        "contentDecision": 6,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 9,
+        "trigger": "fallback",
+        "contentDecision": 11,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 14,
+        "trigger": "fallback",
+        "contentDecision": 16,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 18,
+        "trigger": "fallback",
+        "contentDecision": 19,
+        "focalChecksFailingAtFire": 1,
+        "adapted": true
+      }
+    ],
+    "decisions": 24,
+    "minutes": 2.9,
+    "estimatedCostUsd": 1.0801824999999998,
+    "mainModelRecords": {
+      "claude-opus-5": 63
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-opus-5"
+    ],
+    "malformedSDKLines": [],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-sonnet-5-settlement-r1",
+    "directory": "results/sonnet5-native-2026-09-16T19-28-50-577Z/settlement",
+    "model": "claude-sonnet-5",
+    "family": "settlement",
+    "repetition": 1,
+    "seed": 1,
+    "reused": true,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 14,
+    "checksTotal": 15,
+    "failedChecks": [
+      {
+        "id": "ledger_balance",
+        "passed": false,
+        "detail": "Expected values to be strictly equal:\n\n-23 !== 0\n"
+      }
+    ],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 6,
+        "trigger": "fallback",
+        "contentDecision": 8,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 11,
+        "trigger": "fallback",
+        "contentDecision": 17,
+        "focalChecksFailingAtFire": 2,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 16,
+        "trigger": "fallback",
+        "contentDecision": 18,
+        "focalChecksFailingAtFire": 1,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 20,
+        "trigger": "fallback",
+        "contentDecision": 21,
+        "focalChecksFailingAtFire": 2,
+        "adapted": true
+      }
+    ],
+    "decisions": 42,
+    "minutes": 5.07,
+    "estimatedCostUsd": 0.6864145999999999,
+    "mainModelRecords": {
+      "claude-sonnet-5": 105
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-sonnet-5"
+    ],
+    "malformedSDKLines": [
+      1075,
+      1100,
+      1122,
+      1133,
+      1151
+    ],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-sonnet-5-fulfillment-r1",
+    "directory": "results/sonnet5-native-2026-09-16T19-28-50-577Z/fulfillment",
+    "model": "claude-sonnet-5",
+    "family": "fulfillment",
+    "repetition": 1,
+    "seed": 1,
+    "reused": true,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 6,
+        "trigger": "fallback",
+        "contentDecision": 8,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 11,
+        "trigger": "fallback",
+        "contentDecision": 13,
+        "focalChecksFailingAtFire": 5,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 16,
+        "trigger": "fallback",
+        "contentDecision": 24,
+        "focalChecksFailingAtFire": 5,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 20,
+        "trigger": "fallback",
+        "contentDecision": 21,
+        "focalChecksFailingAtFire": 6,
+        "adapted": true
+      }
+    ],
+    "decisions": 40,
+    "minutes": 4.42,
+    "estimatedCostUsd": 0.6752306,
+    "mainModelRecords": {
+      "claude-sonnet-5": 103
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-sonnet-5"
+    ],
+    "malformedSDKLines": [],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-sonnet-5-settlement-r2",
+    "directory": "results/native-three-reps-2026-09-17/claude-sonnet-5-settlement-r2",
+    "model": "claude-sonnet-5",
+    "family": "settlement",
+    "repetition": 2,
+    "seed": 2,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 6,
+        "trigger": "fallback",
+        "contentDecision": 25,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 11,
+        "trigger": "fallback",
+        "contentDecision": 13,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 16,
+        "trigger": "fallback",
+        "contentDecision": 25,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 20,
+        "trigger": "fallback",
+        "contentDecision": 21,
+        "focalChecksFailingAtFire": 8,
+        "adapted": true
+      }
+    ],
+    "decisions": 48,
+    "minutes": 4.93,
+    "estimatedCostUsd": 0.7354030000000001,
+    "mainModelRecords": {
+      "claude-sonnet-5": 118
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-sonnet-5"
+    ],
+    "malformedSDKLines": [
+      677,
+      703,
+      724,
+      744,
+      786,
+      796
+    ],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-sonnet-5-fulfillment-r2",
+    "directory": "results/native-three-reps-2026-09-17/claude-sonnet-5-fulfillment-r2",
+    "model": "claude-sonnet-5",
+    "family": "fulfillment",
+    "repetition": 2,
+    "seed": 2,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 6,
+        "trigger": "fallback",
+        "contentDecision": 8,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 11,
+        "trigger": "fallback",
+        "contentDecision": 30,
+        "focalChecksFailingAtFire": 5,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 16,
+        "trigger": "fallback",
+        "contentDecision": 20,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 20,
+        "trigger": "fallback",
+        "contentDecision": 26,
+        "focalChecksFailingAtFire": 1,
+        "adapted": true
+      }
+    ],
+    "decisions": 38,
+    "minutes": 3.41,
+    "estimatedCostUsd": 0.576735,
+    "mainModelRecords": {
+      "claude-sonnet-5": 100
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-sonnet-5"
+    ],
+    "malformedSDKLines": [],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-opus-5-settlement-r2",
+    "directory": "results/native-three-reps-2026-09-17/claude-opus-5-settlement-r2",
+    "model": "claude-opus-5",
+    "family": "settlement",
+    "repetition": 2,
+    "seed": 2,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 4,
+        "trigger": "condition",
+        "contentDecision": 6,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 9,
+        "trigger": "fallback",
+        "contentDecision": 11,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 14,
+        "trigger": "fallback",
+        "contentDecision": 16,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 18,
+        "trigger": "fallback",
+        "contentDecision": 19,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      }
+    ],
+    "decisions": 22,
+    "minutes": 2.27,
+    "estimatedCostUsd": 0.8365305000000001,
+    "mainModelRecords": {
+      "claude-opus-5": 60
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-opus-5"
+    ],
+    "malformedSDKLines": [],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-opus-5-fulfillment-r2",
+    "directory": "results/native-three-reps-2026-09-17/claude-opus-5-fulfillment-r2-retry1",
+    "model": "claude-opus-5",
+    "family": "fulfillment",
+    "repetition": 2,
+    "seed": 2,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 4,
+        "trigger": "condition",
+        "contentDecision": 6,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 9,
+        "trigger": "fallback",
+        "contentDecision": 11,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 14,
+        "trigger": "fallback",
+        "contentDecision": 16,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 18,
+        "trigger": "fallback",
+        "contentDecision": 19,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      }
+    ],
+    "decisions": 22,
+    "minutes": 2.37,
+    "estimatedCostUsd": 0.8925694999999999,
+    "mainModelRecords": {
+      "claude-opus-5": 54
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-opus-5"
+    ],
+    "malformedSDKLines": [],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-opus-5-settlement-r3",
+    "directory": "results/native-three-reps-2026-09-17/claude-opus-5-settlement-r3",
+    "model": "claude-opus-5",
+    "family": "settlement",
+    "repetition": 3,
+    "seed": 3,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 4,
+        "trigger": "condition",
+        "contentDecision": 6,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 9,
+        "trigger": "fallback",
+        "contentDecision": 11,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 14,
+        "trigger": "fallback",
+        "contentDecision": 16,
+        "focalChecksFailingAtFire": 8,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 18,
+        "trigger": "fallback",
+        "contentDecision": 19,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      }
+    ],
+    "decisions": 25,
+    "minutes": 3.08,
+    "estimatedCostUsd": 1.1938745,
+    "mainModelRecords": {
+      "claude-opus-5": 68
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-opus-5"
+    ],
+    "malformedSDKLines": [
+      700
+    ],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-opus-5-fulfillment-r3",
+    "directory": "results/native-three-reps-2026-09-17/claude-opus-5-fulfillment-r3-retry1",
+    "model": "claude-opus-5",
+    "family": "fulfillment",
+    "repetition": 3,
+    "seed": 3,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 4,
+        "trigger": "condition",
+        "contentDecision": 6,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 9,
+        "trigger": "fallback",
+        "contentDecision": 11,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 14,
+        "trigger": "fallback",
+        "contentDecision": 16,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 18,
+        "trigger": "fallback",
+        "contentDecision": 19,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      }
+    ],
+    "decisions": 22,
+    "minutes": 2.49,
+    "estimatedCostUsd": 0.95208,
+    "mainModelRecords": {
+      "claude-opus-5": 57
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-opus-5"
+    ],
+    "malformedSDKLines": [],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-sonnet-5-settlement-r3",
+    "directory": "results/native-three-reps-2026-09-17/claude-sonnet-5-settlement-r3",
+    "model": "claude-sonnet-5",
+    "family": "settlement",
+    "repetition": 3,
+    "seed": 3,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 6,
+        "trigger": "fallback",
+        "contentDecision": 8,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 11,
+        "trigger": "fallback",
+        "contentDecision": 14,
+        "focalChecksFailingAtFire": 3,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 16,
+        "trigger": "fallback",
+        "contentDecision": 18,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 20,
+        "trigger": "fallback",
+        "contentDecision": 21,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      }
+    ],
+    "decisions": 45,
+    "minutes": 4.79,
+    "estimatedCostUsd": 0.7214058000000002,
+    "mainModelRecords": {
+      "claude-sonnet-5": 111
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-sonnet-5"
+    ],
+    "malformedSDKLines": [
+      2317,
+      2344,
+      2366,
+      2397,
+      2429,
+      2461
+    ],
+    "hashMismatches": []
+  },
+  {
+    "id": "claude-sonnet-5-fulfillment-r3",
+    "directory": "results/native-three-reps-2026-09-17/claude-sonnet-5-fulfillment-r3",
+    "model": "claude-sonnet-5",
+    "family": "fulfillment",
+    "repetition": 3,
+    "seed": 3,
+    "reused": false,
+    "termination": {
+      "reason": "agent_finished",
+      "detail": "Claude Code ended its turn"
+    },
+    "valid": true,
+    "censored": false,
+    "checksPassed": 15,
+    "checksTotal": 15,
+    "failedChecks": [],
+    "eventsFired": 4,
+    "eventsRetrieved": 4,
+    "eventDetails": [
+      {
+        "kind": "requirement_change",
+        "firedDecision": 6,
+        "trigger": "fallback",
+        "contentDecision": 9,
+        "focalChecksFailingAtFire": 7,
+        "adapted": true
+      },
+      {
+        "kind": "urgent_assignment",
+        "firedDecision": 11,
+        "trigger": "fallback",
+        "contentDecision": 33,
+        "focalChecksFailingAtFire": 5,
+        "adapted": true
+      },
+      {
+        "kind": "comment_change",
+        "firedDecision": 16,
+        "trigger": "fallback",
+        "contentDecision": 18,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      },
+      {
+        "kind": "decoy",
+        "firedDecision": 20,
+        "trigger": "fallback",
+        "contentDecision": 21,
+        "focalChecksFailingAtFire": 0,
+        "adapted": true
+      }
+    ],
+    "decisions": 44,
+    "minutes": 5.03,
+    "estimatedCostUsd": 0.6699276000000001,
+    "mainModelRecords": {
+      "claude-sonnet-5": 107
+    },
+    "internalModels": [
+      "claude-haiku-4-5-20251001",
+      "claude-sonnet-5"
+    ],
+    "malformedSDKLines": [],
+    "hashMismatches": []
+  }
+]

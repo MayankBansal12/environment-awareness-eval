@@ -1,7 +1,8 @@
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { createRuntime, DEFAULT_SELECTION, modelSelectionSchema } from './harness/model.js';
+import { createRuntime, selectModel } from './harness/model.js';
+import { verifyClaudeCode } from './harness/claude-code.js';
 import { auditRun } from './audit.js';
 import { calibrate } from './calibrate.js';
 import { compare, execute, freeze, profileSchema } from './experiment.js';
@@ -46,11 +47,7 @@ async function main() {
   const [command, a, b, c] = positionals;
   if (Boolean(values.provider) !== Boolean(values.model))
     throw Error('Provide both --provider and --model');
-  const selection = modelSelectionSchema.parse({
-    provider: values.provider ?? DEFAULT_SELECTION.provider,
-    model: values.model ?? DEFAULT_SELECTION.model,
-    thinking: values.thinking ?? DEFAULT_SELECTION.thinking,
-  });
+  const selection = selectModel(values);
   const budgets = {
     ...DEFAULT_BUDGETS,
     ...(values['timeout-min'] ? { timeoutMs: Number(values['timeout-min']) * 60_000 } : {}),
@@ -66,7 +63,15 @@ async function main() {
     return;
   }
   if (command === 'verify-model') {
-    console.log(JSON.stringify((await createRuntime(selection)).verification, null, 2));
+    console.log(
+      JSON.stringify(
+        selection.provider === 'anthropic'
+          ? await verifyClaudeCode(selection)
+          : (await createRuntime(selection)).verification,
+        null,
+        2,
+      ),
+    );
     return;
   }
   if (command === 'run') {

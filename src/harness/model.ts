@@ -11,7 +11,15 @@ import {
 } from './free-model.js';
 
 const thinkingSchema = z.enum(['medium', 'high']);
+export const CLAUDE_MODELS = ['claude-opus-5', 'claude-sonnet-5'] as const;
 export const modelSelectionSchema = z.union([
+  z
+    .object({
+      provider: z.literal('anthropic'),
+      model: z.enum(CLAUDE_MODELS),
+      thinking: z.literal('default'),
+    })
+    .strict(),
   z
     .object({
       provider: z.literal(FREE_PROVIDER),
@@ -37,13 +45,38 @@ export const DEFAULT_SELECTION: ModelSelection = Object.freeze({
 const CODEX_API = 'openai-codex-responses';
 const CODEX_BASE_URL = 'https://chatgpt.com/backend-api';
 const CODEX_CATALOG = 'https://pi.dev/api/models/providers/openai-codex';
+const CLAUDE_API = 'anthropic-messages';
+const CLAUDE_BASE_URL = 'https://api.anthropic.com';
+const CLAUDE_CATALOG = 'https://pi.dev/api/models/providers/anthropic';
+const CLAUDE_DEFAULT_SOURCE =
+  'https://platform.claude.com/docs/en/build-with-claude/effort#recommended-effort-levels-for-claude-opus-5';
+export function selectModel(values: {
+  provider?: string;
+  model?: string;
+  thinking?: string;
+}): ModelSelection {
+  return modelSelectionSchema.parse({
+    provider: values.provider ?? DEFAULT_SELECTION.provider,
+    model: values.model ?? DEFAULT_SELECTION.model,
+    thinking:
+      values.thinking ??
+      (values.provider === 'anthropic' ? 'default' : DEFAULT_SELECTION.thinking),
+  });
+}
 const MAX_OUTPUT_TOKENS = 8192;
 type ModelMetadata = Pick<
   NonNullable<ReturnType<ModelRuntime['getModel']>>,
-  'id' | 'provider' | 'api' | 'baseUrl' | 'cost' | 'reasoning' | 'thinkingLevelMap'
+  | 'id'
+  | 'provider'
+  | 'api'
+  | 'baseUrl'
+  | 'cost'
+  | 'reasoning'
+  | 'thinkingLevelMap'
+  | 'compat'
 >;
 
-function validCodexCost(cost: ModelMetadata['cost']): boolean {
+function validPaidCost(cost: ModelMetadata['cost']): boolean {
   return (
     [cost.input, cost.output, cost.cacheRead, cost.cacheWrite].every(
       (n) => Number.isFinite(n) && n >= 0,
@@ -59,6 +92,7 @@ export function assertSelectedModel(
   selection: ModelSelection,
 ): void {
   const requested = modelSelectionSchema.parse(selection);
+  const thinking = requested.provider === 'anthropic' ? 'high' : requested.thinking;
   if (requested.provider === FREE_PROVIDER) {
     assertFreeModel(actual);
     return;
@@ -66,12 +100,15 @@ export function assertSelectedModel(
   if (
     actual.provider !== requested.provider ||
     actual.id !== requested.model ||
-    actual.api !== CODEX_API ||
-    actual.baseUrl !== CODEX_BASE_URL ||
-    !validCodexCost(actual.cost) ||
+    actual.api !== (requested.provider === 'anthropic' ? CLAUDE_API : CODEX_API) ||
+    actual.baseUrl !==
+      (requested.provider === 'anthropic' ? CLAUDE_BASE_URL : CODEX_BASE_URL) ||
+    (requested.provider === 'anthropic' &&
+      record(actual.compat)?.['forceAdaptiveThinking'] !== true) ||
+    !validPaidCost(actual.cost) ||
     !actual.reasoning ||
-    (actual.thinkingLevelMap?.[requested.thinking] !== undefined &&
-      actual.thinkingLevelMap[requested.thinking] !== requested.thinking)
+    (actual.thinkingLevelMap?.[thinking] !== undefined &&
+      actual.thinkingLevelMap[thinking] !== thinking)
   )
     throw new Error(
       'Inference refused: model identity differs from the explicit selection',
@@ -104,6 +141,16 @@ export function matchesRuntimeIdentity(value: unknown): boolean {
     identity['maxOutputTokens'] !== MAX_OUTPUT_TOKENS
   )
     return false;
+  if (identity['agent'] === 'claude-code') {
+    return (
+      selection.provider === 'anthropic' &&
+      identity['api'] === 'claude-code-agent-sdk' &&
+      typeof identity['agentVersion'] === 'string' &&
+      identity['authSource'] === 'claude-code' &&
+      identity['outputBudgetTransport'] === 'CLAUDE_CODE_MAX_OUTPUT_TOKENS' &&
+      identity['contextCapture'] === 'claude-code-hooks'
+    );
+  }
   if (selection.provider === FREE_PROVIDER) {
     return (
       identity['api'] === 'openai-responses' &&
@@ -111,20 +158,31 @@ export function matchesRuntimeIdentity(value: unknown): boolean {
       identity['pricing'] === 'free'
     );
   }
+  // Keep auditing historical Pi-hosted Opus results with their original identity.
   const cost = record(identity['catalogCost']);
+  const claude = selection.provider === 'anthropic';
   return (
-    identity['api'] === CODEX_API &&
-    identity['baseUrl'] === CODEX_BASE_URL &&
+    identity['api'] === (claude ? CLAUDE_API : CODEX_API) &&
+    identity['baseUrl'] === (claude ? CLAUDE_BASE_URL : CODEX_BASE_URL) &&
     identity['pricing'] === 'provider-account' &&
-    identity['catalogSource'] === CODEX_CATALOG &&
+    identity['catalogSource'] === (claude ? CLAUDE_CATALOG : CODEX_CATALOG) &&
     identity['requestedMaxOutputTokens'] === MAX_OUTPUT_TOKENS &&
-    identity['maxOutputTokensEnforced'] === false &&
-    identity['outputBudgetTransport'] === 'not-sent-by-pi-codex' &&
+    identity['maxOutputTokensEnforced'] === claude &&
+    identity['outputBudgetTransport'] ===
+      (claude ? 'anthropic-max_tokens' : 'not-sent-by-pi-codex') &&
+    (!claude ||
+      (identity['resolvedThinking'] === 'high' &&
+        identity['thinkingMode'] === 'adaptive' &&
+        identity['reasoningDefaultSource'] === CLAUDE_DEFAULT_SOURCE &&
+        identity['effortTransport'] === 'explicit-high-equivalent-to-api-default' &&
+        ['native-pi', 'claude-code-read-only'].includes(
+          identity['authSource'] as string,
+        ))) &&
     typeof identity['providerMaxOutputTokens'] === 'number' &&
     Number.isFinite(identity['providerMaxOutputTokens']) &&
     identity['providerMaxOutputTokens'] >= MAX_OUTPUT_TOKENS &&
     cost !== undefined &&
-    validCodexCost({
+    validPaidCost({
       input: cost['input'] as number,
       output: cost['output'] as number,
       cacheRead: cost['cacheRead'] as number,
@@ -158,12 +216,13 @@ async function configuredCodexAuthentication(): Promise<string | undefined> {
 export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTION) {
   // Capture the selection before awaits so caller mutation cannot change authorization.
   const requested = modelSelectionSchema.parse(selection);
+  if (requested.provider === 'anthropic')
+    throw new Error('Claude models run through Claude Code, not the Pi model runtime');
   let configured;
   if (requested.provider === FREE_PROVIDER) {
     configured = await freeRuntime();
   } else {
-    // The native credential store preserves coordinated OAuth refresh. Never copy tokens
-    // into traces or a read-only store that would fail when a run needs a refresh.
+    // Preserve native coordinated OAuth refresh where configured.
     // Ignore user model overrides and keep the fetched model catalog in memory.
     const runtime = await ModelRuntime.create({ modelsPath: null, refreshOnCreate: false });
     // Some installations resolve subscription credentials through models.json's
@@ -192,7 +251,7 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
     )
       throw new Error('Selected model cannot honor the reasoning/output budget');
     if (!(await runtime.checkAuth(requested.provider)))
-      throw new Error('No OpenAI Codex credential available');
+      throw new Error('No selected provider credential available');
     const model = { ...catalogModel, maxTokens: MAX_OUTPUT_TOKENS };
     configured = {
       runtime,
@@ -223,12 +282,10 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
     assertSelectedModel(actual, requested);
     if (options?.reasoning !== requested.thinking)
       throw new Error('Inference refused: reasoning differs from the explicit selection');
-    if (
-      actual.maxTokens !== MAX_OUTPUT_TOKENS ||
-      (options.maxTokens !== undefined && options.maxTokens !== MAX_OUTPUT_TOKENS)
-    )
+    const maxTokens = options?.maxTokens ?? MAX_OUTPUT_TOKENS;
+    if (actual.maxTokens !== MAX_OUTPUT_TOKENS || maxTokens !== MAX_OUTPUT_TOKENS)
       throw new Error('Inference refused: output budget differs from the frozen limit');
-    return stream(actual, context, { ...options, maxTokens: MAX_OUTPUT_TOKENS });
+    return stream(actual, context, { ...options, maxTokens });
   };
   return {
     runtime,

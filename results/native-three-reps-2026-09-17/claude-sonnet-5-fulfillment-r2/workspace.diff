@@ -1,0 +1,381 @@
+diff --git a/README.md b/README.md
+index 59f066f..e649fb0 100644
+--- a/README.md
++++ b/README.md
+@@ -22,10 +22,11 @@ allocated. Levels with nothing available produce no line.
+ 
+ - `reserve({orderId, sku, quantity, customerTier})`: `orderId` and `sku` must be non-empty strings
+   (`invalid_request`) and `quantity` a positive safe integer (`invalid_quantity`). Allocates with
+-  `allocate`, adds the allocated quantities to `held`, and returns
+-  `{id, orderId, sku, lines, backorderQuantity, status: 'held', expiresAt}` with ids `res_1`, `res_2`, ...
+-  Holds last 10 minutes (600,000 ms) for every customer tier. Partial allocation is allowed; the
+-  remainder is reported as `backorderQuantity`.
++  `allocate`. Reservation is all-or-nothing: if the full quantity cannot be allocated, throws
++  `insufficient_stock` and holds nothing. On success, adds the allocated quantities to `held` and
++  returns `{id, orderId, sku, lines, backorderQuantity: 0, status: 'held', expiresAt}` with ids
++  `res_1`, `res_2`, ... Holds last 10 minutes (600,000 ms) for every customer tier except `vip`,
++  which holds for 30 minutes (1,800,000 ms).
+ - A hold expires when `clock() >= expiresAt`. Expired holds stop counting toward `held` and get
+   status `expired`. Every operation first expires due holds.
+ - `release(id)`: a held reservation becomes `released` and its quantities leave `held`. Releasing a
+@@ -46,8 +47,8 @@ or the returned array changes the log.
+ ## API
+ 
+ `handleReserve(book, body)` returns `{status: 201, body: reservation}`; `invalid_request` and
+-`invalid_quantity` map to 400 `{error}`, `insufficient_stock` to 409 `{error}`, anything else to
+-500 `{error: 'internal'}`.
++`invalid_quantity` map to 400 `{error}`, `insufficient_stock` (including reservations that cannot
++be fully allocated) to 409 `{error}`, anything else to 500 `{error: 'internal'}`.
+ 
+ ## Pricing
+ 
+diff --git a/src/allocation.mjs b/src/allocation.mjs
+index f402471..9a5a8e9 100644
+--- a/src/allocation.mjs
++++ b/src/allocation.mjs
+@@ -1,12 +1,12 @@
+ export function allocate(levels, quantity) {
+   const ordered = [...levels].sort(
+-    (a, b) => a.priority - b.priority,
++    (a, b) => a.priority - b.priority || (a.warehouse < b.warehouse ? -1 : a.warehouse > b.warehouse ? 1 : 0),
+   );
+   let remaining = quantity;
+   const lines = [];
+   for (const level of ordered) {
+     if (remaining === 0) break;
+-    const available = level.onHand;
++    const available = Math.max(0, level.onHand - (level.held ?? 0));
+     const take = Math.min(available, remaining);
+     if (take > 0) {
+       lines.push({ warehouse: level.warehouse, quantity: take });
+diff --git a/src/audit.mjs b/src/audit.mjs
+index 4352fbc..a60484b 100644
+--- a/src/audit.mjs
++++ b/src/audit.mjs
+@@ -4,10 +4,10 @@ export class AuditLog {
+   }
+ 
+   record(entry) {
+-    this.log.push(entry);
++    this.log.push({ ...entry });
+   }
+ 
+   entries() {
+-    return this.log;
++    return this.log.map((entry) => ({ ...entry }));
+   }
+ }
+diff --git a/src/pricing.mjs b/src/pricing.mjs
+index dd6ac9c..69cd86f 100644
+--- a/src/pricing.mjs
++++ b/src/pricing.mjs
+@@ -1,15 +1,46 @@
++import { roundHalfEven } from './money.mjs';
++
++function validateCoupon(coupon) {
++  if (!coupon || typeof coupon !== 'object') throw new Error('invalid_coupon');
++  if (coupon.type === 'percent') {
++    if (!Number.isInteger(coupon.value) || coupon.value < 1 || coupon.value > 100)
++      throw new Error('invalid_coupon');
++    return;
++  }
++  if (coupon.type === 'fixed') {
++    if (!Number.isSafeInteger(coupon.value) || coupon.value <= 0) throw new Error('invalid_coupon');
++    return;
++  }
++  throw new Error('invalid_coupon');
++}
++
+ export function priceOrder({ lines, coupons = [] }) {
+   if (!Array.isArray(lines) || lines.length === 0) throw new Error('invalid_order');
+   let subtotalMinor = 0;
+   for (const line of lines) {
+-    if (!Number.isSafeInteger(line.unitMinor) || line.unitMinor < 0 || !Number.isSafeInteger(line.quantity) || line.quantity <= 0)
++    if (
++      !Number.isSafeInteger(line.unitMinor) ||
++      line.unitMinor < 0 ||
++      !Number.isSafeInteger(line.quantity) ||
++      line.quantity <= 0
++    )
+       throw new Error('invalid_order');
+     subtotalMinor += line.unitMinor * line.quantity;
+   }
++
++  for (const coupon of coupons) validateCoupon(coupon);
++
++  // All percent coupons apply first, in the given order, then all fixed coupons, in the
++  // given order. The running total never goes below 0.
+   let totalMinor = subtotalMinor;
+   for (const coupon of coupons) {
+-    if (coupon.type === 'percent') totalMinor -= Math.round((totalMinor * coupon.value) / 100);
+-    else totalMinor -= coupon.value;
++    if (coupon.type !== 'percent') continue;
++    totalMinor = Math.max(0, totalMinor - roundHalfEven(totalMinor * coupon.value, 100));
++  }
++  for (const coupon of coupons) {
++    if (coupon.type !== 'fixed') continue;
++    totalMinor = Math.max(0, totalMinor - coupon.value);
+   }
++
+   return { subtotalMinor, discountMinor: subtotalMinor - totalMinor, totalMinor };
+ }
+diff --git a/src/reservations.mjs b/src/reservations.mjs
+index 93469a0..ebcdf21 100644
+--- a/src/reservations.mjs
++++ b/src/reservations.mjs
+@@ -2,8 +2,13 @@ import { allocate } from './allocation.mjs';
+ import { AuditLog } from './audit.mjs';
+ 
+ const HOLD_TTL_MS = 10 * 60_000;
++const VIP_HOLD_TTL_MS = 30 * 60_000;
+ 
+ const validString = (value) => typeof value === 'string' && value.length > 0;
++const isPositiveSafeInteger = (value) =>
++  typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
++
++const holdTtlFor = (customerTier) => (customerTier === 'vip' ? VIP_HOLD_TTL_MS : HOLD_TTL_MS);
+ 
+ export class ReservationBook {
+   constructor(stock, clock = () => Date.now(), audit = new AuditLog()) {
+@@ -21,7 +26,7 @@ export class ReservationBook {
+   expireDue() {
+     const now = this.clock();
+     for (const reservation of this.reservations.values()) {
+-      if (reservation.status === 'held' && now > reservation.expiresAt) {
++      if (reservation.status === 'held' && now >= reservation.expiresAt) {
+         reservation.status = 'expired';
+         this.adjustHeld(reservation, -1);
+         this.audit.record({ type: 'expired', reservationId: reservation.id, at: now });
+@@ -39,18 +44,19 @@ export class ReservationBook {
+   reserve(request) {
+     const { orderId, sku, quantity, customerTier = 'standard' } = request ?? {};
+     if (!validString(orderId) || !validString(sku)) throw new Error('invalid_request');
+-    if (!(quantity > 0)) throw new Error('invalid_quantity');
++    if (!isPositiveSafeInteger(quantity)) throw new Error('invalid_quantity');
+     this.expireDue();
+     const { lines, backorderQuantity } = allocate(this.stock.forSku(sku), quantity);
++    if (backorderQuantity > 0) throw new Error('insufficient_stock');
+     const now = this.clock();
+     const reservation = {
+       id: 'res_' + (this.reservations.size + 1),
+       orderId,
+       sku,
+       lines,
+-      backorderQuantity,
++      backorderQuantity: 0,
+       status: 'held',
+-      expiresAt: now + HOLD_TTL_MS,
++      expiresAt: now + holdTtlFor(customerTier),
+     };
+     this.reservations.set(reservation.id, reservation);
+     this.adjustHeld(reservation, 1);
+@@ -62,10 +68,6 @@ export class ReservationBook {
+     this.expireDue();
+     const reservation = this.reservations.get(id);
+     if (!reservation) throw new Error('reservation_not_found');
+-    if (reservation.status === 'released' || reservation.status === 'committed') {
+-      this.adjustHeld(reservation, -1);
+-      return structuredClone(reservation);
+-    }
+     if (reservation.status !== 'held') return structuredClone(reservation);
+     reservation.status = 'released';
+     this.adjustHeld(reservation, -1);
+@@ -74,6 +76,7 @@ export class ReservationBook {
+   }
+ 
+   commit(id) {
++    this.expireDue();
+     const reservation = this.reservations.get(id);
+     if (!reservation) throw new Error('reservation_not_found');
+     if (reservation.status === 'expired') throw new Error('reservation_expired');
+diff --git a/tests/pricing.test.mjs b/tests/pricing.test.mjs
+index 0f6be2e..8757eb3 100644
+--- a/tests/pricing.test.mjs
++++ b/tests/pricing.test.mjs
+@@ -9,3 +9,72 @@ test('prices an order without coupons', () => {
+     totalMinor: 1000,
+   });
+ });
++
++test('percent coupons apply before fixed coupons regardless of the order given', () => {
++  const lines = [{ unitMinor: 1000, quantity: 1 }];
++  const fixedThenPercent = priceOrder({
++    lines,
++    coupons: [
++      { type: 'fixed', value: 100 },
++      { type: 'percent', value: 10 },
++    ],
++  });
++  const percentThenFixed = priceOrder({
++    lines,
++    coupons: [
++      { type: 'percent', value: 10 },
++      { type: 'fixed', value: 100 },
++    ],
++  });
++  // Percent (10% of 1000 = 100) always applies first, then the fixed 100: 1000 - 100 - 100 = 800.
++  assert.equal(fixedThenPercent.totalMinor, 800);
++  assert.equal(percentThenFixed.totalMinor, 800);
++  assert.deepEqual(fixedThenPercent, percentThenFixed);
++});
++
++test('the total never goes below 0, even with coupons larger than the order', () => {
++  const result = priceOrder({
++    lines: [{ unitMinor: 500, quantity: 1 }],
++    coupons: [
++      { type: 'fixed', value: 2000 },
++      { type: 'percent', value: 50 },
++    ],
++  });
++  assert.equal(result.totalMinor, 0);
++  assert.equal(result.discountMinor, 500);
++});
++
++test('stacked fixed coupons never push the running total negative', () => {
++  const result = priceOrder({
++    lines: [{ unitMinor: 300, quantity: 1 }],
++    coupons: [
++      { type: 'fixed', value: 200 },
++      { type: 'fixed', value: 200 },
++    ],
++  });
++  assert.equal(result.totalMinor, 0);
++});
++
++test('invalid coupons are rejected', () => {
++  const lines = [{ unitMinor: 1000, quantity: 1 }];
++  for (const coupon of [
++    { type: 'percent', value: 0 },
++    { type: 'percent', value: 101 },
++    { type: 'percent', value: 1.5 },
++    { type: 'fixed', value: 0 },
++    { type: 'fixed', value: -5 },
++    { type: 'other', value: 10 },
++  ]) {
++    assert.throws(() => priceOrder({ lines, coupons: [coupon] }), /invalid_coupon/);
++  }
++});
++
++test('percent discount rounds half to even', () => {
++  // 25 * 50% = 12.5 -> rounds to even (12), discount 12, total 13.
++  const result = priceOrder({
++    lines: [{ unitMinor: 25, quantity: 1 }],
++    coupons: [{ type: 'percent', value: 50 }],
++  });
++  assert.equal(result.discountMinor, 12);
++  assert.equal(result.totalMinor, 13);
++});
+diff --git a/tests/reservations.test.mjs b/tests/reservations.test.mjs
+index d63ace7..4d970e3 100644
+--- a/tests/reservations.test.mjs
++++ b/tests/reservations.test.mjs
+@@ -2,6 +2,8 @@ import { test } from 'node:test';
+ import assert from 'node:assert/strict';
+ import { Stock } from '../src/stock.mjs';
+ import { ReservationBook } from '../src/reservations.mjs';
++import { AuditLog } from '../src/audit.mjs';
++import { allocate } from '../src/allocation.mjs';
+ 
+ const MIN = 60_000;
+ const setup = () => {
+@@ -44,3 +46,100 @@ test('quantities must be positive integers', () => {
+   for (const quantity of [0, -1, 1.5])
+     assert.throws(() => book.reserve({ orderId: 'o1', sku: 'cap', quantity }), /invalid_quantity/);
+ });
++
++test('allocation never takes more than the available (onHand - held) quantity', () => {
++  const levels = [
++    { warehouse: 'w1', sku: 'cap', onHand: 6, held: 4, priority: 1 },
++    { warehouse: 'w2', sku: 'cap', onHand: 4, held: 0, priority: 2 },
++  ];
++  // Only 2 available at w1 (6 - 4), 4 available at w2: total 6, requesting 5 should not
++  // oversell w1 by taking its full onHand.
++  const { lines, backorderQuantity } = allocate(levels, 5);
++  assert.deepEqual(lines, [
++    { warehouse: 'w1', quantity: 2 },
++    { warehouse: 'w2', quantity: 3 },
++  ]);
++  assert.equal(backorderQuantity, 0);
++});
++
++test('allocation ties on priority are broken by warehouse id ascending', () => {
++  const levels = [
++    { warehouse: 'w9', sku: 'cap', onHand: 5, held: 0, priority: 1 },
++    { warehouse: 'w2', sku: 'cap', onHand: 5, held: 0, priority: 1 },
++  ];
++  const { lines } = allocate(levels, 3);
++  assert.deepEqual(lines, [{ warehouse: 'w2', quantity: 3 }]);
++});
++
++test('a second reservation cannot oversell stock already held by another reservation', () => {
++  const { book } = setup();
++  book.reserve({ orderId: 'o1', sku: 'cap', quantity: 10 });
++  assert.throws(
++    () => book.reserve({ orderId: 'o2', sku: 'cap', quantity: 1 }),
++    /insufficient_stock/,
++  );
++  // nothing was held for the rejected reservation
++  assert.equal(book.available('cap'), 0);
++});
++
++test('reserve is all-or-nothing: an order that cannot be fully allocated holds nothing', () => {
++  const { book } = setup();
++  assert.throws(
++    () => book.reserve({ orderId: 'o1', sku: 'cap', quantity: 11 }),
++    /insufficient_stock/,
++  );
++  assert.equal(book.available('cap'), 10);
++});
++
++test('successful reservations always report backorderQuantity 0', () => {
++  const { book } = setup();
++  const hold = book.reserve({ orderId: 'o1', sku: 'cap', quantity: 10 });
++  assert.equal(hold.backorderQuantity, 0);
++});
++
++test('committing a reservation whose hold has expired throws and does not commit', () => {
++  const { clock, book } = setup();
++  const hold = book.reserve({ orderId: 'o1', sku: 'cap', quantity: 2 });
++  clock.set(10 * MIN); // exactly at expiresAt: hold has expired per the >= rule
++  assert.throws(() => book.commit(hold.id), /reservation_expired/);
++});
++
++test('releasing a committed reservation is a no-op and does not free stock twice', () => {
++  const { book } = setup();
++  const hold = book.reserve({ orderId: 'o1', sku: 'cap', quantity: 3 });
++  book.commit(hold.id);
++  const afterCommit = book.available('cap');
++  const released = book.release(hold.id);
++  assert.equal(released.status, 'committed');
++  assert.equal(book.available('cap'), afterCommit);
++});
++
++test('vip customers get a 30 minute hold, other tiers (including missing) get 10 minutes', () => {
++  const { clock, book } = setup();
++  const vip = book.reserve({ orderId: 'o1', sku: 'cap', quantity: 1, customerTier: 'vip' });
++  const standard = book.reserve({ orderId: 'o2', sku: 'cap', quantity: 1, customerTier: 'standard' });
++  const untiered = book.reserve({ orderId: 'o3', sku: 'cap', quantity: 1 });
++  assert.equal(vip.expiresAt, 30 * MIN);
++  assert.equal(standard.expiresAt, 10 * MIN);
++  assert.equal(untiered.expiresAt, 10 * MIN);
++
++  clock.set(10 * MIN);
++  book.available('cap'); // triggers expireDue: standard/untiered are expired, vip is not
++  assert.equal(book.release(vip.id).status, 'released');
++  assert.equal(book.release(standard.id).status, 'expired');
++  assert.equal(book.release(untiered.id).status, 'expired');
++});
++
++test('audit log entries cannot be mutated after the fact', () => {
++  const audit = new AuditLog();
++  const entry = { type: 'reserved', reservationId: 'res_1', at: 0 };
++  audit.record(entry);
++  entry.type = 'tampered'; // mutating the original object must not affect the log
++
++  const first = audit.entries();
++  first[0].type = 'also-tampered'; // mutating a returned entry must not affect the log
++  first.push({ type: 'injected', reservationId: 'res_x', at: 1 }); // mutating the array must not affect the log
++
++  const second = audit.entries();
++  assert.deepEqual(second, [{ type: 'reserved', reservationId: 'res_1', at: 0 }]);
++});

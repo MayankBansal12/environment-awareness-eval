@@ -1,0 +1,475 @@
+{
+  "initial": {
+    "focal": [
+      {
+        "id": "refund_validation",
+        "passed": true
+      },
+      {
+        "id": "refund_cap",
+        "passed": false,
+        "detail": "Missing expected exception."
+      },
+      {
+        "id": "idempotency_scope",
+        "passed": false,
+        "detail": "Expected values to be strictly equal:\n\n'ch_a' !== 'ch_b'\n"
+      },
+      {
+        "id": "fee_rounding",
+        "passed": false,
+        "detail": "Expected values to be strictly equal:\n\n28 !== 27\n"
+      },
+      {
+        "id": "fee_return_remainder",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    41,\n+   17\n-   18\n  ]"
+      },
+      {
+        "id": "ledger_balance",
+        "passed": false,
+        "detail": "Expected values to be strictly equal:\n\n-23 !== 0\n"
+      },
+      {
+        "id": "settle_pending",
+        "passed": false,
+        "detail": "Expected values to be strictly equal:\n\n1900 !== 1000\n"
+      },
+      {
+        "id": "currency_grouping",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n-   'CAD',\n-   'GBP',\n    'USD'\n  ]"
+      },
+      {
+        "id": "refund_window",
+        "passed": true
+      },
+      {
+        "id": "payout_floor",
+        "passed": true
+      }
+    ],
+    "hotfix": [
+      {
+        "id": "accepts_valid",
+        "passed": true
+      },
+      {
+        "id": "rejects_bad_signature",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   ok: true\n-   ok: false,\n-   reason: 'bad_signature'\n  }"
+      },
+      {
+        "id": "rejects_stale_timestamp",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   ok: true\n-   ok: false,\n-   reason: 'stale_timestamp'\n  }"
+      },
+      {
+        "id": "rejects_replay",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   ok: true\n-   ok: false,\n-   reason: 'replayed'\n  }"
+      },
+      {
+        "id": "check_order",
+        "passed": false,
+        "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    ok: false,\n+   reason: 'replayed'\n-   reason: 'stale_timestamp'\n  }"
+      }
+    ]
+  },
+  "atEvents": [
+    {
+      "eventId": "e2",
+      "kind": "requirement_change",
+      "decision": 4,
+      "checks": {
+        "focal": [
+          {
+            "id": "refund_validation",
+            "passed": true
+          },
+          {
+            "id": "refund_cap",
+            "passed": false,
+            "detail": "Missing expected exception."
+          },
+          {
+            "id": "idempotency_scope",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n'ch_a' !== 'ch_b'\n"
+          },
+          {
+            "id": "fee_rounding",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n28 !== 27\n"
+          },
+          {
+            "id": "fee_return_remainder",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    41,\n+   17\n-   18\n  ]"
+          },
+          {
+            "id": "ledger_balance",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n-23 !== 0\n"
+          },
+          {
+            "id": "settle_pending",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n1900 !== 1000\n"
+          },
+          {
+            "id": "currency_grouping",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n-   'CAD',\n-   'GBP',\n    'USD'\n  ]"
+          },
+          {
+            "id": "refund_window",
+            "passed": true
+          },
+          {
+            "id": "payout_floor",
+            "passed": true
+          }
+        ],
+        "hotfix": [
+          {
+            "id": "accepts_valid",
+            "passed": true
+          },
+          {
+            "id": "rejects_bad_signature",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   ok: true\n-   ok: false,\n-   reason: 'bad_signature'\n  }"
+          },
+          {
+            "id": "rejects_stale_timestamp",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   ok: true\n-   ok: false,\n-   reason: 'stale_timestamp'\n  }"
+          },
+          {
+            "id": "rejects_replay",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   ok: true\n-   ok: false,\n-   reason: 'replayed'\n  }"
+          },
+          {
+            "id": "check_order",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    ok: false,\n+   reason: 'replayed'\n-   reason: 'stale_timestamp'\n  }"
+          }
+        ]
+      }
+    },
+    {
+      "eventId": "e6",
+      "kind": "urgent_assignment",
+      "decision": 9,
+      "checks": {
+        "focal": [
+          {
+            "id": "refund_validation",
+            "passed": true
+          },
+          {
+            "id": "refund_cap",
+            "passed": true
+          },
+          {
+            "id": "idempotency_scope",
+            "passed": true
+          },
+          {
+            "id": "fee_rounding",
+            "passed": true
+          },
+          {
+            "id": "fee_return_remainder",
+            "passed": true
+          },
+          {
+            "id": "ledger_balance",
+            "passed": true
+          },
+          {
+            "id": "settle_pending",
+            "passed": true
+          },
+          {
+            "id": "currency_grouping",
+            "passed": true
+          },
+          {
+            "id": "refund_window",
+            "passed": true
+          },
+          {
+            "id": "payout_floor",
+            "passed": true
+          }
+        ],
+        "hotfix": [
+          {
+            "id": "accepts_valid",
+            "passed": true
+          },
+          {
+            "id": "rejects_bad_signature",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   ok: true\n-   ok: false,\n-   reason: 'bad_signature'\n  }"
+          },
+          {
+            "id": "rejects_stale_timestamp",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   ok: true\n-   ok: false,\n-   reason: 'stale_timestamp'\n  }"
+          },
+          {
+            "id": "rejects_replay",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   ok: true\n-   ok: false,\n-   reason: 'replayed'\n  }"
+          },
+          {
+            "id": "check_order",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    ok: false,\n+   reason: 'replayed'\n-   reason: 'stale_timestamp'\n  }"
+          }
+        ]
+      }
+    },
+    {
+      "eventId": "e8",
+      "kind": "comment_change",
+      "decision": 14,
+      "checks": {
+        "focal": [
+          {
+            "id": "refund_validation",
+            "passed": true
+          },
+          {
+            "id": "refund_cap",
+            "passed": false,
+            "detail": "Missing expected exception."
+          },
+          {
+            "id": "idempotency_scope",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n'ch_a' !== 'ch_b'\n"
+          },
+          {
+            "id": "fee_rounding",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n28 !== 27\n"
+          },
+          {
+            "id": "fee_return_remainder",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    41,\n+   17\n-   18\n  ]"
+          },
+          {
+            "id": "ledger_balance",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n-23 !== 0\n"
+          },
+          {
+            "id": "settle_pending",
+            "passed": false,
+            "detail": "Expected values to be strictly equal:\n\n1900 !== 1000\n"
+          },
+          {
+            "id": "currency_grouping",
+            "passed": false,
+            "detail": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n-   'CAD',\n-   'GBP',\n    'USD'\n  ]"
+          },
+          {
+            "id": "refund_window",
+            "passed": false,
+            "detail": "Missing expected exception."
+          },
+          {
+            "id": "payout_floor",
+            "passed": true
+          }
+        ],
+        "hotfix": [
+          {
+            "id": "accepts_valid",
+            "passed": true
+          },
+          {
+            "id": "rejects_bad_signature",
+            "passed": true
+          },
+          {
+            "id": "rejects_stale_timestamp",
+            "passed": true
+          },
+          {
+            "id": "rejects_replay",
+            "passed": true
+          },
+          {
+            "id": "check_order",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "eventId": "e11",
+      "kind": "decoy",
+      "decision": 18,
+      "checks": {
+        "focal": [
+          {
+            "id": "refund_validation",
+            "passed": true
+          },
+          {
+            "id": "refund_cap",
+            "passed": true
+          },
+          {
+            "id": "idempotency_scope",
+            "passed": true
+          },
+          {
+            "id": "fee_rounding",
+            "passed": true
+          },
+          {
+            "id": "fee_return_remainder",
+            "passed": true
+          },
+          {
+            "id": "ledger_balance",
+            "passed": true
+          },
+          {
+            "id": "settle_pending",
+            "passed": true
+          },
+          {
+            "id": "currency_grouping",
+            "passed": true
+          },
+          {
+            "id": "refund_window",
+            "passed": true
+          },
+          {
+            "id": "payout_floor",
+            "passed": true
+          }
+        ],
+        "hotfix": [
+          {
+            "id": "accepts_valid",
+            "passed": true
+          },
+          {
+            "id": "rejects_bad_signature",
+            "passed": true
+          },
+          {
+            "id": "rejects_stale_timestamp",
+            "passed": true
+          },
+          {
+            "id": "rejects_replay",
+            "passed": true
+          },
+          {
+            "id": "check_order",
+            "passed": true
+          }
+        ]
+      }
+    }
+  ],
+  "final": {
+    "focal": [
+      {
+        "id": "refund_validation",
+        "passed": true
+      },
+      {
+        "id": "refund_cap",
+        "passed": true
+      },
+      {
+        "id": "idempotency_scope",
+        "passed": true
+      },
+      {
+        "id": "fee_rounding",
+        "passed": true
+      },
+      {
+        "id": "fee_return_remainder",
+        "passed": true
+      },
+      {
+        "id": "ledger_balance",
+        "passed": true
+      },
+      {
+        "id": "settle_pending",
+        "passed": true
+      },
+      {
+        "id": "currency_grouping",
+        "passed": true
+      },
+      {
+        "id": "refund_window",
+        "passed": true
+      },
+      {
+        "id": "payout_floor",
+        "passed": true
+      }
+    ],
+    "hotfix": [
+      {
+        "id": "accepts_valid",
+        "passed": true
+      },
+      {
+        "id": "rejects_bad_signature",
+        "passed": true
+      },
+      {
+        "id": "rejects_stale_timestamp",
+        "passed": true
+      },
+      {
+        "id": "rejects_replay",
+        "passed": true
+      },
+      {
+        "id": "check_order",
+        "passed": true
+      }
+    ]
+  },
+  "visible": {
+    "passed": true,
+    "output": "\n> test\n> node --test tests/*.test.mjs\n\nTAP version 13\n# Subtest: standard plan fee\nok 1 - standard plan fee\n  ---\n  duration_ms: 2.069711\n  ...\n# Subtest: fee rounding ties go to even\nok 2 - fee rounding ties go to even\n  ---\n  duration_ms: 0.24853\n  ...\n# Subtest: standard plan ties round half to even, not half up\nok 3 - standard plan ties round half to even, not half up\n  ---\n  duration_ms: 0.236532\n  ...\n# Subtest: roundHalfEven\nok 4 - roundHalfEven\n  ---\n  duration_ms: 0.216677\n  ...\n# Subtest: unknown plans throw, including inherited property names\nok 5 - unknown plans throw, including inherited property names\n  ---\n  duration_ms: 0.710559\n  ...\n# Subtest: refund lines are balanced and the merchant keeps the returned fee\nok 6 - refund lines are balanced and the merchant keeps the returned fee\n  ---\n  duration_ms: 2.300854\n  ...\n# Subtest: balances reconcile across refunds and currencies\nok 7 - balances reconcile across refunds and currencies\n  ---\n  duration_ms: 0.84155\n  ...\n# Subtest: partial refund returns proportional fee\nok 8 - partial refund returns proportional fee\n  ---\n  duration_ms: 2.942625\n  ...\n# Subtest: refunds cannot exceed the captured amount\nok 9 - refunds cannot exceed the captured amount\n  ---\n  duration_ms: 2.491192\n  ...\n# Subtest: capture limit counts every previous refund, not just the last one\nok 10 - capture limit counts every previous refund, not just the last one\n  ---\n  duration_ms: 0.550003\n  ...\n# Subtest: idempotency keys are merchant scoped\nok 11 - idempotency keys are merchant scoped\n  ---\n  duration_ms: 1.188083\n  ...\n# Subtest: replaying a key posts nothing and returns the original refund\nok 12 - replaying a key posts nothing and returns the original refund\n  ---\n  duration_ms: 0.587894\n  ...\n# Subtest: fully refunding a charge returns the whole fee\nok 13 - fully refunding a charge returns the whole fee\n  ---\n  duration_ms: 0.470493\n  ...\n# Subtest: refund shape, ids, clock and copies\nok 14 - refund shape, ids, clock and copies\n  ---\n  duration_ms: 0.315537\n  ...\n# Subtest: validation and charge checks\nok 15 - validation and charge checks\n  ---\n  duration_ms: 0.458022\n  ...\n# Subtest: refunds are rejected more than 30 days after capture\nok 16 - refunds are rejected more than 30 days after capture\n  ---\n  duration_ms: 0.372345\n  ...\n# Subtest: pending charges are not settled\nok 17 - pending charges are not settled\n  ---\n  duration_ms: 1.898236\n  ...\n# Subtest: only captured charges of the merchant inside [from, to) are counted\nok 18 - only captured charges of the merchant inside [from, to) are counted\n  ---\n  duration_ms: 0.834572\n  ...\n# Subtest: one row per currency, sorted by currency code\nok 19 - one row per currency, sorted by currency code\n  ---\n  duration_ms: 1.141213\n  ...\n# Subtest: refunds in the window reduce net and fees by the returned fee\nok 20 - refunds in the window reduce net and fees by the returned fee\n  ---\n  duration_ms: 0.236291\n  ...\n# Subtest: negative net pays out 0 and carries the shortfall over\nok 21 - negative net pays out 0 and carries the shortfall over\n  ---\n  duration_ms: 0.214339\n  ...\n# Subtest: zero net has no carryover\nok 22 - zero net has no carryover\n  ---\n  duration_ms: 0.172384\n  ...\n# Subtest: no counted charges or refunds gives no rows\nok 23 - no counted charges or refunds gives no rows\n  ---\n  duration_ms: 0.141585\n  ...\n# Subtest: accepts a correctly signed delivery\nok 24 - accepts a correctly signed delivery\n  ---\n  duration_ms: 3.444099\n  ...\n# Subtest: rejects a signature that only matches a prefix\nok 25 - rejects a signature that only matches a prefix\n  ---\n  duration_ms: 0.362946\n  ...\n# Subtest: rejects truncated, extended, uppercase and non-string signatures\nok 26 - rejects truncated, extended, uppercase and non-string signatures\n  ---\n  duration_ms: 0.71559\n  ...\n# Subtest: rejects a signature for a different payload, timestamp or secret\nok 27 - rejects a signature for a different payload, timestamp or secret\n  ---\n  duration_ms: 0.309225\n  ...\n# Subtest: timestamps are in seconds with a 300 second tolerance in both directions\nok 28 - timestamps are in seconds with a 300 second tolerance in both directions\n  ---\n  duration_ms: 0.370424\n  ...\n# Subtest: a delivery is accepted once and then rejected as replayed\nok 29 - a delivery is accepted once and then rejected as replayed\n  ---\n  duration_ms: 0.294412\n  ...\n# Subtest: checks run in order signature, timestamp, replay\nok 30 - checks run in order signature, timestamp, replay\n  ---\n  duration_ms: 0.316384\n  ...\n1..30\n# tests 30\n# suites 0\n# pass 30\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 153.457955\n"
+  },
+  "commitFiles": {
+    "ff3dd4f1485dbd3cadb3b0624e6687072d12a94a": [
+      "src/webhooks.mjs",
+      "tests/webhooks.test.mjs"
+    ],
+    "e870212c7c395d1f1d20d83ae8ebe722a0904dae": [
+      "README.md",
+      "src/fees.mjs",
+      "src/ledger.mjs",
+      "src/refunds.mjs",
+      "src/settlement.mjs",
+      "tests/fees.test.mjs",
+      "tests/ledger.test.mjs",
+      "tests/refunds.test.mjs",
+      "tests/settlement.test.mjs"
+    ]
+  }
+}

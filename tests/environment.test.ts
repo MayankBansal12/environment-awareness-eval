@@ -18,7 +18,7 @@ import {
   TEST_COMMAND,
   type Condition,
 } from '../src/scenario.js';
-import type { Evidence, RepoSnapshot } from '../src/schema.js';
+import type { Event as TraceEvent, Evidence, RepoSnapshot } from '../src/schema.js';
 import { TeamState, type StateResult } from '../src/state.js';
 import { UsageMeter } from '../src/usage.js';
 
@@ -130,6 +130,125 @@ function harness(condition: Partial<Condition> = {}) {
 }
 
 const failTests = { name: 'bash', args: { command: 'npm test' }, exitCode: 1 };
+const passTests = { name: 'bash', args: { command: 'npm test' }, exitCode: 0 };
+
+describe('update timing (script-3.0)', () => {
+  it('delivers requirement after inspection, urgent after edit, comment after test, decoy on a new module', () => {
+    for (const test of [passTests, failTests]) {
+      const { engine, step } = harness();
+      step([{ name: 'linear_list_my_issues' }], repo('f0'));
+      expect(
+        step([{ name: 'read', args: { path: 'src/fees.mjs' } }], repo('f0')).fired.map(
+          (e) => e.kind,
+        ),
+      ).toEqual(['requirement_change']);
+      expect(
+        step([{ name: 'edit', args: { path: 'src/fees.mjs' } }], repo('f1')).fired.map(
+          (e) => e.kind,
+        ),
+      ).toEqual(['urgent_assignment']);
+      expect(step([test], repo('f1')).fired.map((e) => e.kind)).toEqual(['comment_change']);
+      expect(
+        step([{ name: 'read', args: { path: 'src/refunds.mjs' } }], repo('f1')).fired.map(
+          (e) => e.kind,
+        ),
+      ).toEqual(['decoy']);
+      expect([...engine.fired.values()].map((e) => e.decision)).toEqual([2, 3, 4, 5]);
+    }
+  });
+
+  it('recognizes shell inspection but not directory listings, failed inspection, or unrelated reads', () => {
+    for (const action of [
+      { name: 'read', args: { path: 'README.md' } },
+      { name: 'bash', args: { command: 'ls src/fees.mjs' } },
+      { name: 'bash', args: { command: 'cat src/fees.mjs' }, exitCode: 1 },
+      { name: 'write', args: { path: 'src/fees.mjs' } },
+    ]) {
+      const { step } = harness();
+      expect(step([action], repo('f0')).fired).toEqual([]);
+    }
+    const { step } = harness();
+    expect(
+      step(
+        [{ name: 'bash', args: { command: 'cat README.md src/*.mjs' } }],
+        repo('f0'),
+      ).fired.map((e) => e.kind),
+    ).toEqual(['requirement_change']);
+  });
+
+  it('bounds idle trajectories at decisions 3/5/7/9, with exactly one bundle per important event', () => {
+    for (const noise of ['none', 'normal'] as const) {
+      const { engine, step } = harness({ noise });
+      for (let i = 0; i < 10; i++)
+        step([{ name: 'bash', args: { command: 'ls' } }], repo('f0'));
+      expect([...engine.fired.values()].map((e) => e.decision)).toEqual([3, 5, 7, 9]);
+      const events = engine.trace.filter((e) => e.type === 'environment_event');
+      expect(
+        events
+          .filter((e) => e.event.kind !== 'noise')
+          .every((e) => e.trigger.mode === 'fallback'),
+      ).toBe(true);
+      expect(events.filter((e) => e.trigger.bundled).length).toBe(noise === 'none' ? 0 : 4);
+      if (noise === 'none') expect(events).toHaveLength(4);
+    }
+  });
+
+  it('never publishes multiple important events in one batch or treats an old module as new', () => {
+    const { engine, step } = harness();
+    expect(
+      step(
+        [{ name: 'read', args: { path: 'src/fees.mjs' } }, passTests],
+        repo('f1'),
+      ).fired.map((e) => e.kind),
+    ).toEqual(['requirement_change']);
+    step([{ name: 'edit' }], repo('f2'));
+    step([passTests], repo('f2'));
+    expect(
+      step([{ name: 'read', args: { path: 'src/fees.mjs' } }], repo('f2')).fired,
+    ).toEqual([]);
+    expect(
+      step([{ name: 'read', args: { path: 'src/fees.mjs' } }], repo('f2')).fired.map(
+        (e) => e.kind,
+      ),
+    ).toEqual(['decoy']);
+    const frame = engine.trace.find(
+      (e) => e.type === 'environment_event' && e.event.kind === 'decoy',
+    );
+    expect(frame).toMatchObject({ trigger: { mode: 'fallback', newModule: false } });
+  });
+
+  it('is deterministic per seed for bundles and never triggers on terminal responses', () => {
+    type EnvEvent = TraceEvent & { type: 'environment_event' };
+    const bundleTexts = () => {
+      const { engine, step, team, finish } = harness({ noise: 'normal', seed: 123 });
+      step([{ name: 'linear_list_my_issues' }], repo('f0'));
+      step([passTests], repo('f1'));
+      for (let i = 0; i < 12; i++)
+        step(
+          [i % 3 === 0 ? failTests : { name: 'bash', args: { command: 'ls' } }],
+          repo('f3'),
+        );
+      finish();
+      return {
+        bundled: engine.trace
+          .filter(
+            (e): e is EnvEvent =>
+              e.type === 'environment_event' && e.trigger.bundled === true,
+          )
+          .map((e) => e.event.text),
+        events: team.snapshot().events.map((e) => e.id),
+      };
+    };
+    const first = bundleTexts();
+    expect(first.bundled.length).toBe(4);
+    expect(bundleTexts()).toEqual(first);
+    const { engine, team } = harness({ noise: 'heavy', seed: 5 });
+    engine.decision = 8; // Both condition and fallback paths would otherwise be eligible.
+    expect(engine.settle(repo('edited'), false)).toEqual([]);
+    expect(team.snapshot().events).toEqual([]);
+    expect(engine.fired.size).toBe(0);
+  });
+});
 
 describe('fixtures', () => {
   it('each load fails exactly its injected bugs and references pass every spec', async () => {
@@ -269,24 +388,14 @@ describe('engine and grader', () => {
     expect(
       step([{ name: 'linear_get_issue', args: { id: family.focal.id } }], repo('f0')).fired,
     ).toEqual([]);
-    // D3: first focal edit fires the requirement change.
-    const d3 = step([{ name: 'edit' }], repo('f1'));
-    expect(d3.fired.map((e) => e.kind)).toEqual(['requirement_change']);
-    // D4 sees the indicator, keeps editing without reading; D5 fails tests -> urgent fires (gap 2).
-    const d4 = step([{ name: 'edit' }], repo('f2'));
+    // D3 inspection, D4 edit, D5 test: one important event per boundary.
+    step([{ name: 'read', args: { path: 'src/fees.mjs' } }], repo('f0'));
+    const d4 = step([{ name: 'edit' }], repo('f1'));
     expect(JSON.stringify(d4.input)).toContain('Linear inbox: 1 unread');
-    const d5 = step([{ name: 'edit' }, failTests], repo('f3'));
-    expect(d5.fired.map((e) => e.kind)).toEqual(['urgent_assignment']);
-    // D6 reads the focal issue (requirement content), D7 opens the hotfix.
-    step([{ name: 'linear_get_issue', args: { id: family.focal.id } }], repo('f3'));
-    step([{ name: 'linear_get_issue', args: { id: family.hotfix.id } }], repo('f3'));
-    for (let i = 0; i < 12; i++)
-      step([{ name: 'bash', args: { command: 'ls' } }], repo('f3'));
-    // Comment change reaches its fallback (12 decisions after urgent at D5) at D17.
-    expect(engine.fired.get('comment_change')?.decision).toBe(17);
-    step([failTests], repo('f3'));
-    step([failTests], repo('f3'));
-    expect(engine.fired.get('decoy')?.decision).toBe(20);
+    step([{ name: 'edit' }, failTests], repo('f2'));
+    step([{ name: 'linear_get_issue', args: { id: family.hotfix.id } }], repo('f2'));
+    // Retrieve focal content only after another decision; decoy deadline lands here.
+    step([{ name: 'linear_get_issue', args: { id: family.focal.id } }], repo('f2'));
     finish();
 
     const evidence: Evidence = {
@@ -317,36 +426,39 @@ describe('engine and grader', () => {
     expect(byKind['requirement_change']).toMatchObject({
       firedDecision: 3,
       trigger: 'condition',
-      contentDecision: 6,
-      detectionLatency: 2,
+      contentDecision: 7,
+      detectionLatency: 3,
       focalChangesBeforeContent: 2,
       missed: false,
       adapted: true,
       contextTokensAtFire: 1000,
     });
     expect(byKind['urgent_assignment']).toMatchObject({
-      firedDecision: 5,
-      firedDuringTestFailure: true,
-      contentDecision: 7,
+      firedDecision: 4,
+      firedDuringTestFailure: false,
+      contentDecision: 6,
       detectionLatency: 1,
     });
     expect(byKind['comment_change']).toMatchObject({
-      trigger: 'fallback',
-      missed: true,
+      firedDecision: 5,
+      trigger: 'condition',
+      missed: false,
       adapted: false,
     });
     expect(byKind['decoy']).toMatchObject({
-      firedDecision: 20,
-      missed: true,
-      decisionsAfterFire: 1,
+      firedDecision: 7,
+      // No model input can follow the firing decision in this trajectory, so 4.1 grading
+      // records it as unassessable rather than missed.
+      missed: null,
+      decisionsAfterFire: 0,
     });
     expect(g.valid).toBe(true);
-    expect(g.summary['importantMissed']).toBe(2);
+    expect(g.summary['importantMissed']).toBe(0);
   });
 
   it('exposed delivery inlines content and counts it as immediate', () => {
     const { engine, step, finish, team } = harness({ delivery: 'exposed', noise: 'heavy' });
-    step([{ name: 'edit' }], repo('f1'));
+    step([{ name: 'read', args: { path: 'src/fees.mjs' } }, passTests], repo('f1'));
     const next = step([], repo('f1'));
     expect(JSON.stringify(next.input)).toContain('<notification>');
     expect(JSON.stringify(next.input)).toContain('refund_window_expired');

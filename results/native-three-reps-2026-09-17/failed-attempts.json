@@ -1,0 +1,14 @@
+[
+  {
+    "id": "claude-opus-5-fulfillment-r2",
+    "reason": "API response stopped arriving at decision 18; Claude subprocess remained stalled and was terminated with SIGTERM to finalize artifacts.",
+    "replacement": "claude-opus-5-fulfillment-r2-retry1",
+    "countAsCompletedRepetition": false
+  },
+  {
+    "id": "claude-opus-5-fulfillment-r3",
+    "reason": "Runner process exited across chat interruption; orphaned Claude subprocess stopped. Partial attempt retained without summary.",
+    "replacement": "claude-opus-5-fulfillment-r3-retry1",
+    "countAsCompletedRepetition": false
+  }
+]

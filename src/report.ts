@@ -17,6 +17,7 @@ export function renderReport(s: Summary): string {
 
 ${c.family} · load ${c.load} · noise ${c.noise} · ${c.delivery} · seed ${c.seed}
 Model: ${cell(s.runtime['provider'])}/${cell(s.runtime['model'])} · thinking ${cell(s.runtime['thinking'])}
+${s.runtime['agent'] === 'claude-code' ? 'Agent: Claude Code · native default effort and fallback behavior\n' : ''}
 
 **Termination:** ${s.termination.reason} — ${s.termination.detail}
 **Valid:** ${g.valid} · **Censored:** ${g.censored} · **Duration:** ${minutes} min
@@ -26,18 +27,36 @@ Model: ${cell(s.runtime['provider'])}/${cell(s.runtime['model'])} · thinking ${
 | Calls | Input | Cache read | Cache write | Output | Reasoning | Total tokens | Peak context | Cost (USD, catalog pricing) |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | ${u.calls} (${u.summaryCalls} summary, ${u.erroredCalls} errored) | ${u.input} | ${u.cacheRead} | ${u.cacheWrite} | ${u.output} | ${u.reasoning} | ${u.totalTokens} | ${u.peakContextTokens} | ${u.costUsd.total.toFixed(4)} |
+${s.runtime['agent'] === 'claude-code' ? '\nCall counts cover visible main-loop responses. Internal summary calls are not counted; final token/cost totals include them when Claude Code supplies a result. Cost is Claude Code’s estimate.\n' : ''}
 
 ## Updates
 
-Latency counts decisions after the first input that showed the unread indicator.
+Retrieval latency counts decisions from the first recorded input after an event to content retrieval. Retrieval does not prove understanding; final correctness does not prove adaptation or rejection of a decoy.
 
-| Update | Fired | Focal checks failing then | Context tokens then | Cue | Content | Latency | Focal edits before content | Commits before content | Final behavior correct |
+${
+  g.events.some((e) => e.observation)
+    ? `| Update | First input after event | Responses after event | Content retrieved | Behavior correct at fire (old contract) | Compactions after retrieval |
+| --- | ---: | ---: | --- | --- | ---: |
+${g.events
+  .filter((e) => e.observation)
+  .map(
+    (e) =>
+      `| ${e.kind} | ${cell(e.observation!.firstInputAfterEvent)} | ${e.observation!.responseDecisions} | ${e.observation!.contentRetrieved} | ${cell(e.observation!.behaviorCorrectAtFire)} | ${cell(e.observation!.compactionsAfterContent)} |`,
+  )
+  .join('\n')}
+`
+    : ''
+}
+
+| Update | Fired | Focal checks failing then | Context tokens then | Cue retrieved | Content retrieved | Retrieval latency | Focal edits before content | Commits before content | Final behavior correct |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 ${rows}
 
 Noise events: ${cell(g.summary['noiseEvents'])}
 
 ## Urgent work
+
+Status ordering and edits are descriptive, not automatic priority violations. Review safe stopping points and later ticket reopenings.
 
 ${Object.entries(g.urgent)
   .map(([k, v]) => `- ${k}: ${cell(v)}`)

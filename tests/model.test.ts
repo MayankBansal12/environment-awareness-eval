@@ -8,6 +8,7 @@ import {
   DEFAULT_SELECTION,
   matchesRuntimeIdentity,
   modelSelectionSchema,
+  selectModel,
   type ModelSelection,
 } from '../src/harness/model.js';
 
@@ -54,6 +55,91 @@ beforeEach(() => vi.mocked(readFile).mockRejectedValue({ code: 'ENOENT' }));
 afterEach(() => vi.restoreAllMocks());
 
 describe('explicit model runtime', () => {
+  const opusSelection = {
+    provider: 'anthropic',
+    model: 'claude-opus-5',
+    thinking: 'default',
+  } as const;
+  it('selects the native Claude Code default independently of the Pi high default', () => {
+    expect(selectModel({ provider: 'anthropic', model: 'claude-opus-5' })).toEqual(
+      opusSelection,
+    );
+    expect(selectModel({ provider: 'anthropic', model: 'claude-sonnet-5' })).toEqual({
+      provider: 'anthropic',
+      model: 'claude-sonnet-5',
+      thinking: 'default',
+    });
+    expect(selectModel({})).toEqual(DEFAULT_SELECTION);
+    for (const change of [
+      { model: 'opus' },
+      { model: 'claude-opus-4-8' },
+      { model: 'claude-sonnet-4-5' },
+      { provider: 'openrouter' },
+      { thinking: 'high' },
+      { thinking: 'off' },
+    ])
+      expect(() => selectModel({ ...opusSelection, ...change })).toThrow();
+  });
+
+  it('accepts the exact claude-sonnet-5 selection and audits it like Opus', () => {
+    const sonnet = {
+      provider: 'anthropic',
+      model: 'claude-sonnet-5',
+      thinking: 'default',
+    } as const;
+    expect(modelSelectionSchema.safeParse(sonnet).success).toBe(true);
+    expect(modelSelectionSchema.safeParse({ ...sonnet, thinking: 'high' }).success).toBe(
+      false,
+    );
+    const identity = {
+      ...sonnet,
+      requested: sonnet,
+      agent: 'claude-code',
+      agentVersion: '2.1.266 (Claude Code)',
+      api: 'claude-code-agent-sdk',
+      authSource: 'claude-code',
+      maxOutputTokens: 8192,
+      outputBudgetTransport: 'CLAUDE_CODE_MAX_OUTPUT_TOKENS',
+      contextCapture: 'claude-code-hooks',
+    };
+    expect(matchesRuntimeIdentity(identity)).toBe(true);
+    expect(matchesRuntimeIdentity({ ...identity, requested: opusSelection })).toBe(false);
+    for (const change of [
+      { agent: 'pi' },
+      { api: 'anthropic-messages' },
+      { authSource: 'claude-code-read-only' },
+      { agentVersion: undefined },
+      { contextCapture: undefined },
+    ])
+      expect(matchesRuntimeIdentity({ ...identity, ...change })).toBe(false);
+  });
+
+  it('routes Opus to Claude Code and audits its agent identity', async () => {
+    const fake = mockRuntime();
+    await expect(createRuntime(opusSelection)).rejects.toThrow('Claude Code');
+    expect(fake.create).not.toHaveBeenCalled();
+    const identity = {
+      ...opusSelection,
+      requested: opusSelection,
+      agent: 'claude-code',
+      agentVersion: '2.1.266 (Claude Code)',
+      api: 'claude-code-agent-sdk',
+      authSource: 'claude-code',
+      maxOutputTokens: 8192,
+      outputBudgetTransport: 'CLAUDE_CODE_MAX_OUTPUT_TOKENS',
+      contextCapture: 'claude-code-hooks',
+    };
+    expect(matchesRuntimeIdentity(identity)).toBe(true);
+    for (const change of [
+      { agent: 'pi' },
+      { api: 'anthropic-messages' },
+      { authSource: 'claude-code-read-only' },
+      { agentVersion: undefined },
+      { contextCapture: undefined },
+    ])
+      expect(matchesRuntimeIdentity({ ...identity, ...change })).toBe(false);
+  });
+
   it('retains Muse/high by default and accepts only the authorized provider/model tuples', () => {
     expect(DEFAULT_SELECTION).toEqual({
       provider: 'opencode',

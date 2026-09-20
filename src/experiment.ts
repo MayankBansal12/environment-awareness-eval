@@ -390,18 +390,29 @@ export function summarize(manifest: Manifest, trials: TrialRecord[]) {
         const metrics = valid
           .map((s) => s.grade.events.find((e) => e.kind === kind)!)
           .filter((e) => e?.fired);
+        const assessableRetrieval = metrics.filter((e) => e.missed !== null);
+        const completedOutcomes = uncensored.flatMap((s) =>
+          s.grade.events.filter((e) => e.kind === kind && e.fired),
+        );
         return [
           kind,
           {
             fired: metrics.length,
-            missed: fraction(metrics.filter((e) => e.missed).length, metrics.length),
+            missed: fraction(
+              assessableRetrieval.filter((e) => e.missed).length,
+              assessableRetrieval.length,
+            ),
+            retrievalUnassessable: metrics.length - assessableRetrieval.length,
             detectionLatencyMedian: median(nums(metrics.map((e) => e.detectionLatency))),
             detectionLatencyMean: avg(nums(metrics.map((e) => e.detectionLatency))),
             focalChangesBeforeContentMean: avg(
               nums(metrics.map((e) => e.focalChangesBeforeContent)),
             ),
             commitsBeforeContentMean: avg(nums(metrics.map((e) => e.commitsBeforeContent))),
-            adapted: fraction(metrics.filter((e) => e.adapted).length, metrics.length),
+            adapted: fraction(
+              completedOutcomes.filter((e) => e.adapted).length,
+              completedOutcomes.length,
+            ),
             contextTokensAtFireMean: avg(nums(metrics.map((e) => e.contextTokensAtFire))),
             focalChecksFailingAtFireMean: avg(
               nums(metrics.map((e) => e.focalChecksFailingAtFire)),
@@ -478,7 +489,7 @@ function renderComparison(r: Comparison): string {
     '',
     `Model ${r.model}. ${r.completed}/${r.scheduled} trials completed.`,
     '',
-    '| Cell | Valid | Update | Missed | Latency median | Focal edits before content | Correct final behavior | Failing checks at fire |',
+    '| Cell | Valid | Update | Content not retrieved | Retrieval latency median | Focal edits before content | Correct final behavior | Failing checks at fire |',
     '| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: |',
   ];
   for (const c of r.cells)

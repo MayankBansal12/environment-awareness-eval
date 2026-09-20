@@ -11,6 +11,11 @@ import {
   type InlineExtension,
 } from '@earendil-works/pi-coding-agent';
 import { assistantInfo } from './harness/assistant.js';
+import {
+  CLAUDE_CONTEXT_NOTE,
+  runClaudeCode,
+  verifyClaudeCode,
+} from './harness/claude-code.js';
 import { redactSecrets } from './harness/redact.js';
 import { sha256 } from './harness/identity.js';
 import { sourceIdentity } from './harness/identity.js';
@@ -130,34 +135,49 @@ export async function run(config: Config): Promise<Summary> {
     const tools = new ControlledTools(sandbox, team, (o) => engine.observe(o));
     const defs = definitions(tools);
     const selection = modelSelectionSchema.parse(config.modelConfig ?? DEFAULT_SELECTION);
-    const { runtime, model, verification } = await createRuntime(selection);
+    const claude = selection.provider === 'anthropic';
+    const selectedRuntime = claude ? undefined : await createRuntime(selection);
+    const verification = claude
+      ? await verifyClaudeCode(selection)
+      : selectedRuntime!.verification;
     const meter = new UsageMeter();
+    const abortController = new AbortController();
     let termination = { reason: 'agent_finished', detail: 'Agent ended its turn' },
       lastStop = 'unknown',
       lastError: string | undefined;
     const stop = (reason: string, detail: string) => {
       if (termination.reason === 'agent_finished') termination = { reason, detail };
+      abortController.abort();
       void session?.abort().catch(() => {});
     };
-    const stream = runtime.streamSimple.bind(runtime);
-    runtime.streamSimple = (actual, context, options) => {
-      const s = stream(actual, context, options);
-      void s
-        .result()
-        .then((message) => {
-          meter.add(message, context.tools?.length ? 'turn' : 'summary');
-          if (meter.totals.totalTokens > config.budgets.maxTotalTokens)
-            stop(
-              'token_budget',
-              `Token budget of ${config.budgets.maxTotalTokens} exceeded`,
-            );
-        })
-        .catch(() => {});
-      return s;
-    };
+    if (selectedRuntime) {
+      const { runtime } = selectedRuntime;
+      const stream = runtime.streamSimple.bind(runtime);
+      runtime.streamSimple = (actual, context, options) => {
+        const s = stream(actual, context, options);
+        void s
+          .result()
+          .then((message) => {
+            meter.add(message, context.tools?.length ? 'turn' : 'summary');
+            if (meter.totals.totalTokens > config.budgets.maxTotalTokens)
+              stop(
+                'token_budget',
+                `Token budget of ${config.budgets.maxTotalTokens} exceeded`,
+              );
+          })
+          .catch(() => {});
+        return s;
+      };
+    }
     const identity: Record<string, unknown> = {
       ...verification,
-      piVersion: VERSION,
+      ...(selectedRuntime
+        ? {
+            agent: 'pi',
+            piVersion: VERSION,
+            contextWindow: selectedRuntime.model.contextWindow,
+          }
+        : {}),
       thinking: selection.thinking,
       nodeVersion: process.version,
       isolation: 'bubblewrap-unshare-all',
@@ -170,7 +190,6 @@ export async function run(config: Config): Promise<Summary> {
       systemPromptSha256: sha256(SYSTEM_PROMPT),
       initialPrompt: INITIAL_PROMPT,
       providerWeightsPinned: false,
-      contextWindow: model.contextWindow,
       concurrency: 1,
       subagents: false,
       ...(config.manifestHash ? { manifestHash: config.manifestHash } : {}),
@@ -181,168 +200,207 @@ export async function run(config: Config): Promise<Summary> {
       decision: number;
       name: string;
     }> = [];
-    const owned: InlineExtension = {
-      name: 'workspace-observer',
-      factory: (pi) => {
-        pi.on('context', (event) => {
-          try {
-            return {
-              messages: engine.beforeDecision(
-                event.messages as unknown as Parameters<Engine['beforeDecision']>[0],
-              ) as unknown as typeof event.messages,
-            };
-          } catch (e) {
-            stop('harness_error', String(e));
-            throw e;
-          }
-        });
-        pi.on('turn_end', async (event) => {
-          try {
-            const info = assistantInfo(event.message);
-            lastStop = info.stopReason;
-            lastError = info.errorMessage;
-            engine.afterOutput(event.message, info, usageOf(event.message));
-            const current = await snapshot(sandbox!, commit, family);
-            for (const fired of engine.settle(
-              current,
-              info.calls.length > 0 && info.stopReason === 'toolUse',
-            )) {
-              const name = path.posix.join('at-events', fired.id);
-              await cp(sandbox!.repo, path.join(dir, name), {
-                recursive: true,
-                dereference: false,
-                filter: (src) => !['.git', 'node_modules'].includes(path.basename(src)),
-              });
-              atEvents.push({
-                eventId: fired.id,
-                kind: fired.kind as Evidence['atEvents'][number]['kind'],
-                decision: engine.decision,
-                name,
-              });
-            }
-            const t = meter.totals;
-            process.stdout.write(
-              `D${engine.decision}: ${info.calls.map((c) => c.name).join(', ') || info.stopReason} · ${t.totalTokens} tok · $${t.costUsd.total.toFixed(4)}\n`,
-            );
-          } catch (e) {
-            stop('harness_error', String(e));
-          }
-        });
-      },
+    const afterTurn = async (message: unknown) => {
+      try {
+        const info = assistantInfo(message);
+        lastStop = info.stopReason;
+        lastError = info.errorMessage;
+        engine.afterOutput(message, info, usageOf(message));
+        const current = await snapshot(sandbox!, commit, family);
+        for (const fired of engine.settle(
+          current,
+          info.calls.length > 0 && info.stopReason === 'toolUse',
+        )) {
+          const name = path.posix.join('at-events', fired.id);
+          await cp(sandbox!.repo, path.join(dir, name), {
+            recursive: true,
+            dereference: false,
+            filter: (src) => !['.git', 'node_modules'].includes(path.basename(src)),
+          });
+          atEvents.push({
+            eventId: fired.id,
+            kind: fired.kind as Evidence['atEvents'][number]['kind'],
+            decision: engine.decision,
+            name,
+          });
+        }
+        const t = meter.totals;
+        process.stdout.write(
+          `D${engine.decision}: ${info.calls.map((c) => c.name).join(', ') || info.stopReason} · ${t.totalTokens} tok${claude ? '' : ` · $${t.costUsd.total.toFixed(4)}`}\n`,
+        );
+      } catch (e) {
+        stop('harness_error', String(e));
+      }
     };
-    const settings = SettingsManager.inMemory({
-      compaction: { enabled: config.budgets.compaction },
-      retry: {
-        enabled: config.budgets.providerRetries > 0,
-        maxRetries: config.budgets.providerRetries,
-        baseDelayMs: 5000,
-      },
-      steeringMode: 'one-at-a-time',
-    });
-    const loader = new DefaultResourceLoader({
-      cwd: AGENT_CWD,
-      agentDir: path.join(sandbox.root, 'config'),
-      settingsManager: settings,
-      noExtensions: true,
-      noSkills: true,
-      noPromptTemplates: true,
-      noThemes: true,
-      noContextFiles: true,
-      systemPrompt: SYSTEM_PROMPT,
-      appendSystemPrompt: [],
-      extensionFactories: [owned],
-    });
-    await loader.reload();
-    const created = await createAgentSession({
-      cwd: AGENT_CWD,
-      agentDir: path.join(sandbox.root, 'config'),
-      modelRuntime: runtime,
-      model,
-      scopedModels: [{ model, thinkingLevel: selection.thinking }],
-      thinkingLevel: selection.thinking,
-      tools: defs.map((d) => d.name),
-      customTools: defs,
-      resourceLoader: loader,
-      sessionManager: SessionManager.inMemory(AGENT_CWD),
-      settingsManager: settings,
-    });
-    session = created.session;
-    if (created.modelFallbackMessage) throw Error('Model fallback refused');
-    if (!session.model) throw Error('Missing session model');
-    assertSelectedModel(session.model, selection);
-    if (session.thinkingLevel !== selection.thinking)
-      throw Error('Reasoning setting fallback refused');
-    const actualTools = defs.map((d) => {
-      const actual = session!.getToolDefinition(d.name);
-      if (!actual || actual.description !== d.description)
-        throw Error('Controlled tools mismatch');
-      return {
-        name: actual.name,
-        description: actual.description,
-        parameters: actual.parameters,
+    const begin = async (
+      systemPrompt: string,
+      actualTools: Array<{ name: string; description: string; parameters: unknown }>,
+    ) => {
+      identity['systemPromptSha256'] = sha256(systemPrompt);
+      identity['toolSchemasSha256'] = sha256(JSON.stringify(actualTools));
+      engine.emit({
+        type: 'run_start',
+        runId: config.runId,
+        condition: config.condition,
+        runtime: identity,
+      });
+      engine.emit({ type: 'snapshot', snapshot: initial });
+      engine.capture({
+        type: 'header',
+        systemPrompt,
+        tools: actualTools,
+        runtime: identity,
+      });
+      await json('runtime.json', identity);
+      timer = setTimeout(
+        () => stop('timeout', 'Run time budget reached'),
+        config.budgets.timeoutMs,
+      );
+    };
+    if (claude) {
+      await begin(
+        SYSTEM_PROMPT,
+        defs.map((d) => ({
+          name: 'mcp__workspace__' + d.name,
+          description: d.description,
+          parameters: d.parameters,
+        })),
+      );
+      try {
+        const result = await runClaudeCode({
+          selection,
+          cwd: path.join(sandbox.root, 'config'),
+          systemPrompt: SYSTEM_PROMPT,
+          initialPrompt: INITIAL_PROMPT,
+          tools,
+          engine,
+          meter,
+          budgets: config.budgets,
+          abortController,
+          afterTurn,
+          stop,
+          persist: (event) => persist('claude-code.jsonl', event),
+        });
+        if (termination.reason === 'agent_finished') termination = result;
+      } catch (e) {
+        if (termination.reason === 'agent_finished')
+          termination = { reason: 'provider_error', detail: redactSecrets(String(e)) };
+      }
+    } else {
+      const { runtime, model, thinking } = selectedRuntime!;
+      const owned: InlineExtension = {
+        name: 'workspace-observer',
+        factory: (pi) => {
+          pi.on('context', (event) => {
+            try {
+              return {
+                messages: engine.beforeDecision(
+                  event.messages as unknown as Parameters<Engine['beforeDecision']>[0],
+                ) as unknown as typeof event.messages,
+              };
+            } catch (e) {
+              stop('harness_error', String(e));
+              throw e;
+            }
+          });
+          pi.on('turn_end', (event) => afterTurn(event.message));
+        },
       };
-    });
-    identity['systemPromptSha256'] = sha256(session.systemPrompt);
-    identity['toolSchemasSha256'] = sha256(JSON.stringify(actualTools));
-    if (
-      session.systemPrompt.includes(sandbox.root) ||
-      session.systemPrompt.includes(config.runId) ||
-      !session.systemPrompt.includes(AGENT_CWD)
-    )
-      throw Error('Non-neutral runtime prompt');
-    session.subscribe((event) => {
-      if (event.type === 'auto_retry_start')
-        engine.emit({
-          type: 'provider_retry',
-          attempt: event.attempt,
-          maxAttempts: event.maxAttempts,
-          delayMs: event.delayMs,
-          errorMessage: redactSecrets(event.errorMessage),
-        });
-      else if (event.type === 'compaction_start')
-        engine.emit({ type: 'compaction', phase: 'start', reason: event.reason });
-      else if (event.type === 'compaction_end')
-        engine.emit({
-          type: 'compaction',
-          phase: 'end',
-          reason: event.reason,
-          aborted: event.aborted,
-          ...(event.errorMessage
-            ? { errorMessage: redactSecrets(event.errorMessage) }
-            : {}),
-        });
-    });
-    engine.emit({
-      type: 'run_start',
-      runId: config.runId,
-      condition: config.condition,
-      runtime: identity,
-    });
-    engine.emit({ type: 'snapshot', snapshot: initial });
-    engine.capture({
-      type: 'header',
-      systemPrompt: session.systemPrompt,
-      tools: actualTools,
-      runtime: identity,
-    });
-    await json('runtime.json', identity);
-    timer = setTimeout(
-      () => stop('timeout', 'Run time budget reached'),
-      config.budgets.timeoutMs,
-    );
-    try {
-      await session.prompt(INITIAL_PROMPT);
-    } catch (e) {
-      if (termination.reason === 'agent_finished')
-        termination = {
-          reason: lastError ? 'provider_error' : 'harness_error',
-          detail: redactSecrets(lastError ?? String(e)),
+      const settings = SettingsManager.inMemory({
+        compaction: { enabled: config.budgets.compaction },
+        retry: {
+          enabled: config.budgets.providerRetries > 0,
+          maxRetries: config.budgets.providerRetries,
+          baseDelayMs: 5000,
+        },
+        steeringMode: 'one-at-a-time',
+      });
+      const loader = new DefaultResourceLoader({
+        cwd: AGENT_CWD,
+        agentDir: path.join(sandbox.root, 'config'),
+        settingsManager: settings,
+        noExtensions: true,
+        noSkills: true,
+        noPromptTemplates: true,
+        noThemes: true,
+        noContextFiles: true,
+        systemPrompt: SYSTEM_PROMPT,
+        appendSystemPrompt: [],
+        extensionFactories: [owned],
+      });
+      await loader.reload();
+      const created = await createAgentSession({
+        cwd: AGENT_CWD,
+        agentDir: path.join(sandbox.root, 'config'),
+        modelRuntime: runtime,
+        model,
+        scopedModels: [{ model, thinkingLevel: thinking }],
+        thinkingLevel: thinking,
+        tools: defs.map((d) => d.name),
+        customTools: defs,
+        resourceLoader: loader,
+        sessionManager: SessionManager.inMemory(AGENT_CWD),
+        settingsManager: settings,
+      });
+      session = created.session;
+      if (created.modelFallbackMessage) throw Error('Model fallback refused');
+      if (!session.model) throw Error('Missing session model');
+      assertSelectedModel(session.model, selection);
+      if (session.thinkingLevel !== thinking)
+        throw Error('Reasoning setting fallback refused');
+      const actualTools = defs.map((d) => {
+        const actual = session!.getToolDefinition(d.name);
+        if (!actual || actual.description !== d.description)
+          throw Error('Controlled tools mismatch');
+        return {
+          name: actual.name,
+          description: actual.description,
+          parameters: actual.parameters,
         };
+      });
+      if (
+        session.systemPrompt.includes(sandbox.root) ||
+        session.systemPrompt.includes(config.runId) ||
+        !session.systemPrompt.includes(AGENT_CWD)
+      )
+        throw Error('Non-neutral runtime prompt');
+      session.subscribe((event) => {
+        if (event.type === 'auto_retry_start')
+          engine.emit({
+            type: 'provider_retry',
+            attempt: event.attempt,
+            maxAttempts: event.maxAttempts,
+            delayMs: event.delayMs,
+            errorMessage: redactSecrets(event.errorMessage),
+          });
+        else if (event.type === 'compaction_start')
+          engine.emit({ type: 'compaction', phase: 'start', reason: event.reason });
+        else if (event.type === 'compaction_end')
+          engine.emit({
+            type: 'compaction',
+            phase: 'end',
+            reason: event.reason,
+            aborted: event.aborted,
+            ...(event.errorMessage
+              ? { errorMessage: redactSecrets(event.errorMessage) }
+              : {}),
+          });
+      });
+      await begin(session.systemPrompt, actualTools);
+      try {
+        await session.prompt(INITIAL_PROMPT);
+      } catch (e) {
+        if (termination.reason === 'agent_finished')
+          termination = {
+            reason: lastError ? 'provider_error' : 'harness_error',
+            detail: redactSecrets(lastError ?? String(e)),
+          };
+      }
+      session.dispose();
+      session = undefined;
     }
     clearTimeout(timer);
     timer = undefined;
-    session.dispose();
-    session = undefined;
     if (termination.reason === 'agent_finished' && ['error', 'aborted'].includes(lastStop))
       termination = {
         reason: 'provider_error',
@@ -355,7 +413,7 @@ export async function run(config: Config): Promise<Summary> {
       termination = { reason: 'max_output_tokens', detail: 'Model output budget reached' };
     const final = await snapshot(sandbox, commit, family);
     engine.emit({ type: 'snapshot', snapshot: final });
-    engine.close();
+    engine.close(claude ? CLAUDE_CONTEXT_NOTE : undefined);
     engine.emit({ type: 'termination', ...termination });
     const durationMs = Date.now() - started;
 
@@ -417,7 +475,7 @@ export async function run(config: Config): Promise<Summary> {
     await json('evidence.json', evidence);
     await json('team-state.json', team.snapshot());
     await json('usage.json', meter.totals);
-    const extra: string[] = [];
+    const extra: string[] = claude ? ['claude-code.jsonl'] : [];
     async function collect(relative: string) {
       for (const entry of await readdir(path.join(dir, relative), {
         withFileTypes: true,

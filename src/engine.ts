@@ -83,6 +83,7 @@ export class Engine {
   private outputs = 0;
   private partial = false;
   private last: RepoSnapshot;
+  private seenModules = new Set<string>();
   private noise: NoiseStream;
   constructor(
     readonly state: TeamState,
@@ -222,6 +223,49 @@ export class Engine {
     );
     const batchError = batch.some((o) => o.isError);
     const focalEdit = repo.focalDigest !== this.last.focalDigest;
+    const batchTestRun = batch.some(
+      (o) => o.name === 'bash' && TEST_COMMAND.test(String(o.args['command'] ?? '')),
+    );
+    // Successful explicit source reads/searches, or shell inspection commands mentioning source.
+    // Shell recognition is deliberately heuristic; deadlines cover opaque/custom commands.
+    const paths = [...this.state.family.focal.paths, ...this.state.family.hotfix.paths];
+    const successful = batch.filter(
+      (o) =>
+        !o.isError &&
+        (o.name !== 'bash' || (o.value as { exitCode?: number })?.exitCode === 0),
+    );
+    const touchedModules = (o: ToolObservation): string[] => {
+      const target = String(o.args['path'] ?? '')
+        .replace(/^\/workspace\/repo\//, '')
+        .replace(/^\.\//, '');
+      if (['read', 'edit', 'write', 'grep'].includes(o.name))
+        return paths.filter(
+          (p) =>
+            p === target ||
+            (o.name === 'grep' &&
+              (target === '.' || target === '' || p.startsWith(target + '/'))),
+        );
+      if (
+        o.name === 'bash' &&
+        /\b(cat|sed|head|tail|rg|grep)\b/.test(String(o.args['command'] ?? ''))
+      )
+        return paths.filter(
+          (p) =>
+            String(o.args['command']).includes(p) ||
+            String(o.args['command']).includes('src/*'),
+        );
+      return [];
+    };
+    const modules = new Set(successful.flatMap(touchedModules));
+    const sourceInspection = successful.some(
+      (o) =>
+        ['read', 'grep', 'bash'].includes(o.name) &&
+        touchedModules(o).length > 0 &&
+        (o.name !== 'bash' ||
+          /\b(cat|sed|head|tail|rg|grep)\b/.test(String(o.args['command'] ?? ''))),
+    );
+    const newModule = [...modules].some((p) => !this.seenModules.has(p));
+    for (const p of modules) this.seenModules.add(p);
     this.last = repo;
     // A terminal response has no following decision in which to observe new events.
     if (!canContinue) return [];
@@ -232,7 +276,14 @@ export class Engine {
         step.trigger.after === 'start' ? 0 : this.fired.get(step.trigger.after)?.decision;
       if (anchor === undefined) break;
       const gap = this.decision - anchor;
-      const met = step.trigger.when === 'focal_edit' ? focalEdit : batchTestFailure;
+      const met =
+        step.trigger.when === 'source_inspection'
+          ? sourceInspection
+          : step.trigger.when === 'focal_edit'
+            ? focalEdit
+            : step.trigger.when === 'test_run'
+              ? batchTestRun
+              : newModule;
       const mode =
         gap >= step.trigger.minGap && met
           ? 'condition'
@@ -249,11 +300,36 @@ export class Engine {
         this.emit({
           type: 'environment_event',
           event,
-          trigger: { mode, when: step.trigger.when, batchTestFailure, batchError },
+          trigger: {
+            mode,
+            when: step.trigger.when,
+            batchTestFailure,
+            batchError,
+            sourceInspection,
+            focalEdit,
+            batchTestRun,
+            newModule,
+          },
         });
         published.push(event);
+        // Mixed-priority bundle: the important message shares the boundary with one seeded
+        // low-priority item. Empty at noise=none; ordered after the important event so retrieval
+        // semantics (requirement-before-comment, important cue first) stay untouched.
+        for (const item of this.noise.bundle()) {
+          const bundled = this.state.publishNoise(item);
+          this.emit({
+            type: 'environment_event',
+            event: bundled,
+            trigger: {
+              mode: 'noise',
+              when: step.trigger.when,
+              batchTestFailure,
+              batchError,
+              bundled: true,
+            },
+          });
+        }
       }
-      break;
     }
     for (const item of this.noise.draw(batchTestFailure || batchError)) {
       const event = this.state.publishNoise(item);
@@ -266,7 +342,7 @@ export class Engine {
     return published;
   }
 
-  close() {
+  close(note = 'Pi runtime context seam; no provider wire-payload claim.') {
     const complete = this.inputs > 0 && this.inputs === this.outputs;
     this.capture({
       type: 'audit',
@@ -274,7 +350,7 @@ export class Engine {
       outputs: this.outputs,
       complete,
       partialContent: this.partial,
-      note: 'Pi runtime context seam; no provider wire-payload claim.',
+      note,
     });
     return { complete, partialContent: this.partial };
   }

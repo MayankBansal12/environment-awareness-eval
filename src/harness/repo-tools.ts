@@ -112,6 +112,11 @@ export class ControlledTools {
     return promise;
   }
 
+  /** Wait for cancelled/in-flight commands before the evaluator probes the repo. */
+  async idle(): Promise<void> {
+    await this.queue;
+  }
+
   definitions(): ToolDefinition[] {
     const descriptions: Array<{ name: string; description: string; parameters: TSchema }> =
       [
