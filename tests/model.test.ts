@@ -337,3 +337,81 @@ describe('explicit model runtime', () => {
       expect(matchesRuntimeIdentity(value)).toBe(false);
   });
 });
+
+describe('OpenCode Go exact Pi models', () => {
+  for (const model of [
+    'glm-5.3-flash',
+    'muse-spark-1.3-contributor',
+    'deepseek-v4.1-flash',
+  ] as const) {
+    it(`selects, caps and audits ${model} without fallback`, async () => {
+      const selected = { provider: 'opencode-go', model, thinking: 'high' } as const;
+      const responses = model.startsWith('muse');
+      const actual: Model = {
+        ...catalogModel,
+        provider: selected.provider,
+        id: model,
+        api: responses ? 'openai-responses' : 'openai-completions',
+        baseUrl: 'https://opencode.ai/zen/go/v1',
+        compat: responses
+          ? { sessionAffinityFormat: 'openai-nosession' }
+          : { maxTokensField: 'max_tokens' },
+        thinkingLevelMap: { high: 'high' },
+      };
+      const mock = mockRuntime(actual);
+      expect(selectModel({ provider: selected.provider, model })).toEqual(selected);
+      const configured = await createRuntime(selected);
+      expect(configured.model.maxTokens).toBe(8192);
+      expect(matchesRuntimeIdentity(configured.verification)).toBe(true);
+      expect(configured.verification).toMatchObject({
+        maxOutputTokensEnforced: true,
+        resolvedThinking: 'high',
+        outputBudgetTransport: responses ? 'openai-max_output_tokens' : 'openai-max_tokens',
+      });
+      configured.runtime.streamSimple(configured.model, context, {
+        reasoning: 'high',
+        maxTokens: 8192,
+      });
+      expect(mock.stream).toHaveBeenCalledWith(configured.model, context, {
+        reasoning: 'high',
+        maxTokens: 8192,
+      });
+      configured.runtime.streamSimple(configured.model, context, { maxTokens: 4096 });
+      expect(mock.stream).toHaveBeenLastCalledWith(configured.model, context, {
+        reasoning: 'high',
+        maxTokens: 4096,
+      });
+      expect(() =>
+        configured.runtime.streamSimple(configured.model, context, { reasoning: 'medium' }),
+      ).toThrow();
+      expect(() =>
+        configured.runtime.streamSimple(configured.model, context, { maxTokens: 8193 }),
+      ).toThrow();
+      expect(() => assertSelectedModel({ ...actual, id: 'other' }, selected)).toThrow();
+      expect(() =>
+        assertSelectedModel({ ...actual, baseUrl: 'https://example.com' }, selected),
+      ).toThrow();
+      expect(() =>
+        assertSelectedModel({ ...actual, thinkingLevelMap: { high: null } }, selected),
+      ).toThrow();
+      expect(
+        matchesRuntimeIdentity({
+          ...configured.verification,
+          maxOutputTokensEnforced: false,
+        }),
+      ).toBe(false);
+      expect(
+        matchesRuntimeIdentity({
+          ...configured.verification,
+          outputBudgetTransport: 'not-sent-by-pi-codex',
+        }),
+      ).toBe(false);
+      expect(
+        modelSelectionSchema.safeParse({ ...selected, thinking: 'medium' }).success,
+      ).toBe(false);
+      expect(
+        modelSelectionSchema.safeParse({ ...selected, model: model + '-free' }).success,
+      ).toBe(false);
+    });
+  }
+});

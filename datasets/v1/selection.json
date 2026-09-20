@@ -1,0 +1,4749 @@
+{
+  "dataset": "environment-awareness-v1",
+  "version": 1,
+  "selectionRule": "Curated study selections only; unique sessions; valid audit, uncensored, agent_finished. Behavioral failures and unassessable scenarios retained.",
+  "included": [
+    {
+      "path": "results/opus5-new-scenarios-retained/t003",
+      "summarySha256": "9e2ee92421c69be07bd66e8388436bce8cdf8f96c9b699d620ae87e2658e2e65",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-new-scenarios-retained/t002",
+      "summarySha256": "de7e76eb6903cc75259caa7f496edfa28cab2f2c93919f6f0c6ac70dd97cde5c",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-new-scenarios-retained/t006",
+      "summarySha256": "dc5d03efbfc9597eac82350baeb506e1b7a34a311ecda41e87eef35b7f1e814d",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-new-scenarios-retained/t005",
+      "summarySha256": "d3b603a2945656606cc3eb5ae408be0f1cd03af44419c3b5d638cfb4c211ca20",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-downgrade-v11/runs/t002",
+      "summarySha256": "2335c3124953019a8a32493b8054264c2461d92cf5ea34436b8757767125a309",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-milestones-2026-09-17/claude-opus-5-fulfillment-r1",
+      "summarySha256": "bfba3b305948ab1bc4e564c88267e0a21d9352f2a5d52bcdfb65f65e49a62f56",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1
+      },
+      "graderVersion": "4.1.0"
+    },
+    {
+      "path": "results/opus5-downgrade-v11/runs/t001",
+      "summarySha256": "059ad08542be0b0441c93a7625cab6aadaa215fe24a6ad30fc3861ed6b36d4fa",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-milestones-2026-09-17/claude-opus-5-settlement-r1",
+      "summarySha256": "b3ed6fd9f7fdb80100bdaee48c35ea36ed7b6a9cd8cef280cb5dcb21182015c5",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1
+      },
+      "graderVersion": "4.1.0"
+    },
+    {
+      "path": "results/opus5-milestones-2026-09-17/claude-opus-5-settlement-r2",
+      "summarySha256": "47c5092e254f945d71b1379e5d7ede6521ca5d1433cffcc96b99b99ba2db1ecb",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2
+      },
+      "graderVersion": "4.1.0"
+    },
+    {
+      "path": "results/opus5-five-v1/runs/t010",
+      "summarySha256": "3bede2a254f8ae822e95759f13bdc6c3e18585b1ef935db9d5f623f62607e4e2",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v1/runs/t011",
+      "summarySha256": "1759d6024ea4108cc8ead5d20dcbe8b54f80e5214c3bcfa99e666114ea67e239",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v1/runs/t012",
+      "summarySha256": "306dc972846688d8ffee11bdd0facb697b19fec194bc70fc1b6dd1b7a87d5402",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v1/runs/t013",
+      "summarySha256": "657c1e3fd43502ba063de1505c56f73110f5042ff4e965ed1a6a2fc9bb09a046",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v1/runs/t014",
+      "summarySha256": "630c6fea44e0fbfab9272115ad0f00db16898a4e018b3608579bd064a3051ff4",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v2/runs/t015",
+      "summarySha256": "05e2d86b7256643d8e22800e2b05b44aeff6b9cf8f0995f024d9951bf0a7b1e3",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-milestones-2026-09-17/claude-opus-5-fulfillment-r2",
+      "summarySha256": "f9975be51c89b819c0bd6804960d750671fdeae3403523a067a815921e1fc026",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2
+      },
+      "graderVersion": "4.1.0"
+    },
+    {
+      "path": "results/opus5-milestones-2026-09-17/claude-opus-5-fulfillment-r3",
+      "summarySha256": "e920c91aa88519f3057e6df93a4b2b35cfc47e6318d7b6e7d7f9fe46fafc3cac",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3
+      },
+      "graderVersion": "4.1.0"
+    },
+    {
+      "path": "results/opus5-five-v2/runs/t018",
+      "summarySha256": "8db1e69303e0b2d51d312e0388f79c27034ccef3b0c605b5f7f346ca171fa165",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v2/runs/t019",
+      "summarySha256": "4480910a2fab3710ab0d7c422d03582e718a070827a977aab2d13768f609a7c9",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-milestones-2026-09-17/claude-opus-5-settlement-r3",
+      "summarySha256": "967cc8730318989702fe60a3036ae02a60e9f5fd8a63159a09abd148602ed4f3",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3
+      },
+      "graderVersion": "4.1.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t021",
+      "summarySha256": "c4759b2c0f6a2e1d80b38b12e36f86aba95520aae72cee86bf2edc34d13c54e1",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t022",
+      "summarySha256": "6366b455807e3eb13f910bd8593be461f6918079052e2a60602062738d29d8cd",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t023",
+      "summarySha256": "d70a600290286c247fc97e335e1254e90c7f6300d3385ea308abef7c343dd63b",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t024",
+      "summarySha256": "58917738cfdbebc2326364f5fd157353548b41e48f126c8ef1c0837f501d06d1",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t025",
+      "summarySha256": "82fc79dd06e4aca8d5448e38504dfa21858f6998d6521f6d174cba31ea19b7e1",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t026",
+      "summarySha256": "b7b886837fb747a92ad9c6fce2544bb2d63d17499c1cff3e928e52d9d62f473a",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t027",
+      "summarySha256": "b6f9fb34dc0867dd1380cf6146eabb9af7c060da7020be08b126d09d4eca460d",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t028.r2",
+      "summarySha256": "ba45b8182edabce87b77e0a803b1a283f1204cd770615cba9f84b590f0e1a40f",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t029",
+      "summarySha256": "7cfee7a6caf96af1f971e7c28a87125968834110285238817fb2668a72d81f04",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t030",
+      "summarySha256": "4f4613e98023204597531e1d8df1e1663c2855c26d587698e6864c2bf08b1b6e",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t031.r2",
+      "summarySha256": "4182163bcda3fdae989de4381324ee769483674787db0576d72c06e408fc411d",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t032",
+      "summarySha256": "657f42724695eb2177fdd266feda34e5786d3bcbf2e65b0bd35397cd090e7727",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t033",
+      "summarySha256": "02235fcbe5092299a09ac755b887bc53203aa786de75a66735dd807d626ee034",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t034",
+      "summarySha256": "eb339e9b9e154fc03d69b0f9da31d049775253950557b274b7e10128f8ad766f",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t035",
+      "summarySha256": "559149f8a3b287910d0553b42e0e51369b3e3d74abf3acf6738fb7821e3de20f",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t036",
+      "summarySha256": "c495761b49b7b8af2f4b3a4adb524dc125dc22c47eb09e8beb9e1175d95291b9",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v4/runs/t037.r2",
+      "summarySha256": "321cb35ff1c76fa2340efb4662eef6c02808487093af5ce87ec91c06d223bce8",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v3/runs/t038",
+      "summarySha256": "85b438976854a970d68a157ceebe4162eff620cdc02add0f1ae4e5074d162fcc",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v4/runs/t039",
+      "summarySha256": "1fe8bed66676894a3ed4aa25b7d3086e67f58be736bdc4580476ad2207611724",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/opus5-five-v4/runs/t040",
+      "summarySha256": "b162120e44be73f70848a543a1f6ecd8bb39406a09d696e13de9f24842e55407",
+      "model": "claude-opus-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v1/runs/t001",
+      "summarySha256": "bfa31d5d3ed327a7ea1ad86007192fb2834259deca4c42fcd9347f809b2a6482",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v1/runs/t002",
+      "summarySha256": "cd7ec4b8623ac003239a7a5c37cc734239dd31a913bc915b193fbee226f7a25b",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v1/runs/t003",
+      "summarySha256": "e197122304853cac024fb617caa6c241af9b14261c06e6b98d8c38e9b5fbd111",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v1/runs/t004",
+      "summarySha256": "bf5fc4c9c054ee249696d5e6d30d2464304cd58ead6fef15b4fd9ad8ab1d4f64",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v1/runs/t005",
+      "summarySha256": "917575cb2672f3edd6ff7e25c029028fffc303999bca3ef7efb1df0c307488bf",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v1/runs/t006",
+      "summarySha256": "d7a004830a4bb8edb310dda972cb32330147b829ab2c9c9f74da5abe7f468b9a",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v1/runs/t007",
+      "summarySha256": "630509d8722ef7206ab635da180d17ac7e5a3a0d88cc63d612d4b9b723416765",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v2/runs/t008",
+      "summarySha256": "0984ea2b12020b61a4462475fd2f83eae2c16b5c9707d7d78df39da3d76eed3b",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v2/runs/t009",
+      "summarySha256": "1e25cd5f5a3ac2f943ae8dcc26f974d80785933de181c3bff602e04a122eeb1c",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v2/runs/t010",
+      "summarySha256": "c5bb5d7bcf05335e708dd073a98c567e065769e54def8cc89f60387b9f3256cd",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v2/runs/t011",
+      "summarySha256": "6d1537eb41119eca6c4d1db298776321d5a2dc445150dae8357c4c78f18a7413",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t012.r2",
+      "summarySha256": "ecf2fb7a11e4012e61c6f07c66516d7a608425158b07086123310a05b7d3b1d4",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t013.r2",
+      "summarySha256": "98eb5b4754e14fc9b79b367e30732fa5250f2c206345b8f0e4d18675ba3b1670",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t014.r2",
+      "summarySha256": "1bf570b391216aa9d2444569285ac0e700a9dcb7c6892466d49e831223abf877",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t015.r2",
+      "summarySha256": "cc6f56083697f973b7e7f0c5c995b174e6c2964c51e2435012d115ec67a8bfac",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t016",
+      "summarySha256": "bea201d7908155129afe6d0b67784255d7d4a952be5d128529ab0353dfccbbdd",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t017",
+      "summarySha256": "df0e9a06d3855dad9abfafe6a5a2a1586d8e84d396679cad74fd72e537c78af9",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t018",
+      "summarySha256": "620bd4e0bae31d95f372c6e11ee21a92171150f9c21e857f837e664fe2013df3",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t019",
+      "summarySha256": "6fb9a0023c97881a957ef6c4ac3647dfc014503f95c2e078059e081501d73d26",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t020",
+      "summarySha256": "e7cc2e8e3e79f8f9fbd2d1e5a6234fc13c76932d724176261d61f09845a1d30b",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t021",
+      "summarySha256": "0df7ef27e6172c2403b1e87ed6caaf809504137ad8f9bf98489cf17bd501b91f",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t022.r2",
+      "summarySha256": "9d3bcb7789e6d35f2179c40c8bc82a5308d0f68ba2fbddbf534b500c62416ac2",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t023",
+      "summarySha256": "1503d4d6de3245fb30c96fc5da38baaf5b00aed7247af78b47a3232b5f8305b2",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t024",
+      "summarySha256": "68bd565792b764aad13b4cd4380aa6e726607e7ac0f3535ea9bccc77536dbda7",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t025",
+      "summarySha256": "5e4fe9ebe349f5230ab5a088b20a9b2c078daa247a850ff70113ed204cbbafd2",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t026",
+      "summarySha256": "733afcaa4368b7b69803f15c57893a1403abf3b0b6810089be46292684ea3cea",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t027",
+      "summarySha256": "76d5f9872142f1951e99412b9f961036ff24a802d65c16226454854aa505b86b",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t028",
+      "summarySha256": "5980779aa30cea2a3bca9e3b5a5641f6dd73868be99aa3fd77e0cecc12412c87",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t029",
+      "summarySha256": "8b235ef5b97814b16559aa4ff257b472bc2ec56576cfafc9d18298e23e5563f3",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t030",
+      "summarySha256": "95f6b68c9ba98e48e693d16889c54aabd4a53f41bd475e163f50d2c6180fb8b2",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t031",
+      "summarySha256": "62f76056759f68feaac9318810421a34aebc00bd3fc3fe747d70a1d26e1def45",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t032",
+      "summarySha256": "1b0e5a3335992540eeaf0b3472ea122b683c93a368f4f011b6366ca4efda7d72",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v3/runs/t033",
+      "summarySha256": "a8964bc9351a3d1a16707c7a4e5ac2975278f1933675a89fa9e7a58978c8f4fa",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v4/runs/t034",
+      "summarySha256": "0343d239a2c6c5fe1940b5b1299f173f77c6e2e35794107eaf036efe64aa2cb9",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v4/runs/t035",
+      "summarySha256": "7944adbf6b6556387b63eb2bd047f41dba04fae20b2e22239afc62fc9adaacf9",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v4/runs/t036",
+      "summarySha256": "2c3bb4902a74a97eb6d43ad9ccc3d82841bc9089f5b9a9a5963f1bc3095b7cf4",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v4/runs/t037",
+      "summarySha256": "5811a87832a02c080a1686097b1dad615973a737410f73a4bcf1b0ee654891d7",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v4/runs/t038",
+      "summarySha256": "e0fd3b2173c9909adeac75eb367e1836943d94accde8035fc15e3c6afdc3d26f",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v4/runs/t039",
+      "summarySha256": "0afd60af8417a62f2c6dd4d128f8af5242537c6d59600f68252414d51359efa5",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sonnet5-five-v4/runs/t040",
+      "summarySha256": "f546abcf012ad72b0d992b66edeb7e19e7a3b17e048bb7ce5a73f74842ff3c33",
+      "model": "claude-sonnet-5",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/codex-writable-preflight/astra-fulfillment-cancellation-r1",
+      "summarySha256": "755254a6101a2eb5584ed950752d46e9f3823f959f7622e5c72b0943f5da9b02",
+      "model": "gpt-6-astra",
+      "condition": {
+        "scenario": "task-cancellation",
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t002",
+      "summarySha256": "fe4236c8056bf23244c6c4a34c9d87f74699d53799befd49cae6efddc8b3c388",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t003",
+      "summarySha256": "2f9f57a8dc8a1b2a83ef5a6b7230b51416c78393953cd307d243a55ccf47668c",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t004",
+      "summarySha256": "1e24ce9c46b2f163478fe426d8c2fc45a93275329acae71cd245592e2f96053f",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t005",
+      "summarySha256": "15fead41efc1c664a97d3bb9ce3094b7c980521894499ff8148d0aed4952dbfb",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t006",
+      "summarySha256": "e457124d837cb000e3ba7a10e123cfcaf12c0cde207421184cc837f0971cd892",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t007",
+      "summarySha256": "675a3ee8bbd233c850c187eaa1689c7fab68e2f49f5299ca10fe426cf3187b7e",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t008",
+      "summarySha256": "07c9bd0bfa425197869292deb8e22163f55a24289b1eb08a02c7837d9ae949af",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t009",
+      "summarySha256": "3992ba7f11b5fa1c7681b904017440b6a7e850dce11a8c1b5625df5acd274a6d",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t010",
+      "summarySha256": "cc76d23c95e518cfc99b7e1bb5fbb5aa47a57673747ebc8b30c250f20fc7aa06",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t011",
+      "summarySha256": "ee09a211f2f4cbd1e5ec243ce38ebd8065951d47cb2e5f2f78ce46f6469c7049",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t012",
+      "summarySha256": "67f392c143c2dceb6c94905883ffa9aa5a31f51487242829906626118fe12261",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t013",
+      "summarySha256": "dc437f980a4c1326db87adac3eced7f87a117e301a936ecb318f2464df522951",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t014",
+      "summarySha256": "b1bbdb241f8bcfb4f52fb0afe29e1f6f8ef00e4da5ccd74260517c204a495799",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t015",
+      "summarySha256": "71d18513556ce1e13652b7110c1ab88300f8cc55664acc4a23ea81293c60cb3e",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t016",
+      "summarySha256": "5f90628be30a57c5d5bfd6d097ffcbba7443577dd31731fe3532e9e84cc9e57b",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t017",
+      "summarySha256": "7c3e430d00c5c2d87e4e914fb052f2ec54157940abcbfbc33100434a606db22a",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t018",
+      "summarySha256": "a1191f1966e6bc6f058406fb9741b12525a48ed7fdb03efa5515b01b053da4d2",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t019",
+      "summarySha256": "8af4e5f055fb0ace05b8e41910b9f28a3839d8ae2304d1b6ee426e1f892cde3a",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t020",
+      "summarySha256": "bddd8c2433b2248f45981bdf4ef08fd0de17056de97971a9ddc597a3dfe59e9a",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t021",
+      "summarySha256": "bfcaebd3776e04f5c26d2edbe35351fbbe1ded802114d5d806c3e04221bdc4ce",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t022",
+      "summarySha256": "9d31c677ca232ec772d6574c255f3ee70932357d271df04b4c84752f5cba5704",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t023",
+      "summarySha256": "9b542d2156480c5395ce04d378b3a4e13d39d73001eeb4d0f7e46315102452a0",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t024",
+      "summarySha256": "134523696c7b8017d21295583e86de31a921c09100c42a67c000c61a157af6a8",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t025",
+      "summarySha256": "179a468d0bda3f469883096fcd36cb0cf8ced632043411cdc1a5e53513f10713",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t026",
+      "summarySha256": "34ee36ebfc2f43150723f00a44df0ab8c8f484247dd3e0a1e6b0b155c72e527a",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t027",
+      "summarySha256": "3d31be270be6da276daff277448cbbf85ae99efab7838c6b11172cf40b9408af",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t028",
+      "summarySha256": "07bd46e30304f02998a18d7c206c121c1ff42745eb988199a3beac8c3f8cfbfa",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t029",
+      "summarySha256": "505573947d60bb7e8d215ef9bea4e787366d6c0381b150d958ad757f541565cf",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t030",
+      "summarySha256": "eba83b761a24e06f373b4c0350da7064ef87c65ee73e1b8c379bbdbe15675528",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t031",
+      "summarySha256": "195a4735149256cd7400313d8cef6c6f0f8646e59e3911edebd4c3e1c06000f7",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t032",
+      "summarySha256": "c43fab949800874721d5a1fc4904aef5763c27fdcc798db933ada2803ccd60ea",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t033",
+      "summarySha256": "647e7e09066110cda7c6daccbf52e4cca44868cf2c79405a40fdf1ba41e59424",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t034",
+      "summarySha256": "440266b920e3110192e30a183e8681daa6fc7c8a512c4fda8e2322719a52c66d",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t035",
+      "summarySha256": "3cb50b8cae5e759cbb2ec0fff8a04153ceeb61b4337c7e3b6c9f6065e9d58182",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t036",
+      "summarySha256": "666add08edec251f1e01b830934c1879065fc7acddd8889e076ce5d1d2235f8c",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t037",
+      "summarySha256": "a204bd369188515c1b2131c516762a115ab48795ba62a86708cb58be1559ccd9",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t038",
+      "summarySha256": "9e8e7aae35c78151ef6ad753a927ac3e787b826f6af1480468441cf3b9758623",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t039",
+      "summarySha256": "574494de5b9e7fd6871a772ba5620c09f2099f81276adbbfd945925f72712233",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-five-v3/runs/t040",
+      "summarySha256": "91a78b34f364e9ed6f945c906da3ecaf66067fdc29beb6841d90df87401a8c16",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t001",
+      "summarySha256": "a14b96b3547ee7d6bb7ec1757f99c3c69e9b8bab37d4dadf11cc1f7201f6dd59",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t002",
+      "summarySha256": "a7af88173228b621bbd67be60c03c4124a366d72e2a8eaf97f314fa982fc5385",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t003",
+      "summarySha256": "ffff2ac539259482b67ff0ecf0f520166e8c9eff1d1c3f20595bdefe0a6aa735",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t004",
+      "summarySha256": "421a8387786094f5e39ced6832272a53a8924749b8160f9c5c0a09cc4b335dff",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t005",
+      "summarySha256": "cd4ca7c2c3c4da8e3607cc57370236a16330f479811a4be89ebfb690edb4e29b",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t006",
+      "summarySha256": "282676a99bd7a976031868a912ae818e2a9e03acc18490d9347f073eaa11d010",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t007",
+      "summarySha256": "93405efda4d89557fd4ae090beced16a22f6bfd334ea766fcacca9af64e34741",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t008",
+      "summarySha256": "1ea20f1c57cabad23ef7ac69d1329eeae57c9ff150ef13f1ed0d7da22162289e",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t009",
+      "summarySha256": "f2eaf475d3aeaf08fdb08ad5724f6b103970c2396900f0a0208e3ecf6c359edd",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t010",
+      "summarySha256": "a85568948d6c88fe067a6deff5d0368f1efd5871cdb564d007090537589ac083",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t011",
+      "summarySha256": "a10b2bb267ee75b19177564430d51ffceb808ea907c34bd554a74b5de6bc31bc",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t012",
+      "summarySha256": "127cb0ae58fb4ed231aef0598e55bfde4f835c9c7c5b577623bc87a23cf56351",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t013.r2",
+      "summarySha256": "ccb5ef7e8021b2ba4fa836993304f8314de2ec8fcffa5405963d8402089a69da",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t014",
+      "summarySha256": "38cb8eac7567e3f2149cd658f0700def39df04a50fccab0b87b069fe1b199ae0",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t015",
+      "summarySha256": "e9ecda135a1ec3f35189d2335b8ac5ee0fd0bfffc115b54279c1c528b1659c26",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t016",
+      "summarySha256": "531aa1b3829d1bc15405d2102b0e8658c209a436eb61386c5cf83207a6deb3e0",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t017",
+      "summarySha256": "2702f5ef35071b01b0aa1cb154a27d36cb8b26edf7874596e1566e77238e72ad",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t018",
+      "summarySha256": "e1b11f071296057468aa2f18ae87a58a24ed0d790aa291a44590760683f9eb26",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t019",
+      "summarySha256": "661810f92522acc5f13cf0cf7d1d8e47d2e1a43c3f10577ac3ae947fbe6418fd",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t020",
+      "summarySha256": "db14bcff6d8d8743cfdbdfb63b2f1e959469ec6a0c27466dd2037963a08c65da",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t021",
+      "summarySha256": "8479d55d63b96c95db3e3b7bbffc4a567a3788dbaf7394c585745d0d17f7e1d2",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t022",
+      "summarySha256": "7996aa75c1fb24d3ede338cdd327feb30a1ef5adc319967b053b9065f1bf9c08",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t023",
+      "summarySha256": "c27e03ac58ca83cbde9cc8835a600a74cbde020ff3b067c06b29d8cf9ad85a5b",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t024",
+      "summarySha256": "2ab9b74c6b88236d7c6c810e3f21f60eac1a3efd7df69afd7a29cdf13e102dba",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t025",
+      "summarySha256": "9b608e9c52b4c96093c649971802084a4e2833923b3330be6244506eebc3dfd1",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t026",
+      "summarySha256": "34e4c9b7cce90230f398357a527af0d92575327f4e9f0f9ec36e2dd44bdeb439",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t027",
+      "summarySha256": "3cf78e223f6645e1db3ed5e716e1e99cd9dc0c2c986e49366b327f93a8d705a1",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t028",
+      "summarySha256": "221f52a6ffb4f640557c2048e069abc77ca1406a5bcf7fa075c355f33898a91c",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t029",
+      "summarySha256": "e1bf3880d219ee7dc1e47f15275d62606fc7cf0a9430239f98fb03fc79dd1217",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t030",
+      "summarySha256": "1f389ba2f2d2b71c08785cea2ec7f7b183e63dd9315f423dbdb05f93bdf5dc70",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t031",
+      "summarySha256": "736acd6b6e3c7561f389e3860f7d88692f3b3112a83b197aa34fd31f05c3b793",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t032",
+      "summarySha256": "1c5bcf309e538aacae1e26e569244ad6212fd6241c9d54263373a0521da6e8dd",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t033",
+      "summarySha256": "196b2e8537715ccdd5757e2709aecf77a4a81f888cd4a427a632af79ad692606",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t034",
+      "summarySha256": "351825807276e2f33bb64ab7abbf2c2702240104a450efae7501c1db3c292fb1",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t035",
+      "summarySha256": "ecbc7c9f0961ff8b417e4b461c0aed23f9649a2b5d0ae8717f824529ed8104ac",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t036",
+      "summarySha256": "79bca868335021e374b773de30341553b095755994b9a72d74f3a3962dd4be20",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t037",
+      "summarySha256": "36627bf76204970cff2a5a44e105871f5cbe62167e57fd32efb8e71734f94e03",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t038",
+      "summarySha256": "e31d42198fe08e4e60bd3a69ba49330fa851b08536aba866208609815411d5d6",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t039",
+      "summarySha256": "35aaeb5116ffc93cf1001be45b60d9656cc6dfbe25ce20f3d867412d4d8d6763",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/sol-five-v3/runs/t040",
+      "summarySha256": "a9e526eb50ee4fdd7f47f072a3ff42f487a8c14383b2ffa1355334b2f0139c7e",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.2.0"
+    },
+    {
+      "path": "results/astra-interrupt-pilot-v1/runs/t001",
+      "summarySha256": "13045bacfdf0db565935579afd2068dc4ac16a8eea77475e66565f75da44572a",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t009",
+      "summarySha256": "c654976c7cdf9a5f14dbffb2dd567099402e9074fb63d167fd86fa3604641064",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t013",
+      "summarySha256": "157ef41aeafb98bece3aac28a0137c0aad3c5dec497665f92e517115933253c5",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t023",
+      "summarySha256": "8a5dd4cc2dc82c44757493f481e42ac3d98621c1deed28837c3ef13a644ec038",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t029",
+      "summarySha256": "3e126b149aff841fc483457a09e6d46b7efdcf381f49211028866bf37e1f09e9",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-pilot-v1/runs/t002",
+      "summarySha256": "8f7b5cc9943d99c6dceb1a65b80b9b1825dcf9541c4ff1364aba6d019192dddf",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v2/runs/t010",
+      "summarySha256": "77ddae8246a9069502db468cee26b6263fd191c5f7917b5692eb919131ccdd89",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v2/runs/t015",
+      "summarySha256": "379e29ddfbbd1d6730dfa8bc1d1f93fe4bd7d22dae9c523d88bb3a73517f7804",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t022",
+      "summarySha256": "0f044bbdccaf83d41d5ea3ea78b63a1f1bb96a2f9365894e84730545aba5588c",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t027",
+      "summarySha256": "153dc0878afea79bc8694e729066fd1d571ad6efb762d1fc864de892830dde9c",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-pilot-v1/runs/t003",
+      "summarySha256": "54b2ddef41e0df9ac43d2cf5a22e855d64723571e1879e8e8f984c95c1f19f40",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t008",
+      "summarySha256": "9a5c563f4305d2774b7d008e7ae2c7a10caeea23a4e4bcb1ac3011d349e37075",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t016",
+      "summarySha256": "c5ce2b30b218d7a2341a759f2d5466a0eab8c05d4fad13d2acb55e3a4e0433de",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t021",
+      "summarySha256": "200de956031400cad0744fa4353b4781db56277c8feac59fd820d3b2207c60c4",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t030",
+      "summarySha256": "5674850c8a26aa649f137c53b8b20a26860fbddf353fec4ba14cee522f951446",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-pilot-v1/runs/t004",
+      "summarySha256": "e9469d7de714376bcd05c590996e1026995ef62a33e21011b53cb9030b7a1eb3",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t007",
+      "summarySha256": "97a64d3f110669f5a83a834b1751d9ee6576d4ec26276eb35c0c1531a260bda8",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t014",
+      "summarySha256": "9afc3e9a9b768e1109cd0867156a15e8e58d42a4dc8b42e372c1962361f9419a",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t019",
+      "summarySha256": "ec44efe14d7d4ab6755b74ba8091df5bf16a0753bbb288b0775649d0ec079454",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t025",
+      "summarySha256": "75c48926fa3b502a0035ead43da39f12dd542514d60923bff56eed502684b821",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-pilot-v1/runs/t005",
+      "summarySha256": "46f4ff33ba264daf97f87be063544102dac8d830a14675430982e7270540a76f",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t011",
+      "summarySha256": "3acf81613768241521b225f1e6ff45c86f0e818526caaf417fb398b6bb995449",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t018",
+      "summarySha256": "88338e74cf46ecc4d10a2a7a375228011fa1cc1692c5488a1f7469d1028ecee3",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t020",
+      "summarySha256": "bd46a5757ad4da077ad9b0dea5c4311d6211f8e63bddfc6e3d1be250ee37fa52",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t026",
+      "summarySha256": "efb667759e55c9d4dffc2af98913d15ffbe3c08e1ad437051200bf8b95625530",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-pilot-v1/runs/t006",
+      "summarySha256": "900eaac0bb2d0b4e6cccbc192bac8ba63fae97eb0fd465855a655bd8fa013da6",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t012",
+      "summarySha256": "e53fc9443707e40fec914fb2279f23984a2bc25b9c680d36514beaf11456bfcb",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t017",
+      "summarySha256": "d1797409cf2e6e1a5abf254769d74fa0f3c4eb521239fbbaf6eef28c42c4fa03",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t024",
+      "summarySha256": "8165eaab2313b4af75dcbdd256c143dcc0cacef33778fa77798547f25f24e8c4",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/astra-interrupt-five-default-v1/runs/t028",
+      "summarySha256": "746b76db8543ed48f4fc7cd37ce3e3fb3cf58e646d558866a0debc00b4e74c5c",
+      "model": "gpt-6-astra",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-pilot-v1/runs/t001",
+      "summarySha256": "b437607a055d9cc7a33ad6afa5602cfad8b398c020b798b5468f87c3ccc24d71",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v2/runs/t009",
+      "summarySha256": "3ee4271d1d6cc62790f91d7545e506e5e33986d3df48059f3c25067af4d99c68",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t013",
+      "summarySha256": "9520d618614668f773a0f7f800d8d65d9e4e3437a96d094b18aba4633c9f644d",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t023",
+      "summarySha256": "9d19a54d56e35506cff9aa5cc035f45348298451b47ca490d9ea9ba94b208363",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t029",
+      "summarySha256": "f6641680d2188498f7aeb468b57d91864bec0b7818f935716d2ce61a94bbcd74",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "task-cancellation",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-pilot-v1/runs/t002",
+      "summarySha256": "12d1c0596acfb83948bf2af60dc6d27ec3b2f8f57c482ec12f23d1f2e8ba4a7c",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v2/runs/t010",
+      "summarySha256": "c60c2478453e78295bdef49e05bbc41a52b7cd81376de4b5f63d3a7100f84a93",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t015",
+      "summarySha256": "017102e6bade0c97143b68dc214c45a511b5972fbc0233871b9e95ff65b6cbc2",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v2/runs/t022",
+      "summarySha256": "55acdeaa4592a4ed6acde7947581e92711d4c0e1fbcb2bf77dd622c46a9478c4",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t027",
+      "summarySha256": "4403374844f50b6de110837517287e6937ad17c5360b76531376ac546751e1dc",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-pilot-v1/runs/t003",
+      "summarySha256": "ab59647417980c39d3fec4608d8755d614826a862aff2d504e9c1cca849e32ee",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t008",
+      "summarySha256": "ceafed549af68ae81e33b50f99062e0a2d13a9ee08411c9f806d4d40aad48d0e",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v2/runs/t016",
+      "summarySha256": "8d6ae07b0a52f8d05725e3cade782e8ea0a6dbc9ce928f8705c04fba93ddeed6",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t021",
+      "summarySha256": "cecd89b6e278489718a251d36d2ef4644da8b511d52b04b53b0be79878380ad2",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t030",
+      "summarySha256": "04d9773fdaeeb8094cc7f4cfb0dff01dc62e5c7a16949b23e38f30a16a26d87c",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-pilot-v1/runs/t004",
+      "summarySha256": "6cee8f5cd65d4acf6a8fa51143fe9fbc554b6e12eedcbb2629b989d044f4a1f3",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v2/runs/t007",
+      "summarySha256": "5c97fe814ff1cebcd6138ac0a8ae93135b84b9bdfcb7b543a9a9c1b7fbb5afb6",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t014",
+      "summarySha256": "525ebc8337a8bfbe95b0d0f81e51ab79403507e9636aafe0398690b95e3aa512",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t019",
+      "summarySha256": "ecad0bcccfc76dc8ffe0d53c60849af4194e86933f39decf48b9342b21891057",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t025",
+      "summarySha256": "d6d1147f5c7a0bee25a6144ef02ee9b20a72b70212fed8edef5e5bbda8d78b7f",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-pilot-v1/runs/t005",
+      "summarySha256": "4b962ce62ca0f6f5ab1527b42abc315de084c69d2734d0ba81bbeb60fe1b2430",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v2/runs/t011",
+      "summarySha256": "1a75237b5a36e70f52459c35dc45720ec36f42180ff4179f2621808ee427cdc0",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t018",
+      "summarySha256": "e8d1907c2be277029e0e07969a56ffc3a74fae771545585c7c357a7cf4cab3e8",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t020",
+      "summarySha256": "c0ed07889bb6729b363cb39d0b4cdd97c7d5d416fadc18dfd4b98a34f565b76d",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t026",
+      "summarySha256": "cb14e63b06be7e2c57b50661681098bf87bfadee11caf8aadcce329bee207537",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade",
+        "updates": "disabled"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-pilot-v1/runs/t006",
+      "summarySha256": "965bbfa66be40845e5efc5c3a8fa09ae0b991cc19eff2d2392ca3c4ba3dd8866",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t012",
+      "summarySha256": "86c38ab0c84ff4fdaf3842011c4cf9a8ae559bde1d3713f8e0b854a625b4ce2e",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t017",
+      "summarySha256": "c89f0f497adbd1b72f9d0e0f4e34f7c0f576ba40e4555fe570c85abc3d3179b2",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t024",
+      "summarySha256": "6a262870785dce28fdcfc4095e82d53a686ab226bc9c5d1c4c9d0c67782d3961",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/sol-interrupt-five-default-v1/runs/t028",
+      "summarySha256": "55ebf4b94b7c784e320c0522101bdd51ea6df0a4527c77007c725cce5778b449",
+      "model": "gpt-5.6-sol",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "none",
+        "delivery": "interrupt",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t020",
+      "summarySha256": "df3c321af38f92d027c7ee4b1faff5ff04a8ee264f93fd07c9a59dd2beccf2cb",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t031",
+      "summarySha256": "56439299b8aca24367cfe2b5b751c0c2894b3a6e5f0e21587bc246e62543bad3",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t030",
+      "summarySha256": "6dc8086144db626c76ccf0bda0d8afb2b2b41957cbbadaa80dd124ec9e47d31a",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t007",
+      "summarySha256": "31170ab92aa5d8f8680ca1a8c120784f41ebbd61cf2c51fbad40e0d9a7423a17",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t008",
+      "summarySha256": "35e8c408e64926f309e21a8540affb5b164b8af948eb0f7480f9e2f59a65ade2",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t002",
+      "summarySha256": "0f32e661404695eccf1b499b76dd7c599da2198c7d28a62f780c15096a0563be",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t028",
+      "summarySha256": "25408423d5bc694a6772f8a7c7de550a6b80009eac4962afc707e81e049e0526",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t034",
+      "summarySha256": "2ba167ff6b938f3b2e51781b9de2721cb674bcacd98bc0cf0e7213bd7a3740c8",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t004",
+      "summarySha256": "50357089c7d14a02eceb38e7fba28204c1305967f487e4397ed2c76319bde08e",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t015",
+      "summarySha256": "929a7146c8429a70474a791bbfebc0a58a3544f7f0f11424f3e991da4d9f4131",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t019",
+      "summarySha256": "a5b56823683a8e041de4a37c41f4253c4b4d4e99b0477efa62f2b5ac39155ccc",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t024",
+      "summarySha256": "05f351f9fbc60b6c7f6109d878880d9eb9c6827b585f9f5d573112c1695cdc99",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t032",
+      "summarySha256": "3de07ec69f7cac5e12679899fbd5ef07c0ff25c794d5d2a75ccff9eba6c8bb8d",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t038",
+      "summarySha256": "0208648d97978819118767481e5ca67d681244864e93eed1d14ee340524f48dc",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t029",
+      "summarySha256": "ecf549289fec5a301d5b64b58ecb7fd98b19d10fbbeec4b29707a267f42d0b41",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t039",
+      "summarySha256": "ec69ec84c496c04f4ac0962be3eea94dd860ae8aef285e7e1d3f1f0f50bfb487",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t033",
+      "summarySha256": "d845aa61b9bb773cc580fc230c62d58496ff9a57e686c1404de52ef3af22a830",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t012",
+      "summarySha256": "bf423523becccb9608313978bff03714f7e91c3f630255227f9b0f0e9d716081",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t037",
+      "summarySha256": "2528f04b38c02cf13982cc318e5f2613a4e868c9f19d160045beb1a22a4102a9",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t022",
+      "summarySha256": "9c587420ac48c1619a2b86308887ff4dfa9646f4d8f346f1293d36a673f610f9",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t021",
+      "summarySha256": "bf8f7f9f40f781732fbb72c7e0e1cbac48eaf0d22d7d768e3ccdda5383e3cd68",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t040",
+      "summarySha256": "778bf434a8f84c5be502e24ee85a5a143bf96635b7b7d0e5f95722912a3258ea",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t003",
+      "summarySha256": "6ee65e311c0bc86e1096fef945a556a1620db17e01f1aae56b60fe853b2b6dbe",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t014",
+      "summarySha256": "8c935231af0e20b9fa8c1d499503ca0ea6170b4f92f06831e392972b0f6d6e45",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t027",
+      "summarySha256": "8fca094f6f14b083123aad317dd6645854cab95d0ef0686f8e11eea9d3b236ba",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t001",
+      "summarySha256": "e17cd645f5a872644989b67c5e0cc3774681b32b45b7bef5dce6728e3bc2a61c",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t006",
+      "summarySha256": "22c6e97cd297de4cfb16f2530fdd95d211ca125671e8cc9dc6e57b72a3cefdcc",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t011",
+      "summarySha256": "ac1b7d12f88cde4e38f6779bcf401b92a0825016903e8b5008b15622ad4212ec",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t036",
+      "summarySha256": "358c84f167111cd2e37e1ed9e270ff21b625ad79b023d1ed18453ca6a7545985",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t025",
+      "summarySha256": "788713042d4972f21ca3e6883fb213bdc551da163f823b6899d6ed1b3864e046",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t016",
+      "summarySha256": "ca8ce72cedabfcad2864f7971070aec932cadf2e1050fe2b9f67231d49ee6de4",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t018",
+      "summarySha256": "5ff427b716aa8891ff4408d32387d3f2a233644e30a066903f64a1fc30e4e93e",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t017",
+      "summarySha256": "6e76d77f7e044371f09772f955624cd70e41e4f0e23a79eee1770adcb8c8f9cd",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t013",
+      "summarySha256": "6c51f6868ca11ddbfbf2bc717ba80c10c19e55e4b46828828b1ca694509ea676",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t005",
+      "summarySha256": "89f942149080958d27d6776d31ee3e80dafe53ff6f1b71567cfc72fce18ae54f",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t026",
+      "summarySha256": "0e0b91df0a6abcd29d564a5c5c5f1f200a68793e228d2ab20d7143be2a38b266",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t009",
+      "summarySha256": "2555e3b51bc757bfff0bc2328ead56de34fe4ad95ccc822d7e9c574d074f1cea",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t023",
+      "summarySha256": "f6fe8e8a34524cea174db889ed42b6b856e3e1e29168e9799aad60cbd2357c1f",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t035",
+      "summarySha256": "755e3661a8a959735d492107227f0840bd2e2858ccf0e57a8da36b1d5d8f57d2",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/glm-pi-five-2026-09-19/runs/t010",
+      "summarySha256": "49fb7ba3637a9c6f2baae6d5973220ec915975031188d025b29512661c9e15cd",
+      "model": "glm-5.3-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t020",
+      "summarySha256": "1b76b5786a86731a5f32f0b305e536b939345aecaa40f836549aa0e98810d7ef",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t031",
+      "summarySha256": "18eea09326e269433c3c472c3cb49d01eed9e6159ca3926e855b4788140b7a36",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t030",
+      "summarySha256": "391af7ff04bdc5d9c6574f3c14f3598dbc393b4ddcbf06cbc70bf295f6c55f51",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t007",
+      "summarySha256": "085d31d059f5b7b8191c59c90beee587180f025c30df7254ab0c44ed51b64b76",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t008",
+      "summarySha256": "cf559ea9b6b28f9f654381f54edce8d14e35b92acb384881109a014f05c09c79",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t002",
+      "summarySha256": "5d23509c653ac6d99c2df72fb9c3da6256f08222bd2e1ae9ff365d387f406e39",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t028",
+      "summarySha256": "0205f7833a17b6eae671d0f4036712c244a9b95f7fd043a4c3145d6d7f53a495",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t034",
+      "summarySha256": "2c2483afc48a2ab29963155473f439f52b56b2690fa44c41bcb6ca6169aae211",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t004",
+      "summarySha256": "2249a3e24e27cbbad99f0ca7c5f6f406d452949aac14867b524f68a6e24c524c",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t015",
+      "summarySha256": "92f96364d8b99056c91af2a5ba0c796eb8432fe5b5bc09d566c9430cdcbcba76",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t019",
+      "summarySha256": "6d062c38066e414dd8687a9fda8650e1654d6c7bb47e5dae59e7a30377638c02",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t024",
+      "summarySha256": "6714c5a3eab2e4904489dee9fd55433250e8957a1038d66fc028278f9936a2b2",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t032",
+      "summarySha256": "cb5ee808000850ee1c7c759063ea6b3a2ce7ee43dcf2b9349508fc209fa095cc",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t038",
+      "summarySha256": "501dc595e4f47838c76cb79f55541b57a6c523edc1057b15c3c0aff1be2108b8",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t029",
+      "summarySha256": "5b8799d269681392550eee2308981098a3ad6c1e9b9a26978b9347df59e63e5e",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t039",
+      "summarySha256": "beb18d9880c8774d94bb8af68e159f671d6252a298858401fe38b796a84467f3",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t033",
+      "summarySha256": "751d7fd3b921ee415e9b739f0a4b798227db329c5cc35cfc2089e4662512b2d7",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t012",
+      "summarySha256": "e43ebb30e166d823eedc2892a7cb6c86dc9bf5e87e189fc52d82ae5be7f0d457",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t037",
+      "summarySha256": "ad2d74c33053509b8fbec04d96436ec8cb1da4a803df9f8c198496930d2888c8",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t022",
+      "summarySha256": "3781ffa8a0e42d01b39d02991965edb8e42dd9863e2a9398b36c1fbc149c49a6",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t021",
+      "summarySha256": "f8548f1f291f0d2a5203a10778febd6dba934672ba9f20d445686d5bb3aecdd3",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t040",
+      "summarySha256": "ce9351d134c29678c4885b46099aeeafb5f585768304bd2d21d6639a88fe0d89",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t003",
+      "summarySha256": "9e9ee9f55bba28ea69eb5b358e6a1c594dcf9a4ec93c1df67ff42bd8d40f3a83",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t014",
+      "summarySha256": "2451485522e8f3d65f2fb368cd4aa1b00c84a7e2bff5c8dbb2e8d6c69a13a9c5",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t027",
+      "summarySha256": "055ae22b5923dc7162ecd4431fe80233808d7eb82177d47fb13c336e207f4391",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t001",
+      "summarySha256": "722f0a57103c7c7f4a031cd7ea9b8d5f71028ca0562a588e3bad009e48b53d65",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t006",
+      "summarySha256": "5d13d22f4181141d8fdbd4daecb658382118e55fc723111b64e097b6fbe3d77a",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t011",
+      "summarySha256": "bd89ab99e21a57b28169a46cff66a79a656883bcac77be4a945039b2840e8af0",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t036",
+      "summarySha256": "c07ec05519c50a6965cbd1fc34f6fccd8e21aa2d6f568b33184710a52e8cb160",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t025",
+      "summarySha256": "4598d398cc96387c61421850c44ee232907c711d3d191c85027f61668ae5dc14",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t016",
+      "summarySha256": "0a86dd81e29d5b94074c2c79f0c613996cf1593298914e3b08dfb5e88327889f",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t018",
+      "summarySha256": "78b87f3bd54bcc05d700c9fb85c7b3f56db6b253e5653e3f748f17d1905e2f60",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t017",
+      "summarySha256": "02d36d8aee93ee9170d2b8f6657cf50644ee0f880c5703aecb9eec431081e499",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t013",
+      "summarySha256": "0b4196add90ec67416cffa5d1c88d2aee345168b78d8a26a75c2764971a58333",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t005",
+      "summarySha256": "455b9600435e040e6c1fafeee061dc47341950f5e871c8dfd712708ec9968420",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t026",
+      "summarySha256": "4d62417a9daf3d6e8df1eafd7a758e83f78e1a2c41e15615acdf6304e326ed57",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t009",
+      "summarySha256": "97fd50bb426324edea3507139b6828917af3449575c48ca3a1f08a460d51af78",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t023",
+      "summarySha256": "807131385d9ff5eab33c2333461b259c7dc5c5fa179cfd61652073371f9136bf",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t035",
+      "summarySha256": "9b9a939738b66a88d82327d6f2a69b9bc7095c65a5a25d70babaad36eabfa074",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/muse-pi-five-2026-09-19/runs/t010",
+      "summarySha256": "e86b598ee99f675505553a4f2ac594874451b2ce2dc90c851bf8a028d66a7ca2",
+      "model": "muse-spark-1.3-contributor",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t020",
+      "summarySha256": "ac82e0a7accc6975098f036cc829f58db6745d90371e7d913d3cca3e1cf41372",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t031",
+      "summarySha256": "146d066f91aaae23d2f2d5ed76bd6fa7c622529904f034b9711b5897320506fc",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t030",
+      "summarySha256": "65f0d81f5ff1f6c2973caae0005a0de891123cf08011f3f45e24f5057dd0958a",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t007",
+      "summarySha256": "415dd06e2140aa15d162196db171acf41522771a0effea29ae68179fe67625c1",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t008",
+      "summarySha256": "3c25095c0b8579ce8ff2cc6432f58e413b7f4392e55e9f958a2d4d0df66f5e32",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t002",
+      "summarySha256": "93c50c957d1d4c7a8b868506f59ecd5ea6b48bc085b0f6ac0c74efe28f6fc94d",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t028",
+      "summarySha256": "847fc1c3284108cdadaec479b524b317f4955e96b380e71037cf8c9643279c45",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 4,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t034",
+      "summarySha256": "ad7e8f418a46fd7cec9c0e0f7aec7c0345ce9c0a7628ec1c1892777f3354fbf5",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t004",
+      "summarySha256": "739b67c43cf0bc7ece47c695cb517bf25011cc39879fa42dcfabb1c23b093809",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2136586205,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t019",
+      "summarySha256": "34d563ea2a3113cd6262608ab21361dc8871a797528ad99d6379bacc3f892666",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t024",
+      "summarySha256": "117d83b0b784eb9b19d39730bef6cec62fe895fec9e0d5e5765aeea9671521d0",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t032",
+      "summarySha256": "bf05d81cc30d115be8f5ecc122857389c9662a0d2b9ee564f443626dbbc3aea2",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t038",
+      "summarySha256": "39f99ebc197d5d39afbabbf94f07c1bc3887b61366c7b104351dc6035cc672be",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 5,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t029",
+      "summarySha256": "ec5f1ac65c2cde6f9d1b6a36a75fef3aabd0cfbbffd9af8c8c0351438fde029e",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t039",
+      "summarySha256": "b90ccf04eb60bd7ae0a02ca5d42fd274d71be5f77880fa00bbc87c6f83d46601",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t033",
+      "summarySha256": "68587cc921c5e62a8422bdf11442ae92986d573a1c0c38a6a697a35d1f9c5026",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t012",
+      "summarySha256": "a6ed68b9d8a972c90e02b71b524b1ffa2ccf89a708f77e981a17ad6b736d96d3",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t037",
+      "summarySha256": "a9f1278ab70b75b5c9d7f23fed47e62301cd4d12b1719fedee9dc7140ac8d9e3",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t021",
+      "summarySha256": "673031e04984533cf329e03070bca08e66cff1ea16c2a75e95938e5d0d366d6a",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t003",
+      "summarySha256": "f71b2b19ade39cd076419a93ba1d6693208768f1113c19f7c93282d25726551f",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t014",
+      "summarySha256": "5d961645095ea7767ad202819c915d0c03722b4763123012834b40beb9f2ac15",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t027",
+      "summarySha256": "351d43d1ff620d21cc0f5f971d6d6091b5aa36d26b0bf2cf4f8fa63d77bd9589",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t006",
+      "summarySha256": "6290a7c797a6338bf7906f779a8b5a163061cf69a1394cf531af958a9255c647",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t011",
+      "summarySha256": "cf8974881df7a744e4cc244f5d2b44b0ac42a950101d3db4b7484841227741de",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t036",
+      "summarySha256": "0dbefa85d98f9d6cdcc616af4ea986e1962c0f2ee361931a407e50ba6a144bfe",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1155433493,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t025",
+      "summarySha256": "da363ac7335fa501ebd97b38c62b9beafce4d1c77575b7fe7ccec6bb43c60bac",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3194245034,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t016",
+      "summarySha256": "cd6bbbe2902890a6dfe47695fcb8575cc9e6afe11a3eeb896962fbdd8f4a491e",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t018",
+      "summarySha256": "c9b874087551e70fc5f3cd15519c57c1b56fe5d5ba264c740b90bc32008ec0e2",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 655531459,
+        "scenario": "delayed-relevance"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t017",
+      "summarySha256": "946cf92500c8982d41323dd6a701f294a80365b7044e5df9137519cece1a5719",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t013",
+      "summarySha256": "deb68c3f2348957b26a197f1369fd0cbcac771baa09335ca1eeb34adcff085b3",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2483128085,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t005",
+      "summarySha256": "335d56e1b31e7df0c86a3ba32bdd1c6642ad8b42f3b4eb2ded2a32fc9c5169d2",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 1775922842,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t026",
+      "summarySha256": "959d7f2c6e081c4520bb7c48638c7fea2f1b5889fc6d9a8fb938369649bf9096",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2541218655,
+        "scenario": "urgency-downgrade"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t009",
+      "summarySha256": "68fc24fd9c998988a61c1b8b655d47a6cb37810013c862db0441ca27ec9c9d42",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2,
+        "scenario": "updates"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t023",
+      "summarySha256": "b8dbffef97dae247e37bf5b79ad0aa5000f63df5a6076db8208412d3db464bed",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 3130900766,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t035",
+      "summarySha256": "3b9d3426f47fc587ada3829183339801acb458cb02e5e3d121b3795a49b85f6a",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "settlement",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2424989201,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t010",
+      "summarySha256": "e472ee0b6a5c8cb52bfe211bcaeee4a48ce78d022da1d126ea11660cd714e0b6",
+      "model": "deepseek-v4.1-flash",
+      "condition": {
+        "family": "fulfillment",
+        "load": "high",
+        "noise": "normal",
+        "delivery": "ambient",
+        "seed": 2301451625,
+        "scenario": "task-cancellation"
+      },
+      "graderVersion": "4.3.0"
+    }
+  ],
+  "excluded": [
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t015",
+      "summarySha256": "f5ef311abf428770b4c0ecc4530c8d223d2f7af99da87a1ba9f8288b79debfdd",
+      "reason": "max_output_tokens"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t022",
+      "summarySha256": "d78d20df4292208975e81d538d53a80e1cbc97fe678890bed35d9e6d3e2d8842",
+      "reason": "max_output_tokens"
+    },
+    {
+      "path": "results/deepseek-pi-five-2026-09-19/runs/t001",
+      "summarySha256": "d270aaa8f6f34d8cace420a9fbde8ba7c3f8da73e1d7b1f7cd00001e742e6926",
+      "reason": "max_output_tokens"
+    }
+  ],
+  "pending": [
+    {
+      "model": "deepseek-v4.1-flash",
+      "trial": "t040",
+      "reason": "GoUsageLimitError; three attempts; no completed session"
+    }
+  ]
+}

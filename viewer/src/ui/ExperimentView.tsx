@@ -53,6 +53,41 @@ export function ExperimentView({ index, id }: { index: ViewerIndex; id: string }
         </div>
       </div>
 
+      {!!c.baselines?.length && (
+        <div className="card">
+          <h2>Saved baseline</h2>
+          <p>
+            Historical results, excluded from the new trial totals. Original scores and
+            traces are preserved.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Run</th>
+                <th>Script</th>
+                <th>Grader</th>
+                <th>Valid</th>
+              </tr>
+            </thead>
+            <tbody>
+              {c.baselines.map((b) => {
+                const row = index.runs.find((r) =>
+                  b.path.endsWith('/' + r.key + '/summary.json'),
+                );
+                return (
+                  <tr key={b.path}>
+                    <td>{row ? <a href={href.run(row.key)}>{b.runId}</a> : b.runId}</td>
+                    <td>{String(b.scriptVersion ?? '—')}</td>
+                    <td>{b.graderVersion}</td>
+                    <td>{String(b.valid)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <div className="card">
         <h2>Load trend</h2>
         <p className="legend small">
@@ -189,13 +224,23 @@ export function ExperimentView({ index, id }: { index: ViewerIndex; id: string }
 }
 
 const filterOf = (experiment: string, cell: Cell) => {
-  const [family, load, noise, delivery] = cell.cell.split('/') as [
+  const [family, load, noise, delivery, scenario, control] = cell.cell.split('/') as [
     string,
     string,
     string,
     string,
+    string?,
+    string?,
   ];
-  return { experiment, family, load, noise, delivery };
+  return {
+    experiment,
+    family,
+    load,
+    noise,
+    delivery,
+    scenario: scenario ?? 'updates',
+    updates: control === 'noise-only-control' ? 'disabled' : 'enabled',
+  };
 };
 
 const W = 230,

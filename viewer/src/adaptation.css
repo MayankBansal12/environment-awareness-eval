@@ -142,3 +142,401 @@
 .scrub-mark.cue {
   background: var(--inspect);
 }
+
+/* Focus the run on activity and updates; diagnostics are opened on demand. */
+.app.wide {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+.app.wide > main {
+  flex: 1;
+  min-height: 0;
+}
+.app.wide .topbar {
+  flex: none;
+  margin-bottom: 12px;
+}
+.run-workspace {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.run-workspace .runstrip {
+  flex: none;
+  gap: 14px;
+  margin-bottom: 0;
+  padding: 0 0 14px;
+}
+.back-to-models {
+  color: var(--dim);
+  font-size: 13px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.run-case {
+  color: var(--dim);
+  font-size: 13px;
+}
+.run-case::first-letter,
+.rail-scenario::first-letter {
+  text-transform: uppercase;
+}
+.runstrip .classification {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.runstrip > button {
+  font-size: 12px;
+}
+.run-load-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dim);
+  font-size: 12px;
+}
+.run-load-status button {
+  padding: 4px 8px;
+  font-size: inherit;
+}
+.focused-cockpit .raildot.pending {
+  border-color: var(--faint);
+  border-style: dashed;
+}
+.run-timeline {
+  flex: none;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 12px 0;
+  margin-bottom: 14px;
+  border-block: 1px solid var(--line);
+}
+.update-focus {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.update-focus select {
+  max-width: 220px;
+  font-size: 13px;
+}
+.update-jumps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--faint);
+  white-space: nowrap;
+  font-size: 12px;
+}
+.update-jumps button {
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  color: var(--dim);
+  font-size: inherit;
+}
+.update-jumps button:hover {
+  color: var(--text);
+}
+.run-timeline .scrubber {
+  flex: 1;
+  min-width: 220px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  gap: 8px;
+}
+.run-timeline .scrubber > button {
+  padding: 2px 9px;
+}
+.scrub-label {
+  font-size: 12px;
+}
+.focused-cockpit {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 172px minmax(0, 1fr) minmax(300px, 360px);
+  gap: 12px;
+}
+.focused-cockpit > .pane {
+  min-width: 0;
+  border-radius: 8px;
+}
+.focused-cockpit .railpane {
+  grid-area: auto;
+  background: transparent;
+}
+.focused-cockpit .pane > h3 {
+  padding: 12px;
+  min-height: 48px;
+  font-size: 13px;
+  letter-spacing: 0;
+  color: var(--text);
+}
+.focused-cockpit .pane-body {
+  max-height: none;
+  scrollbar-gutter: stable;
+}
+.agentpane > h3 {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.agentpane .nav {
+  gap: 4px;
+}
+.agentpane .nav button {
+  padding: 4px 8px;
+  font-size: 12px;
+  min-height: 28px;
+}
+.agentpane > .terminalpane,
+.agentpane > .model-inspector {
+  flex: 1;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+.agentpane > .model-inspector {
+  overflow: auto;
+}
+.agentpane .call-columns {
+  grid-template-columns: 1fr;
+  max-height: none;
+}
+.agentpane .call-column + .call-column {
+  border-left: 0;
+  border-top: 1px solid var(--line);
+}
+.focused-cockpit .railrow {
+  padding: 12px 8px;
+}
+.focused-cockpit .rail-scenario {
+  font-size: 12px;
+  padding: 0 4px;
+  margin-bottom: 8px;
+}
+.rail-condition {
+  display: block;
+  font-size: 10px;
+  color: var(--faint);
+  font-weight: 400;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.focused-cockpit .raildot {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  min-height: 34px;
+  border-color: transparent;
+  background: transparent;
+}
+.focused-cockpit .raildot:hover {
+  background: var(--panel);
+}
+.focused-cockpit .raildot.selected {
+  border-color: #405472;
+  background: #1d2836;
+}
+.focused-cockpit .round-n {
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.focused-cockpit .rail-outcome {
+  width: auto;
+  margin-left: auto;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.activitypane .turncard {
+  padding: 12px 14px;
+  cursor: default;
+}
+.turn-select,
+.turn-select:hover {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+}
+.turn-select:active {
+  transform: none;
+}
+.activitypane .turn-headline {
+  font-size: 13px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.activitypane .narration {
+  font-size: 13px;
+  line-height: 1.65;
+  margin-top: 8px;
+  padding-left: 0;
+  border: 0;
+}
+.turncard:not(.active) > .narration {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--dim);
+}
+.turncard:not(.active) .turn-calls {
+  display: none;
+}
+.turn-reasoning,
+.turn-message {
+  margin-top: 8px;
+  color: var(--dim);
+  font-size: 12px;
+}
+.turn-reasoning .reasoning {
+  margin-top: 8px;
+  line-height: 1.65;
+}
+.activitypane .band {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border-radius: 0;
+  padding: 8px 14px;
+  border: 0;
+  border-left: 2px solid var(--line);
+  background: transparent;
+  letter-spacing: 0;
+}
+.activitypane .band.indicator {
+  border-left-color: var(--indicator);
+}
+.activitypane .band.content {
+  border-left-color: var(--content);
+}
+.activitypane .band-title {
+  font-size: 11px;
+  font-weight: 500;
+}
+.noise-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--dim);
+  font-size: 11px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.noise-toggle input {
+  accent-color: var(--explore);
+}
+.focused-cockpit .slackmsg {
+  padding: 14px;
+}
+.focused-cockpit .slackmsg.is-event {
+  background: transparent;
+}
+.focused-cockpit .slackmsg[data-selected='true'] {
+  background: #18221f;
+}
+.focused-cockpit .slackmsg header {
+  gap: 6px;
+}
+.focused-cockpit .slacktext {
+  font-size: 13px;
+}
+.run-workspace > .v4-evidence {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+@media (max-width: 1100px) {
+  .run-timeline {
+    gap: 10px;
+  }
+  .update-focus {
+    gap: 8px;
+  }
+  .update-jumps {
+    gap: 5px;
+    font-size: 11px;
+  }
+  .focused-cockpit {
+    grid-template-columns: 160px minmax(0, 1fr) minmax(260px, 300px);
+  }
+}
+@media (max-width: 900px) {
+  .app.wide {
+    height: auto;
+  }
+  .run-workspace .runstrip {
+    flex-wrap: wrap;
+  }
+  .run-timeline {
+    flex-wrap: wrap;
+  }
+  .run-timeline .scrubber {
+    flex-basis: 100%;
+  }
+  .focused-cockpit {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 600px;
+  }
+  .focused-cockpit .railpane {
+    grid-column: 1 / -1;
+    max-height: 220px;
+  }
+  .focused-cockpit .railpane .pane-body {
+    display: flex;
+    overflow: auto;
+  }
+  .focused-cockpit .railrow {
+    min-width: 170px;
+    flex: 1;
+  }
+}
+@media (max-width: 650px) {
+  .app.wide {
+    padding: 12px;
+  }
+  .run-workspace .runstrip {
+    gap: 10px;
+  }
+  .runstrip select {
+    max-width: 200px;
+  }
+  .run-case {
+    flex-basis: 100%;
+  }
+  .update-focus {
+    flex-wrap: wrap;
+  }
+  .focused-cockpit {
+    display: flex;
+    flex-direction: column;
+  }
+  .focused-cockpit .agentpane,
+  .focused-cockpit .slackpane {
+    height: 520px;
+    flex: none;
+  }
+  .focused-cockpit .railpane {
+    order: 0;
+  }
+  .focused-cockpit .pane-body {
+    max-height: none;
+  }
+}

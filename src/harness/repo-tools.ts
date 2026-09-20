@@ -38,6 +38,8 @@ else {
 `;
 
 export class ControlledTools {
+  /** Runs inside the serialized tool queue, before another tool can change the workspace. */
+  afterEach?: (observation: ToolObservation) => Promise<void>;
   private cache = new Map<
     string,
     { signature: string; promise: Promise<ToolObservation> }
@@ -105,6 +107,7 @@ export class ControlledTools {
         ...(effect ? { effect } : {}),
       };
       this.observe(observation);
+      await this.afterEach?.(observation);
       return observation;
     });
     this.queue = promise.catch(() => {});

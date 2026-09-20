@@ -50,8 +50,7 @@ export function TerminalPane({
   return (
     <section className="pane terminalpane">
       <h3>
-        Terminal & tool logs
-        <span className="pane-note">through D{cursor}</span>
+        <span className="pane-note">Through D{cursor}</span>
         <span className="spacer" />
         <span className="nav">
           {(['shell', 'all'] as const).map((level) => (

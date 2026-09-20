@@ -3,22 +3,35 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { createRuntime, selectModel } from './harness/model.js';
 import { verifyClaudeCode } from './harness/claude-code.js';
+import { verifyCodex } from './harness/codex.js';
 import { auditRun } from './audit.js';
 import { calibrate } from './calibrate.js';
 import { compare, execute, freeze, profileSchema } from './experiment.js';
 import { DEFAULT_BUDGETS, run } from './runner.js';
-import { conditionSchema, familySchema, type FamilyId } from './scenario.js';
+import {
+  conditionSchema,
+  familySchema,
+  scenarioSchema,
+  type FamilyId,
+  deliverySchema,
+  noiseSchema,
+} from './scenario.js';
 
 const USAGE = `pnpm eval <command>
 
   calibrate [out.json]                    Verify fixtures, bugs per load and reference solutions (no inference)
   verify-model [--provider P --model M --thinking T]
-  run --family F --load L [--noise N] [--delivery D] [--seed S] [--run-id ID] [--results DIR]
+  run --family F --load L [--scenario updates|task-cancellation|urgency-downgrade|delayed-relevance]
+      [--noise none|normal|heavy] [--delivery ambient|exposed|interrupt] [--updates enabled|disabled]
+      [--seed S] [--run-id ID] [--results DIR]
       [--provider P --model M --thinking T] [--timeout-min 60] [--max-tokens N] [--no-compaction]
                                           One development run outside a manifest
-  freeze <manifest.json> <id> <smoke|load-sweep|controls> [--reps 3] [--seed S] [--families a,b]
+  freeze <manifest.json> <id> <smoke|load-sweep|controls|new-scenarios|scenario-matrix|interrupt-pilot> [--reps 3] [--seed S] [--families a,b]
+      [--delivery ambient|exposed|interrupt] [--noise none|normal|heavy]
+      [--scenarios task-cancellation,urgency-downgrade,delayed-relevance] [--baseline SAVED_BATCH_DIR]
+      [--reuse SAVED_BATCH_DIR ...]         Reuse matching audited trials in scenario-matrix
       [--provider P --model M --thinking T] [--timeout-min 60] [--max-tokens N] [--no-compaction]
-  execute <manifest.json> [maxNew]        Run pending trials (provider errors are re-attempted)
+  execute <manifest.json> [maxNew] [--concurrency 1]  Run pending trials; provider errors pause the batch
   compare <manifest.json>                 Rebuild comparison.json / comparison.md
   audit <run-dir>`;
 
@@ -31,9 +44,15 @@ async function main() {
       model: { type: 'string' },
       thinking: { type: 'string' },
       family: { type: 'string' },
+      scenario: { type: 'string' },
+      scenarios: { type: 'string' },
+      baseline: { type: 'string' },
+      reuse: { type: 'string', multiple: true },
+      concurrency: { type: 'string' },
       load: { type: 'string' },
       noise: { type: 'string' },
       delivery: { type: 'string' },
+      updates: { type: 'string' },
       seed: { type: 'string' },
       reps: { type: 'string' },
       families: { type: 'string' },
@@ -67,7 +86,9 @@ async function main() {
       JSON.stringify(
         selection.provider === 'anthropic'
           ? await verifyClaudeCode(selection)
-          : (await createRuntime(selection)).verification,
+          : selection.provider === 'openai-codex'
+            ? await verifyCodex(selection)
+            : (await createRuntime(selection)).verification,
         null,
         2,
       ),
@@ -77,14 +98,16 @@ async function main() {
   if (command === 'run') {
     const condition = conditionSchema.parse({
       family: values.family,
+      ...(values.scenario ? { scenario: values.scenario } : {}),
       load: values.load,
       noise: values.noise ?? 'normal',
       delivery: values.delivery ?? 'ambient',
+      ...(values.updates ? { updates: values.updates } : {}),
       seed: Number(values.seed ?? 1),
     });
     const runId =
       values['run-id'] ??
-      `dev-${condition.family}-${condition.load}-${condition.noise}-${condition.delivery}-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+      `dev-${condition.scenario ?? 'updates'}-${condition.family}-${condition.load}-${condition.noise}-${condition.delivery}-${new Date().toISOString().replace(/[:.]/g, '-')}`;
     const summary = await run({
       runId,
       resultsDir: values.results ?? 'results/dev',
@@ -111,6 +134,13 @@ async function main() {
     const manifest = await freeze(a, {
       id: b,
       profile: profileSchema.parse(c),
+      ...(values.scenarios
+        ? { scenarios: values.scenarios.split(',').map((s) => scenarioSchema.parse(s)) }
+        : {}),
+      ...(values.baseline ? { baselineDir: values.baseline } : {}),
+      ...(values.reuse ? { reuseDirs: values.reuse } : {}),
+      ...(values.delivery ? { delivery: deliverySchema.parse(values.delivery) } : {}),
+      ...(values.noise ? { noise: noiseSchema.parse(values.noise) } : {}),
       seed: Number(values.seed ?? 0),
       repetitions: Number(values.reps ?? 3),
       families: (values.families?.split(',') ?? familySchema.options).map((f) =>
@@ -134,7 +164,12 @@ async function main() {
     return;
   }
   if (command === 'execute' && a) {
-    const result = await execute(a, 'results', b ? Number(b) : Infinity);
+    const result = await execute(
+      a,
+      'results',
+      b ? Number(b) : Infinity,
+      Number(values.concurrency ?? 1),
+    );
     console.log(
       JSON.stringify(
         {

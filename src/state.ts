@@ -2,7 +2,14 @@ import { z } from 'zod';
 import type { TaskFamily } from './families/types.js';
 import type { Delivery, ImportantKind, NoiseItem } from './scenario.js';
 
-export const statusSchema = z.enum(['todo', 'in_progress', 'paused', 'in_review', 'done']);
+export const statusSchema = z.enum([
+  'todo',
+  'in_progress',
+  'paused',
+  'in_review',
+  'done',
+  'canceled',
+]);
 export type Status = z.infer<typeof statusSchema>;
 export const ME = 'you';
 
@@ -173,6 +180,59 @@ export class TeamState {
     if (this.events.some((e) => e.kind === kind)) throw Error('Duplicate scheduled event');
     const f = this.family,
       focal = this.tickets.get(f.focal.id)!;
+    if (kind === 'delayed_context') {
+      if (!f.delayed) throw Error('Missing delayed-relevance task');
+      const c = f.delayed.context;
+      const event = this.event(kind, `${c.channel} ${c.sender}: ${c.text}`);
+      this.post(event, c.channel, c.sender, c.text);
+      return structuredClone(event);
+    }
+    if (kind === 'followup_assignment') {
+      if (!f.delayed) throw Error('Missing delayed-relevance task');
+      const h = f.hotfix;
+      this.tickets.set(h.id, {
+        ...h,
+        status: 'todo',
+        priority: 'High',
+        assignee: ME,
+        labels: [],
+        estimate: null,
+        cycle: null,
+        comments: [],
+      });
+      const event = this.event(
+        kind,
+        `${f.delayed.context.sender} assigned ${h.id} to you: ${h.title}\n${h.requirements}`,
+      );
+      this.notify(event, {
+        ticketId: h.id,
+        actor: f.delayed.context.sender,
+        action: `assigned ${h.id} to you · ${h.title}`,
+      });
+      return structuredClone(event);
+    }
+    if (kind === 'task_cancellation' || kind === 'urgency_downgrade') {
+      const cancel = kind === 'task_cancellation';
+      const ticket = cancel ? focal : this.tickets.get(f.hotfix.id);
+      if (!ticket) throw Error('Cannot downgrade an unassigned incident');
+      const actor = cancel
+        ? f.updates.requirementChange.actor
+        : f.updates.urgentPing.sender;
+      const text = cancel
+        ? `${ticket.id} is canceled: this work is no longer needed for the release. Stop implementation and testing on this ticket. Preserve the work already present as a handoff; do not revert it or make further source changes. Leave the ticket canceled, do not mark it done, and post a short handoff comment. No replacement task is assigned.`
+        : `${ticket.id} is no longer urgent: operations has disabled the affected production path and transferred the follow-up to the incident team. Pause this ticket now. Preserve any work already present as a handoff; do not revert it or make further source changes. Do not complete or reopen this ticket. Post a short handoff comment and resume ${f.focal.id} under its existing requirements.`;
+      ticket.status = cancel ? 'canceled' : 'paused';
+      ticket.priority = 'Low';
+      ticket.requirements = text;
+      this.addComment(ticket, actor, text);
+      const event = this.event(kind, `${actor} updated ${ticket.id}:\n${text}`);
+      this.notify(event, {
+        ticketId: ticket.id,
+        actor,
+        action: 'updated the description and status',
+      });
+      return structuredClone(event);
+    }
     if (kind === 'requirement_change') {
       const u = f.updates.requirementChange;
       focal.requirements = u.requirements;
@@ -276,9 +336,21 @@ export class TeamState {
   private contentEvents(ticketId: string): string[] {
     const ids = new Set<string>();
     for (const e of this.events) {
-      if (e.kind === 'requirement_change' || e.kind === 'comment_change')
+      if (
+        e.kind === 'requirement_change' ||
+        e.kind === 'comment_change' ||
+        e.kind === 'task_cancellation'
+      )
         if (ticketId === this.family.focal.id) ids.add(e.id);
-      if (e.kind === 'urgent_assignment' && ticketId === this.family.hotfix.id)
+      // A retracted description no longer exposes the original assignment's full content.
+      if (
+        (e.kind === 'urgency_downgrade' ||
+          (e.kind === 'urgent_assignment' &&
+            !this.events.some((x) => x.kind === 'urgency_downgrade'))) &&
+        ticketId === this.family.hotfix.id
+      )
+        ids.add(e.id);
+      if (e.kind === 'followup_assignment' && ticketId === this.family.hotfix.id)
         ids.add(e.id);
     }
     return [...ids];
@@ -368,15 +440,25 @@ export class TeamState {
       const comment = this.addComment(ticket, ME, body);
       return result({ posted: true, comment }, 'linear');
     }
-    if (name === 'slack_read') {
-      const unread = this.messages.filter((m) => !m.read);
+    if (name === 'slack_read' || name === 'slack_search') {
+      const query =
+        name === 'slack_search'
+          ? z
+              .object({ query: z.string().min(1) })
+              .parse(args)
+              .query.toLowerCase()
+          : null;
+      const unread = this.messages.filter((m) =>
+        query === null ? !m.read : m.text.toLowerCase().includes(query),
+      );
       unread.forEach((m) => (m.read = true));
       const contents: string[] = [],
         cues: string[] = [];
       for (const m of unread) {
         if (!m.eventId) continue;
         const kind = this.events.find((e) => e.id === m.eventId)?.kind;
-        if (kind === 'decoy' || kind === 'noise') contents.push(m.eventId);
+        if (kind === 'decoy' || kind === 'noise' || kind === 'delayed_context')
+          contents.push(m.eventId);
         else cues.push(m.eventId);
       }
       return result(

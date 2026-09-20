@@ -11,8 +11,30 @@ import {
 } from './free-model.js';
 
 const thinkingSchema = z.enum(['medium', 'high']);
+export const GO_MODELS = [
+  'glm-5.3-flash',
+  'muse-spark-1.3-contributor',
+  'deepseek-v4.1-flash',
+] as const;
+const GO_BASE_URL = 'https://opencode.ai/zen/go/v1';
+const GO_CATALOG = 'https://pi.dev/api/models/providers/opencode-go';
+function goApi(model: string) {
+  return model === 'muse-spark-1.3-contributor' ? 'openai-responses' : 'openai-completions';
+}
+function goBudgetTransport(model: string) {
+  return model === 'muse-spark-1.3-contributor'
+    ? 'openai-max_output_tokens'
+    : 'openai-max_tokens';
+}
 export const CLAUDE_MODELS = ['claude-opus-5', 'claude-sonnet-5'] as const;
 export const modelSelectionSchema = z.union([
+  z
+    .object({
+      provider: z.literal('opencode-go'),
+      model: z.enum(GO_MODELS),
+      thinking: z.literal('high'),
+    })
+    .strict(),
   z
     .object({
       provider: z.literal('anthropic'),
@@ -31,7 +53,7 @@ export const modelSelectionSchema = z.union([
     .object({
       provider: z.literal('openai-codex'),
       model: z.enum(['gpt-6-astra', 'gpt-5.6-sol']),
-      thinking: thinkingSchema,
+      thinking: z.enum(['default', 'medium', 'high']),
     })
     .strict(),
 ]);
@@ -60,7 +82,9 @@ export function selectModel(values: {
     model: values.model ?? DEFAULT_SELECTION.model,
     thinking:
       values.thinking ??
-      (values.provider === 'anthropic' ? 'default' : DEFAULT_SELECTION.thinking),
+      (['anthropic', 'openai-codex'].includes(values.provider ?? '')
+        ? 'default'
+        : DEFAULT_SELECTION.thinking),
   });
 }
 const MAX_OUTPUT_TOKENS = 8192;
@@ -92,9 +116,26 @@ export function assertSelectedModel(
   selection: ModelSelection,
 ): void {
   const requested = modelSelectionSchema.parse(selection);
-  const thinking = requested.provider === 'anthropic' ? 'high' : requested.thinking;
+  const thinking = requested.thinking === 'default' ? 'high' : requested.thinking;
   if (requested.provider === FREE_PROVIDER) {
     assertFreeModel(actual);
+    return;
+  }
+  if (requested.provider === 'opencode-go') {
+    if (
+      actual.provider !== requested.provider ||
+      actual.id !== requested.model ||
+      actual.api !== goApi(requested.model) ||
+      actual.baseUrl !== GO_BASE_URL ||
+      !actual.reasoning ||
+      !validPaidCost(actual.cost) ||
+      actual.thinkingLevelMap?.high !== 'high' ||
+      (actual.api === 'openai-completions' &&
+        record(actual.compat)?.['maxTokensField'] !== 'max_tokens')
+    )
+      throw new Error(
+        'Inference refused: Go model identity or transport differs from the explicit selection',
+      );
     return;
   }
   if (
@@ -137,10 +178,33 @@ export function matchesRuntimeIdentity(value: unknown): boolean {
     !request.success ||
     request.data.provider !== selection.provider ||
     request.data.model !== selection.model ||
-    request.data.thinking !== selection.thinking ||
-    identity['maxOutputTokens'] !== MAX_OUTPUT_TOKENS
+    request.data.thinking !== selection.thinking
   )
     return false;
+  if (identity['agent'] === 'codex') {
+    const cost = record(identity['catalogCost']);
+    return (
+      selection.provider === 'openai-codex' &&
+      identity['api'] === 'codex-app-server' &&
+      typeof identity['agentVersion'] === 'string' &&
+      ['codex', 'bb-account-pool'].includes(identity['authSource'] as string) &&
+      identity['contextCapture'] === 'codex-transport-observer' &&
+      identity['outputBudgetTransport'] === 'native-default' &&
+      identity['maxOutputTokens'] === null &&
+      identity['fallbackPolicy'] === 'none' &&
+      ['low', 'medium', 'high'].includes(identity['resolvedThinking'] as string) &&
+      (selection.thinking === 'default' ||
+        identity['resolvedThinking'] === selection.thinking) &&
+      cost !== undefined &&
+      validPaidCost({
+        input: cost['input'] as number,
+        output: cost['output'] as number,
+        cacheRead: cost['cacheRead'] as number,
+        cacheWrite: cost['cacheWrite'] as number,
+      })
+    );
+  }
+  if (identity['maxOutputTokens'] !== MAX_OUTPUT_TOKENS) return false;
   if (identity['agent'] === 'claude-code') {
     return (
       selection.provider === 'anthropic' &&
@@ -156,6 +220,30 @@ export function matchesRuntimeIdentity(value: unknown): boolean {
       identity['api'] === 'openai-responses' &&
       identity['baseUrl'] === ZEN_BASE_URL &&
       identity['pricing'] === 'free'
+    );
+  }
+  if (selection.provider === 'opencode-go') {
+    const cost = record(identity['catalogCost']);
+    return (
+      identity['api'] === goApi(selection.model) &&
+      identity['baseUrl'] === GO_BASE_URL &&
+      identity['pricing'] === 'provider-account' &&
+      identity['catalogSource'] === GO_CATALOG &&
+      identity['requestedMaxOutputTokens'] === MAX_OUTPUT_TOKENS &&
+      identity['maxOutputTokensEnforced'] === true &&
+      identity['outputBudgetTransport'] === goBudgetTransport(selection.model) &&
+      identity['resolvedThinking'] === 'high' &&
+      identity['effortTransport'] === 'explicit-high' &&
+      typeof identity['providerMaxOutputTokens'] === 'number' &&
+      Number.isFinite(identity['providerMaxOutputTokens']) &&
+      identity['providerMaxOutputTokens'] >= MAX_OUTPUT_TOKENS &&
+      cost !== undefined &&
+      validPaidCost({
+        input: cost['input'] as number,
+        output: cost['output'] as number,
+        cacheRead: cost['cacheRead'] as number,
+        cacheWrite: cost['cacheWrite'] as number,
+      })
     );
   }
   // Keep auditing historical Pi-hosted Opus results with their original identity.
@@ -191,7 +279,7 @@ export function matchesRuntimeIdentity(value: unknown): boolean {
   );
 }
 
-async function configuredCodexAuthentication(): Promise<string | undefined> {
+async function configuredAuthentication(provider: string): Promise<string | undefined> {
   let contents: string;
   try {
     contents = await readFile(path.join(getAgentDir(), 'models.json'), 'utf8');
@@ -205,7 +293,7 @@ async function configuredCodexAuthentication(): Promise<string | undefined> {
   } catch {
     throw new Error('Could not parse existing Pi authentication configuration');
   }
-  const auth = record(record(record(config)?.['providers'])?.['openai-codex'])?.['apiKey'];
+  const auth = record(record(record(config)?.['providers'])?.[provider])?.['apiKey'];
   if (auth !== undefined && typeof auth !== 'string')
     throw new Error(
       'Existing Pi authentication configuration has an invalid apiKey setting',
@@ -218,6 +306,8 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
   const requested = modelSelectionSchema.parse(selection);
   if (requested.provider === 'anthropic')
     throw new Error('Claude models run through Claude Code, not the Pi model runtime');
+  if (requested.thinking === 'default')
+    throw new Error('Codex defaults require the native Codex agent');
   let configured;
   if (requested.provider === FREE_PROVIDER) {
     configured = await freeRuntime();
@@ -228,7 +318,7 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
     // Some installations resolve subscription credentials through models.json's
     // apiKey command. Retain that authentication setting while excluding model,
     // endpoint, headers, and transport overrides. Pi resolves it without logging.
-    const apiKey = await configuredCodexAuthentication();
+    const apiKey = await configuredAuthentication(requested.provider);
     if (apiKey !== undefined) runtime.registerProvider(requested.provider, { apiKey });
     const refresh = await runtime.refresh({
       providers: [requested.provider],
@@ -264,14 +354,20 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
         pricing: 'provider-account',
         catalogCost: structuredClone(catalogModel.cost),
         verifiedAt: new Date().toISOString(),
-        catalogSource: CODEX_CATALOG,
+        catalogSource: requested.provider === 'opencode-go' ? GO_CATALOG : CODEX_CATALOG,
         maxOutputTokens: MAX_OUTPUT_TOKENS,
         // Pi 0.84.4's Codex request builder does not serialize maxTokens. Keep
         // the requested cap explicit without claiming that the backend enforces it.
         requestedMaxOutputTokens: MAX_OUTPUT_TOKENS,
-        maxOutputTokensEnforced: false,
+        maxOutputTokensEnforced: requested.provider === 'opencode-go',
         providerMaxOutputTokens: catalogModel.maxTokens,
-        outputBudgetTransport: 'not-sent-by-pi-codex',
+        outputBudgetTransport:
+          requested.provider === 'opencode-go'
+            ? goBudgetTransport(requested.model)
+            : 'not-sent-by-pi-codex',
+        ...(requested.provider === 'opencode-go'
+          ? { resolvedThinking: 'high', effortTransport: 'explicit-high' }
+          : {}),
       },
     };
   }
@@ -280,12 +376,27 @@ export async function createRuntime(selection: ModelSelection = DEFAULT_SELECTIO
   const stream = runtime.streamSimple.bind(runtime);
   runtime.streamSimple = (actual, context, options) => {
     assertSelectedModel(actual, requested);
-    if (options?.reasoning !== requested.thinking)
+    const go = requested.provider === 'opencode-go';
+    // Pi summaries may omit reasoning and use a smaller cap. Keep high explicit
+    // and enforce the frozen cap as an upper bound for this transport.
+    if (
+      options?.reasoning !== requested.thinking &&
+      !(go && options?.reasoning === undefined)
+    )
       throw new Error('Inference refused: reasoning differs from the explicit selection');
     const maxTokens = options?.maxTokens ?? MAX_OUTPUT_TOKENS;
-    if (actual.maxTokens !== MAX_OUTPUT_TOKENS || maxTokens !== MAX_OUTPUT_TOKENS)
+    if (
+      actual.maxTokens !== MAX_OUTPUT_TOKENS ||
+      (go
+        ? !Number.isInteger(maxTokens) || maxTokens < 16 || maxTokens > MAX_OUTPUT_TOKENS
+        : maxTokens !== MAX_OUTPUT_TOKENS)
+    )
       throw new Error('Inference refused: output budget differs from the frozen limit');
-    return stream(actual, context, { ...options, maxTokens });
+    return stream(actual, context, {
+      ...options,
+      ...(go ? { reasoning: requested.thinking } : {}),
+      maxTokens,
+    });
   };
   return {
     runtime,

@@ -44,6 +44,12 @@ const TEAM_TOOLS: Array<{ name: string; description: string; parameters: TSchema
     parameters: Type.Object({}),
   },
   {
+    name: 'slack_search',
+    description:
+      'Search Slack message history, including read messages, by a text substring (case insensitive).',
+    parameters: Type.Object({ query: Type.String({ minLength: 1 }) }),
+  },
+  {
     name: 'slack_post',
     description: 'Post a message to a Slack channel.',
     parameters: Type.Object({

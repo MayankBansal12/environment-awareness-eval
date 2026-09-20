@@ -1,19 +1,7 @@
-/**
- * The Linear & Slack workspace, as a channel.
- *
- * Every message is stamped with what the agent knew about it *at the cursor*, because the
- * whole point of the run is the distance between a message existing and the agent acting
- * on it. A message in the channel that the agent has not read is drawn dim and struck with
- * its state in words; the environment event is drawn with a rail so it is findable at a
- * glance among the ordinary traffic.
- *
- * Unread counts come from the v4 `input` event rather than being
- * counted here, so the footer can never disagree with what was actually in the model's
- * status block.
- */
+/** Incoming updates and agent replies, with visibility evaluated at the selected decision. */
 
-import type { Event } from '../../../src/schema.js';
-import type { RunBundle } from '../derive/model.js';
+import { useState } from 'react';
+import { useRevealSelected } from './useRevealSelected.js';
 import {
   describeVisibility,
   visibilityAt,
@@ -21,74 +9,60 @@ import {
   type SlackVisibility,
 } from '../derive/slack.js';
 
-type Boundary = Extract<Event, { type: 'input' }>;
-
 interface Props {
-  run: RunBundle;
   messages: readonly SlackMessageView[];
   cursor: number;
+  selectedEventId: string | null;
   onJumpToDecision: (decisionIndex: number) => void;
 }
 
-export function SlackPane({ run, messages, cursor, onJumpToDecision }: Props): JSX.Element {
-  const boundary = run.trace.find(
-    (event): event is Boundary => event.type === 'input' && event.decision === cursor,
+export function SlackPane({
+  messages,
+  cursor,
+  selectedEventId,
+  onJumpToDecision,
+}: Props): JSX.Element {
+  const [showNoise, setShowNoise] = useState(false);
+  const bodyRef = useRevealSelected(
+    '[data-selected="true"]',
+    `${selectedEventId}:${cursor}:${showNoise}`,
   );
-
   const visible = messages.filter((message) => visibilityAt(message, cursor) !== 'unsent');
-  const pending = messages.length - visible.length;
+  const shown = visible.filter((message) => showNoise || message.senderRole !== 'noise');
+  const noiseCount = visible.filter((message) => message.senderRole === 'noise').length;
 
   return (
     <section className="pane slackpane">
       <h3>
-        Linear & Slack workspace
-        <span className="pane-note">as of D{cursor}</span>
+        Updates
+        <span className="spacer" />
+        <label className="noise-toggle">
+          <input
+            type="checkbox"
+            checked={showNoise}
+            onChange={(e) => setShowNoise(e.target.checked)}
+            aria-label="Show noise messages"
+          />
+          Noise{noiseCount > 0 ? ` (${noiseCount})` : ''}
+        </label>
       </h3>
 
-      <div className="slack-channel">
-        Inbox & channels
-        <span>Environment messages</span>
-      </div>
-      <div className="pane-body">
-        {visible.length === 0 && (
-          <p className="empty-note">No messages in the channel at D{cursor}.</p>
+      <div className="pane-body" ref={bodyRef}>
+        {shown.length === 0 && (
+          <p className="empty-note">
+            No {showNoise ? 'messages' : 'updates'} yet at D{cursor}.
+          </p>
         )}
 
-        {visible.map((message) => (
+        {shown.map((message) => (
           <SlackMessage
             key={message.messageId}
             message={message}
+            selected={message.eventId !== null && message.eventId === selectedEventId}
             visibility={visibilityAt(message, cursor)}
             onJumpToDecision={onJumpToDecision}
           />
         ))}
-
-        {pending > 0 && (
-          <p className="empty-note">
-            {pending} later message{pending === 1 ? '' : 's'} not yet sent at D{cursor}.
-          </p>
-        )}
-      </div>
-
-      <div className="facts">
-        {boundary === undefined ? (
-          <div>No status block recorded at D{cursor}.</div>
-        ) : (
-          <>
-            <div>
-              Input status: Linear {boundary.counts.linear} unread · Slack{' '}
-              {boundary.counts.slack} unread
-            </div>
-            <div>
-              Retrieved text:{' '}
-              {
-                visible.filter((m) => ['read', 'exposed'].includes(visibilityAt(m, cursor)))
-                  .length
-              }{' '}
-              messages retrieved through D{cursor}
-            </div>
-          </>
-        )}
       </div>
     </section>
   );
@@ -96,10 +70,12 @@ export function SlackPane({ run, messages, cursor, onJumpToDecision }: Props): J
 
 function SlackMessage({
   message,
+  selected,
   visibility,
   onJumpToDecision,
 }: {
   message: SlackMessageView;
+  selected: boolean;
   visibility: SlackVisibility;
   onJumpToDecision: (decisionIndex: number) => void;
 }): JSX.Element {
@@ -109,9 +85,9 @@ function SlackMessage({
   return (
     <article
       className={`slackmsg ${visibility}${message.isEnvironmentEvent ? ' is-event' : ''}`}
+      data-selected={selected}
     >
       <header>
-        <span className="avatar">{message.sender.slice(0, 1).toUpperCase()}</span>
         <span className="who">{message.sender}</span>
         <span className="role">
           {message.channel} · {message.senderRole.replace(/_/g, ' ')}
@@ -138,9 +114,6 @@ function SlackMessage({
           <button className="linklike" onClick={() => onJumpToDecision(perceivedAt)}>
             → D{perceivedAt}
           </button>
-        )}
-        {message.isEnvironmentEvent && message.deliveryMechanism !== null && (
-          <span className="mech">{message.deliveryMechanism}</span>
         )}
       </footer>
     </article>

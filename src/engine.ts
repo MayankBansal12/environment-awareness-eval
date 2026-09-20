@@ -5,7 +5,7 @@ import type { ToolObservation } from './harness/repo-tools.js';
 import type { TaskFamily } from './families/types.js';
 import {
   NoiseStream,
-  SCRIPT,
+  scriptFor,
   TEST_COMMAND,
   type Condition,
   type ImportantKind,
@@ -67,8 +67,8 @@ export interface Fired {
 }
 
 /**
- * Applies environment changes only at model decision boundaries: after every tool in a batch has
- * settled and before the next model call. Triggers never read hidden checks or model reasoning.
+ * Applies environment changes at batch boundaries, or controlled tool boundaries in interrupt
+ * mode. Triggers never read hidden checks or model reasoning.
  */
 export class Engine {
   readonly trace: Event[] = [];
@@ -84,7 +84,9 @@ export class Engine {
   private partial = false;
   private last: RepoSnapshot;
   private seenModules = new Set<string>();
+  private firstFocalEditDecision: number | null = null;
   private noise: NoiseStream;
+  private noiseDecision = -1;
   constructor(
     readonly state: TeamState,
     readonly condition: Condition,
@@ -209,7 +211,7 @@ export class Engine {
     this.outputs++;
   }
 
-  /** Settles one batch. Returns important events that fired at this boundary. */
+  /** Settles a batch or an interrupt-mode tool checkpoint. Returns new important events. */
   settle(repo: RepoSnapshot, canContinue = true): TeamEvent[] {
     this.emit({ type: 'snapshot', snapshot: repo });
     const batch = [...this.observations.values()].filter(
@@ -223,6 +225,8 @@ export class Engine {
     );
     const batchError = batch.some((o) => o.isError);
     const focalEdit = repo.focalDigest !== this.last.focalDigest;
+    const hotfixEdit = repo.hotfixDigest !== this.last.hotfixDigest;
+    if (focalEdit) this.firstFocalEditDecision ??= this.decision;
     const batchTestRun = batch.some(
       (o) => o.name === 'bash' && TEST_COMMAND.test(String(o.args['command'] ?? '')),
     );
@@ -234,12 +238,12 @@ export class Engine {
         !o.isError &&
         (o.name !== 'bash' || (o.value as { exitCode?: number })?.exitCode === 0),
     );
-    const touchedModules = (o: ToolObservation): string[] => {
+    const touchedModules = (o: ToolObservation, candidates = paths): string[] => {
       const target = String(o.args['path'] ?? '')
         .replace(/^\/workspace\/repo\//, '')
         .replace(/^\.\//, '');
       if (['read', 'edit', 'write', 'grep'].includes(o.name))
-        return paths.filter(
+        return candidates.filter(
           (p) =>
             p === target ||
             (o.name === 'grep' &&
@@ -249,14 +253,14 @@ export class Engine {
         o.name === 'bash' &&
         /\b(cat|sed|head|tail|rg|grep)\b/.test(String(o.args['command'] ?? ''))
       )
-        return paths.filter(
+        return candidates.filter(
           (p) =>
             String(o.args['command']).includes(p) ||
-            String(o.args['command']).includes('src/*'),
+            String(o.args['command']).includes(p.split('/')[0] + '/*'),
         );
       return [];
     };
-    const modules = new Set(successful.flatMap(touchedModules));
+    const modules = new Set(successful.flatMap((o) => touchedModules(o)));
     const sourceInspection = successful.some(
       (o) =>
         ['read', 'grep', 'bash'].includes(o.name) &&
@@ -265,12 +269,35 @@ export class Engine {
           /\b(cat|sed|head|tail|rg|grep)\b/.test(String(o.args['command'] ?? ''))),
     );
     const newModule = [...modules].some((p) => !this.seenModules.has(p));
+    const hotfixInspection = successful.some(
+      (o) =>
+        ['read', 'grep', 'bash'].includes(o.name) &&
+        touchedModules(o).some((p) => this.state.family.hotfix.paths.includes(p)),
+    );
+    // Agents can inspect all source before an incident is assigned and then fix it in
+    // one write. Recognize the intervening switch or test inspection at its own boundary.
+    const hotfixTestInspection = successful.some(
+      (o) =>
+        ['read', 'grep', 'bash'].includes(o.name) &&
+        touchedModules(o, this.state.family.hotfix.testPaths ?? []).length > 0,
+    );
+    const hotfixStarted = successful.some(
+      (o) =>
+        o.name === 'linear_update_issue_status' &&
+        String(o.args['id'] ?? '')
+          .trim()
+          .toUpperCase() === this.state.family.hotfix.id &&
+        o.args['status'] === 'in_progress',
+    );
+    const incident = this.fired.get('urgent_assignment');
+    const incidentRetrieved =
+      incident !== undefined && this.seenLevels.has(incident.eventId + ':content');
     for (const p of modules) this.seenModules.add(p);
     this.last = repo;
     // A terminal response has no following decision in which to observe new events.
     if (!canContinue) return [];
     const published: TeamEvent[] = [];
-    for (const step of SCRIPT) {
+    for (const step of scriptFor(this.condition)) {
       if (this.fired.has(step.kind)) continue;
       const anchor =
         step.trigger.after === 'start' ? 0 : this.fired.get(step.trigger.after)?.decision;
@@ -283,11 +310,16 @@ export class Engine {
             ? focalEdit
             : step.trigger.when === 'test_run'
               ? batchTestRun
-              : newModule;
+              : step.trigger.when === 'hotfix_work'
+                ? incidentRetrieved &&
+                  (hotfixStarted || hotfixTestInspection || hotfixEdit || hotfixInspection)
+                : step.trigger.when === 'focal_done'
+                  ? this.state.current(this.state.family.focal.id)?.status === 'done'
+                  : newModule;
       const mode =
         gap >= step.trigger.minGap && met
           ? 'condition'
-          : gap >= step.trigger.fallbackGap
+          : step.trigger.fallbackGap !== undefined && gap >= step.trigger.fallbackGap
             ? 'fallback'
             : null;
       if (mode) {
@@ -307,6 +339,11 @@ export class Engine {
             batchError,
             sourceInspection,
             focalEdit,
+            hotfixEdit,
+            hotfixInspection,
+            hotfixTestInspection,
+            hotfixStarted,
+            firstFocalEditDecision: this.firstFocalEditDecision,
             batchTestRun,
             newModule,
           },
@@ -331,7 +368,11 @@ export class Engine {
         }
       }
     }
-    for (const item of this.noise.draw(batchTestFailure || batchError)) {
+    // Interrupt mode may settle several tools in one decision. Never multiply noise
+    // draws with the number of inner calls in a native code-mode batch.
+    const drawNoise = this.noiseDecision !== this.decision;
+    this.noiseDecision = this.decision;
+    for (const item of drawNoise ? this.noise.draw(batchTestFailure || batchError) : []) {
       const event = this.state.publishNoise(item);
       this.emit({
         type: 'environment_event',

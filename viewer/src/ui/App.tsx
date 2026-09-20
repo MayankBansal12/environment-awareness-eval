@@ -93,7 +93,6 @@ export function App() {
         {index.data &&
           (route.name === 'run' ? (
             <Cockpit
-              key={route.key}
               runKey={route.key}
               decision={route.decision}
               siblings={index.data.runs}

@@ -16,7 +16,8 @@ import {
   runClaudeCode,
   verifyClaudeCode,
 } from './harness/claude-code.js';
-import { redactSecrets } from './harness/redact.js';
+import { redactMetadata, redactSecrets } from './harness/redact.js';
+import { CODEX_CONTEXT_NOTE, runCodex, verifyCodex } from './harness/codex.js';
 import { sha256 } from './harness/identity.js';
 import { sourceIdentity } from './harness/identity.js';
 import { AGENT_CWD, RunSandbox } from './harness/sandbox.js';
@@ -34,7 +35,12 @@ import { Engine, snapshot } from './engine.js';
 import { putFiles, fixtureDigest, INIT_REPO } from './fixture.js';
 import { grade } from './grader.js';
 import { renderReport } from './report.js';
-import { FAMILIES, SCRIPT_VERSION, type Condition } from './scenario.js';
+import {
+  conditionSchema,
+  familyFor,
+  scriptVersionFor,
+  type Condition,
+} from './scenario.js';
 import { FORMAT, type Evidence, type Summary } from './schema.js';
 import { TeamState } from './state.js';
 import { definitions } from './tools.js';
@@ -93,14 +99,18 @@ export function specAt(
 
 export async function run(config: Config): Promise<Summary> {
   if (!/^[A-Za-z0-9._-]+$/.test(config.runId)) throw Error('Invalid run ID');
-  const family = FAMILIES[config.condition.family];
+  conditionSchema.parse(config.condition);
+  const selection = modelSelectionSchema.parse(config.modelConfig ?? DEFAULT_SELECTION);
+  if (config.condition.delivery === 'interrupt' && selection.provider !== 'openai-codex')
+    throw Error('Interrupt delivery currently requires native Codex');
+  const family = familyFor(config.condition);
   const dir = path.resolve(config.resultsDir, config.runId);
   await mkdir(path.dirname(dir), { recursive: true });
   await mkdir(dir);
   const json = async (name: string, v: unknown) =>
-    writeFile(path.join(dir, name), redactSecrets(JSON.stringify(v, null, 2)) + '\n');
+    writeFile(path.join(dir, name), JSON.stringify(redactMetadata(v), null, 2) + '\n');
   const persist = (name: string, v: unknown) =>
-    appendFileSync(path.join(dir, name), redactSecrets(JSON.stringify(v)) + '\n');
+    appendFileSync(path.join(dir, name), JSON.stringify(redactMetadata(v)) + '\n');
   let sandbox: RunSandbox | undefined,
     session: AgentSession | undefined,
     timer: ReturnType<typeof setTimeout> | undefined;
@@ -134,12 +144,13 @@ export async function run(config: Config): Promise<Summary> {
     );
     const tools = new ControlledTools(sandbox, team, (o) => engine.observe(o));
     const defs = definitions(tools);
-    const selection = modelSelectionSchema.parse(config.modelConfig ?? DEFAULT_SELECTION);
     const claude = selection.provider === 'anthropic';
-    const selectedRuntime = claude ? undefined : await createRuntime(selection);
+    const codex = selection.provider === 'openai-codex';
+    const selectedRuntime = claude || codex ? undefined : await createRuntime(selection);
+    const codexVerification = codex ? await verifyCodex(selection) : undefined;
     const verification = claude
       ? await verifyClaudeCode(selection)
-      : selectedRuntime!.verification;
+      : (codexVerification ?? selectedRuntime!.verification);
     const meter = new UsageMeter();
     const abortController = new AbortController();
     let termination = { reason: 'agent_finished', detail: 'Agent ended its turn' },
@@ -182,7 +193,7 @@ export async function run(config: Config): Promise<Summary> {
       nodeVersion: process.version,
       isolation: 'bubblewrap-unshare-all',
       protocolVersion: PROTOCOL_VERSION,
-      scriptVersion: SCRIPT_VERSION,
+      scriptVersion: scriptVersionFor(config.condition),
       familyVersion: family.version,
       fixtureDigest: fixtureDigest(family, config.condition.load),
       budgets: config.budgets,
@@ -192,6 +203,13 @@ export async function run(config: Config): Promise<Summary> {
       providerWeightsPinned: false,
       concurrency: 1,
       subagents: false,
+      ...(config.condition.delivery === 'interrupt'
+        ? {
+            notificationTransport:
+              'controlled-tool-boundary / turn-interrupt / same-thread-resume',
+            notificationContent: 'generic unread indicator; full text requires retrieval',
+          }
+        : {}),
       ...(config.manifestHash ? { manifestHash: config.manifestHash } : {}),
     };
     const atEvents: Array<{
@@ -200,30 +218,37 @@ export async function run(config: Config): Promise<Summary> {
       decision: number;
       name: string;
     }> = [];
+    const settle = async (canContinue: boolean) => {
+      const before = team.events.length;
+      const current = await snapshot(sandbox!, commit, family);
+      for (const fired of engine.settle(current, canContinue)) {
+        const name = path.posix.join('at-events', fired.id);
+        await cp(sandbox!.repo, path.join(dir, name), {
+          recursive: true,
+          dereference: false,
+          filter: (src) => !['.git', 'node_modules'].includes(path.basename(src)),
+        });
+        atEvents.push({
+          eventId: fired.id,
+          kind: fired.kind as Evidence['atEvents'][number]['kind'],
+          decision: engine.decision,
+          name,
+        });
+      }
+      return team.events.slice(before).map((e) => e.id);
+    };
     const afterTurn = async (message: unknown) => {
       try {
         const info = assistantInfo(message);
         lastStop = info.stopReason;
         lastError = info.errorMessage;
         engine.afterOutput(message, info, usageOf(message));
-        const current = await snapshot(sandbox!, commit, family);
-        for (const fired of engine.settle(
-          current,
-          info.calls.length > 0 && info.stopReason === 'toolUse',
-        )) {
-          const name = path.posix.join('at-events', fired.id);
-          await cp(sandbox!.repo, path.join(dir, name), {
-            recursive: true,
-            dereference: false,
-            filter: (src) => !['.git', 'node_modules'].includes(path.basename(src)),
+        if (config.condition.delivery === 'interrupt')
+          engine.emit({
+            type: 'snapshot',
+            snapshot: await snapshot(sandbox!, commit, family),
           });
-          atEvents.push({
-            eventId: fired.id,
-            kind: fired.kind as Evidence['atEvents'][number]['kind'],
-            decision: engine.decision,
-            name,
-          });
-        }
+        else await settle(info.calls.length > 0 && info.stopReason === 'toolUse');
         const t = meter.totals;
         process.stdout.write(
           `D${engine.decision}: ${info.calls.map((c) => c.name).join(', ') || info.stopReason} · ${t.totalTokens} tok${claude ? '' : ` · $${t.costUsd.total.toFixed(4)}`}\n`,
@@ -280,6 +305,30 @@ export async function run(config: Config): Promise<Summary> {
           afterTurn,
           stop,
           persist: (event) => persist('claude-code.jsonl', event),
+        });
+        if (termination.reason === 'agent_finished') termination = result;
+      } catch (e) {
+        if (termination.reason === 'agent_finished')
+          termination = { reason: 'provider_error', detail: redactSecrets(String(e)) };
+      }
+    } else if (codex) {
+      await begin(SYSTEM_PROMPT, defs);
+      try {
+        const result = await runCodex({
+          selection,
+          verification: codexVerification!,
+          cwd: path.join(sandbox.root, 'config'),
+          systemPrompt: SYSTEM_PROMPT,
+          initialPrompt: INITIAL_PROMPT,
+          tools,
+          engine,
+          meter,
+          budgets: config.budgets,
+          abortController,
+          afterTurn,
+          afterTool: () => settle(true),
+          stop,
+          persist: (event) => persist('codex.jsonl', event),
         });
         if (termination.reason === 'agent_finished') termination = result;
       } catch (e) {
@@ -413,7 +462,7 @@ export async function run(config: Config): Promise<Summary> {
       termination = { reason: 'max_output_tokens', detail: 'Model output budget reached' };
     const final = await snapshot(sandbox, commit, family);
     engine.emit({ type: 'snapshot', snapshot: final });
-    engine.close(claude ? CLAUDE_CONTEXT_NOTE : undefined);
+    engine.close(claude ? CLAUDE_CONTEXT_NOTE : codex ? CODEX_CONTEXT_NOTE : undefined);
     engine.emit({ type: 'termination', ...termination });
     const durationMs = Date.now() - started;
 
@@ -475,7 +524,7 @@ export async function run(config: Config): Promise<Summary> {
     await json('evidence.json', evidence);
     await json('team-state.json', team.snapshot());
     await json('usage.json', meter.totals);
-    const extra: string[] = claude ? ['claude-code.jsonl'] : [];
+    const extra: string[] = claude ? ['claude-code.jsonl'] : codex ? ['codex.jsonl'] : [];
     async function collect(relative: string) {
       for (const entry of await readdir(path.join(dir, relative), {
         withFileTypes: true,

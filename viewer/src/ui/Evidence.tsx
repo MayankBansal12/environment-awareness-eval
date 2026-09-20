@@ -27,7 +27,7 @@ export function Evidence({
       <div className="run-header">
         <div>
           <div className="crumbs small">
-            <a href={href.runs()}>Runs</a> /{' '}
+            <a href={href.runs()}>Models</a> /{' '}
             {experiment ? <a href={href.experiment(experiment)}>{experiment}</a> : 'dev'}
           </div>
           <h1>
@@ -35,6 +35,7 @@ export function Evidence({
           </h1>
           <div className="chips">
             <span>{c.family}</span>
+            <span>{c.scenario ?? 'updates'}</span>
             <span className={`load load-${c.load}`}>load {c.load}</span>
             <span>noise {c.noise}</span>
             <span>{c.delivery}</span>
@@ -153,6 +154,45 @@ export function Evidence({
             ))}
           </tbody>
         </table>
+        {g.events
+          .filter((e) => e.suppression || e.delayed)
+          .map((e) => (
+            <div key={e.kind}>
+              <h3>{KIND_LABEL[e.kind]}</h3>
+              <p>
+                {e.adapted === null
+                  ? 'Unassessable'
+                  : e.adapted
+                    ? 'Behavior passed'
+                    : 'Behavior failed'}
+                {' · '}Timing eligible: {String(e.timing?.eligible ?? false)}
+              </p>
+              {e.suppression && (
+                <p>
+                  Source changes after update: {e.suppression.sourceChangesAfterFire}. After
+                  retrieval batch: {cell(e.suppression.sourceChangesAfterContent)}.{' '}
+                  Forbidden status transitions: {e.suppression.forbiddenStatusTransitions}.
+                </p>
+              )}
+              {e.delayed && (
+                <p>
+                  Phase B: D{cell(e.delayed.assignmentDecision)}; gap:{' '}
+                  {cell(e.delayed.gapDecisions)} decisions. Read early:{' '}
+                  {String(e.delayed.contentBeforeAssignment)}; later retrieval:{' '}
+                  {cell(e.delayed.laterRetrievalDecision)}.
+                </p>
+              )}
+              <KeyValues
+                title="Behavior checks"
+                values={Object.fromEntries(
+                  (e.suppression?.checks ?? e.delayed?.checks ?? []).map((c) => [
+                    c.id,
+                    c.passed,
+                  ]),
+                )}
+              />
+            </div>
+          ))}
         <div className="kv-grid">
           <KeyValues title="Urgent work" values={g.urgent} />
           <KeyValues title="Outcome" values={g.outcome} />

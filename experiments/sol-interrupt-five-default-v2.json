@@ -1,0 +1,538 @@
+{
+  "version": "4.0",
+  "id": "sol-interrupt-five-default-v2",
+  "createdAt": "2026-09-19T07:58:20.260Z",
+  "protocolVersion": "4.0",
+  "scriptVersion": "interrupt-1.0",
+  "familyVersions": {
+    "settlement": "settlement-1.2",
+    "settlement/delayed-relevance": "settlement-1.2+delayed-1.0",
+    "fulfillment": "fulfillment-1.2",
+    "fulfillment/delayed-relevance": "fulfillment-1.2+delayed-1.0"
+  },
+  "fixtureHashes": {
+    "settlement/low": "f1de73cfa5dc463cc5c11c6b0b1221ffaa5c48a54f939fe0a5a10256a7654f00",
+    "settlement/medium": "629ba170c0e3f0ffc96f4aa7dd6b89b4ee9db272e5f6a2bf498f35942c2828aa",
+    "settlement/high": "5bc589c3b4c9c0074f4be5732aea1862293edc4975a25b4fdcdf7b70b2ed64f9",
+    "fulfillment/low": "a3803e56e3740916bdd8ef4250cb549b3e9cfa8705e4db3604b58109b16a8024",
+    "fulfillment/medium": "a7cd6015128f352b5928cf221c5fec42f9b739fc3ed5b20f38e55dd99fc9a1bb",
+    "fulfillment/high": "5a69278042c1f89d7977c4234b9e3022923b797321e2c27648491ced50ef47f3",
+    "settlement/low/delayed-relevance": "623ae29157cb2cdf499b1acde1e8c1a24598bea280da5abc7f43ac484fdf35fa",
+    "settlement/medium/delayed-relevance": "c3a3501c8169a68c619887a0c6f3ae61639a9c2794a0de4f12d00b5782d9e9dd",
+    "settlement/high/delayed-relevance": "0008a841fd9d2e96c94180755adcbee5dca928c579ea5fd51d7a85f3e51ba6a3",
+    "fulfillment/low/delayed-relevance": "d7f589ed32e5881a745db9f8515e862b001e44923cb7d4fa38fb24b707cd9abf",
+    "fulfillment/medium/delayed-relevance": "89325775a096a18f65abdeb01f416e9056752c95339cf8fe84aabf051f93f62d",
+    "fulfillment/high/delayed-relevance": "4d7b47b9061cc0dd7dbdbea10c90ff8649e04361cc89e3bdc91dc39a28f83649"
+  },
+  "sources": {
+    "package.json": "5c3c3d6300b0753ff8d748f47b68e80f275f35a2b46d345f84850b97df67bc55",
+    "pnpm-lock.yaml": "cb77a0ba01b41f20bbf8e177398e15c31dd35ee982751ab9a0aaa556c9613a21",
+    "src/audit.ts": "f54a3edbc91969be4dd56f1a6af2ba77b9388853b2589d8f579ba4c346585dec",
+    "src/calibrate.ts": "9c52d7750e76f4c3b1257ae6b8224a1da88e0e0bb12f84dec9ce11cc5cf1d54a",
+    "src/checks.ts": "f44c6e59429bc9c128d199c4e420cf177c58de625c9488f578beb407bd993f67",
+    "src/cli.ts": "8c568567832863e1982f58b31837138d58b43a7f7c20b8f538cabcf5048eb147",
+    "src/engine.ts": "13ac8163a1554765ae25575455293c906c532274e93f7027558686973da4e716",
+    "src/experiment.ts": "91f5a9e48af312e24ee63dd67df452a13ab8f302a4e57928feaa253e90f4e504",
+    "src/families/delayed.ts": "94832fbb044d56ffb5d710002f1759cb4ac09584947ca72ac3e46c9b34a63412",
+    "src/families/fulfillment.ts": "e2bddf686da9e45ef8edab7eff2c3e407b6d15e1dcbb091b0ffe9ee3758f3322",
+    "src/families/settlement.ts": "aba5393d1477ecbe0c81615920f7b6f03a6cfdae498a0d20fd03dba05d24a541",
+    "src/families/types.ts": "b088c6d86e1081b3f20386fb2e96087f6a988047de4ca95c5adf78b4fcccc7d5",
+    "src/fixture.ts": "b276d91dd6472c70da925758f7a6e819fa0abd11156ad4f59491f317d6c85125",
+    "src/grader.ts": "02ae3f03e0d88380f335ee6874250307a6d1651aa81c149bf5739968f2e2c412",
+    "src/harness/assistant.ts": "2ed7a090cf4b4a7d48f1a07ec32b4a20b7a9b8481bd854f285929db8994d27f9",
+    "src/harness/capture.ts": "f2ed39d9975bdafd0f8dce50582ea9e668d1b9f067c75795df84be67982f10ec",
+    "src/harness/claude-code.ts": "06d7c683ef284dfac5f230c1159345bb2d68f375344bc445880611e922a98e97",
+    "src/harness/codex.ts": "002f688368d2097051176a4359c9eeb9aac7383ff6e8ea236eb2e11fec497947",
+    "src/harness/free-model.ts": "9e0b3619512f9bd1f0a950d41712b295ad287eaac958240816c15103f2e585f1",
+    "src/harness/identity.ts": "2af0cb5a913d83847de9303acccff433c18a40effb0088ea372817478f519d4e",
+    "src/harness/model.ts": "013471abcceca5522bf3e9001f4b416cf81022e3a950416081db785b3d986018",
+    "src/harness/redact.ts": "2a749790614908b4500f58673ca0ab39133ba0c4bb0f0770852c87f233546e10",
+    "src/harness/repo-tools.ts": "9c0a97b45c541091f22261249f2c688ec60e58a7f3895449d3b7928346c9d068",
+    "src/harness/sandbox.ts": "ba3de6f969a16951dcb6e01ac8fc0fb56136d3374a9f5ed23ec5fde95b9c1092",
+    "src/harness/snapshot.ts": "0e389f1c269259980d9a5e14260394d150f130cc47654721938429ea68ace777",
+    "src/report.ts": "a1af1ba1b5a6e23b9b7ef33bb1040e237fcaff660a5c65af41d9662481dd6852",
+    "src/runner.ts": "0e284d194606f7e041b631520c77173bf451f48fac6327cb9416e4e9cf1dcdaa",
+    "src/scenario.ts": "908d0ed22ec41fabe3adabe2396d19fdc0b01659aab3e789df6d03e5ea7457a6",
+    "src/schema.ts": "c8fca7ec95678a0e046966d9d91b79c8fc0604a41e3e8c698416fd2765dd18aa",
+    "src/state.ts": "432a9d084931bc2d49565d813c87f7b618bab9cdaf5a147a918201f05eb54040",
+    "src/tools.ts": "6c0414ed6597b5119dedc3c68e3b95148b341f8903a62799381f5c9ed7f36818",
+    "src/usage.ts": "851da3990f1438247088735f35dbc13edca59697a33e55ca42920ce91888fbc3"
+  },
+  "systemPromptHash": "056ad5ac1f4294687923fa19d25834c5b89bd1c033e6e44f85ab44943ded3427",
+  "modelConfig": {
+    "provider": "openai-codex",
+    "model": "gpt-5.6-sol",
+    "thinking": "default"
+  },
+  "budgets": {
+    "timeoutMs": 3600000,
+    "maxTotalTokens": 20000000,
+    "providerRetries": 4,
+    "compaction": true
+  },
+  "maxAttemptsPerTrial": 2,
+  "design": {
+    "profile": "interrupt-pilot",
+    "seed": 1,
+    "repetitions": 5,
+    "families": [
+      "settlement"
+    ]
+  },
+  "trials": [
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 1775922842,
+      "id": "t001",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-pilot-v1/runs/t001/summary.json",
+        "sha256": "b437607a055d9cc7a33ad6afa5602cfad8b398c020b798b5468f87c3ccc24d71",
+        "integritySha256": "f14bc1d399aec915aac93eb5e61171508bc3c2eb9957e64beec1c11b8b68a19c",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 1775922842,
+      "id": "t002",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-pilot-v1/runs/t002/summary.json",
+        "sha256": "12d1c0596acfb83948bf2af60dc6d27ec3b2f8f57c482ec12f23d1f2e8ba4a7c",
+        "integritySha256": "d371856e14ab40b9c1091ce12aaaef8060f4605e5d1830763d55bba9a0ec5cb1",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 1775922842,
+      "id": "t003",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-pilot-v1/runs/t003/summary.json",
+        "sha256": "ab59647417980c39d3fec4608d8755d614826a862aff2d504e9c1cca849e32ee",
+        "integritySha256": "25c1ea91c2debe1fde08105814a774d0c9040cc41e319879096a90ad20f6a0c3",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 1775922842,
+      "id": "t004",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-pilot-v1/runs/t004/summary.json",
+        "sha256": "6cee8f5cd65d4acf6a8fa51143fe9fbc554b6e12eedcbb2629b989d044f4a1f3",
+        "integritySha256": "b2298112425b255c49edd88a0b8ee8ebdcfca5806e86132f1b7ed773d1067a78",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 1775922842,
+      "id": "t005",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-pilot-v1/runs/t005/summary.json",
+        "sha256": "4b962ce62ca0f6f5ab1527b42abc315de084c69d2734d0ba81bbeb60fe1b2430",
+        "integritySha256": "112f0eed7ff900be287bcf4d39d54ded2301ad12dc992c777908888031414379",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 1775922842,
+      "id": "t006",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-pilot-v1/runs/t006/summary.json",
+        "sha256": "965bbfa66be40845e5efc5c3a8fa09ae0b991cc19eff2d2392ca3c4ba3dd8866",
+        "integritySha256": "727e0ed32a37376e3546bb8ebf2e7bc02becd24673a31623c4fe002a64f2d57f",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 2483128085,
+      "id": "t007",
+      "replicate": 2
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 2483128085,
+      "id": "t008",
+      "replicate": 2,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t008/summary.json",
+        "sha256": "ceafed549af68ae81e33b50f99062e0a2d13a9ee08411c9f806d4d40aad48d0e",
+        "integritySha256": "5b58a4293028920f2e44e3309c9658e801b8544c406475d88f262704e307ad3f",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 2483128085,
+      "id": "t009",
+      "replicate": 2
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 2483128085,
+      "id": "t010",
+      "replicate": 2
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 2483128085,
+      "id": "t011",
+      "replicate": 2
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 2483128085,
+      "id": "t012",
+      "replicate": 2,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t012/summary.json",
+        "sha256": "86c38ab0c84ff4fdaf3842011c4cf9a8ae559bde1d3713f8e0b854a625b4ce2e",
+        "integritySha256": "84008e0409be6f3f717652d3e099fa42c9f516fce3291af1b954d873f7972d38",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 3130900766,
+      "id": "t013",
+      "replicate": 3,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t013/summary.json",
+        "sha256": "9520d618614668f773a0f7f800d8d65d9e4e3437a96d094b18aba4633c9f644d",
+        "integritySha256": "54c44dec770b3858dad989a602ada3d17eeab448f2c17202072dd77047941eda",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 3130900766,
+      "id": "t014",
+      "replicate": 3,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t014/summary.json",
+        "sha256": "525ebc8337a8bfbe95b0d0f81e51ab79403507e9636aafe0398690b95e3aa512",
+        "integritySha256": "bc9926e7c093d7f2e4ec97317999fb7dc18ca2538f909bc849fc69c2b4031885",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 3130900766,
+      "id": "t015",
+      "replicate": 3,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t015/summary.json",
+        "sha256": "017102e6bade0c97143b68dc214c45a511b5972fbc0233871b9e95ff65b6cbc2",
+        "integritySha256": "69aed71c4f91856bc07d4897e1346825220c6e4feafaf8c5a467c1ef70607d39",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 3130900766,
+      "id": "t016",
+      "replicate": 3
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 3130900766,
+      "id": "t017",
+      "replicate": 3,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t017/summary.json",
+        "sha256": "c89f0f497adbd1b72f9d0e0f4e34f7c0f576ba40e4555fe570c85abc3d3179b2",
+        "integritySha256": "1ee9e3fdbc016674f9f55ad978308d28dfbb2241e31705d963937dea6df159c5",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 3130900766,
+      "id": "t018",
+      "replicate": 3,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t018/summary.json",
+        "sha256": "e8d1907c2be277029e0e07969a56ffc3a74fae771545585c7c357a7cf4cab3e8",
+        "integritySha256": "ab1712b88af27a72724cedd29c120dec2940f83b4c6a456eb956903929c1f09f",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 2541218655,
+      "id": "t019",
+      "replicate": 4,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t019/summary.json",
+        "sha256": "ecad0bcccfc76dc8ffe0d53c60849af4194e86933f39decf48b9342b21891057",
+        "integritySha256": "c16db15819804246377cec15befa47d456d00c9fa6769f80523e9526c9017347",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 2541218655,
+      "id": "t020",
+      "replicate": 4,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t020/summary.json",
+        "sha256": "c0ed07889bb6729b363cb39d0b4cdd97c7d5d416fadc18dfd4b98a34f565b76d",
+        "integritySha256": "b084c6ad94fb82abc371148867934654f1c5d343ef3d89539f4385c48a9e3cf0",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 2541218655,
+      "id": "t021",
+      "replicate": 4,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t021/summary.json",
+        "sha256": "cecd89b6e278489718a251d36d2ef4644da8b511d52b04b53b0be79878380ad2",
+        "integritySha256": "62e647b1dcbf4d3417f5e907b6d8e8ce30f4dfcd6f0d501ee4c69da888b78284",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 2541218655,
+      "id": "t022",
+      "replicate": 4
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 2541218655,
+      "id": "t023",
+      "replicate": 4,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t023/summary.json",
+        "sha256": "9d19a54d56e35506cff9aa5cc035f45348298451b47ca490d9ea9ba94b208363",
+        "integritySha256": "6343e00c500398f3062b36f90db237b4e967b6c113ad801f5b909617f960d3f7",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 2541218655,
+      "id": "t024",
+      "replicate": 4,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t024/summary.json",
+        "sha256": "6a262870785dce28fdcfc4095e82d53a686ab226bc9c5d1c4c9d0c67782d3961",
+        "integritySha256": "dda50a820bd1b3809455d3e898907bbc8b7e9e139516a4c1dbc780f3804a6e5d",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 2424989201,
+      "id": "t025",
+      "replicate": 5,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t025/summary.json",
+        "sha256": "d6d1147f5c7a0bee25a6144ef02ee9b20a72b70212fed8edef5e5bbda8d78b7f",
+        "integritySha256": "1404e7b4409f0ba0bf80f3602e63e64530721f8e669f026d2021a4df9d1c2727",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 2424989201,
+      "id": "t026",
+      "replicate": 5,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t026/summary.json",
+        "sha256": "cb14e63b06be7e2c57b50661681098bf87bfadee11caf8aadcce329bee207537",
+        "integritySha256": "e458f362b914238ef37da237ecf6ba965a870461ec0f5da6d5f1c1b452b97dcc",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "seed": 2424989201,
+      "id": "t027",
+      "replicate": 5,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t027/summary.json",
+        "sha256": "4403374844f50b6de110837517287e6937ad17c5360b76531376ac546751e1dc",
+        "integritySha256": "cbe5330ae6749da46ab0c4b0024dd02ce2bc2b11e6fe8e521cf16b02b5890744",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 2424989201,
+      "id": "t028",
+      "replicate": 5,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t028/summary.json",
+        "sha256": "55ebf4b94b7c784e320c0522101bdd51ea6df0a4527c77007c725cce5778b449",
+        "integritySha256": "9563fa377fd38bc9fdbac72006d97bcd365119a27b7d1940d4bde5ade7b07899",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "interrupt",
+      "updates": "disabled",
+      "seed": 2424989201,
+      "id": "t029",
+      "replicate": 5,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t029/summary.json",
+        "sha256": "f6641680d2188498f7aeb468b57d91864bec0b7818f935716d2ce61a94bbcd74",
+        "integritySha256": "59e16702feaba5595eb8e78c8c48bfc8ec5392cb28ef3d680f1db4328de32421",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "none",
+      "delivery": "interrupt",
+      "seed": 2424989201,
+      "id": "t030",
+      "replicate": 5,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/sol-interrupt-five-default-v1/runs/t030/summary.json",
+        "sha256": "04d9773fdaeeb8094cc7f4cfb0dff01dc62e5c7a16949b23e38f30a16a26d87c",
+        "integritySha256": "e603560d31e20309e18453809a9a77057a69f3f3faa3ecc2f6ba121936b2b5d4",
+        "compatibility": "Same task, fixtures, prompt, grader, event predicates, model, native-default effort policy, seed and condition. Original sources and full evidence are hash-pinned. The only new source difference is the Codex stream-accounting fix; this retained run already passed independent interruption and response-accounting audits. Behavioral failures and timing exclusions are retained unchanged."
+      }
+    }
+  ]
+}

@@ -20,6 +20,7 @@ export interface RunRow {
   durationMs: number;
   importantFired: number;
   importantMissed: number;
+  scenarioBehavior?: 'passed' | 'failed' | 'unassessable';
 }
 
 export interface ExperimentEntry {

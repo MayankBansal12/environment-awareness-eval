@@ -2,9 +2,9 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { directExecutor, taskChecks } from './checks.js';
-import type { SpecFlags } from './families/types.js';
+import { BASE_SPEC, type SpecFlags } from './families/types.js';
 import { putFiles } from './fixture.js';
-import { FAMILIES, familySchema, loadSchema } from './scenario.js';
+import { FAMILIES, familyFor, familySchema, loadSchema } from './scenario.js';
 
 /** Every load fails exactly its injected bugs; references pass under every spec combination. */
 export async function calibrate() {
@@ -66,10 +66,37 @@ export async function calibrate() {
       }
     }
   }
+  const delayed = [];
+  for (const id of familySchema.options) {
+    const family = familyFor({ family: id, scenario: 'delayed-relevance' });
+    for (const load of loadSchema.options) {
+      const root = await mkdtemp(path.join(os.tmpdir(), 'calibrate-delayed-'));
+      try {
+        await putFiles(root, family.files(load));
+        const executor = directExecutor(root);
+        const stale = await taskChecks(executor, family, BASE_SPEC);
+        await putFiles(root, family.reference(BASE_SPEC));
+        const current = await taskChecks(executor, family, BASE_SPEC);
+        const passes = current.focal.concat(current.hotfix).every((c) => c.passed);
+        const discriminates =
+          JSON.stringify(
+            stale.hotfix
+              .filter((c) => !c.passed)
+              .map((c) => c.id)
+              .sort(),
+          ) === JSON.stringify(family.checkIds.hotfix.slice(0, 2).sort());
+        ok &&= passes && discriminates;
+        delayed.push({ cell: `${id}/${load}/delayed-relevance`, passes, discriminates });
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    }
+  }
   return {
     inference: false,
     ok,
     results,
+    delayed,
     summary: results.map((r) => ({
       cell: `${r.family}/${r.load}`,
       injectedBugs: r.failing.length,
