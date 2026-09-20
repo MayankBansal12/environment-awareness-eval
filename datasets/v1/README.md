@@ -80,3 +80,20 @@ For an offline/local archive, set `EAW_DATASET_ARCHIVE` to its absolute path bef
 To reproduce the archive from the original evidence: `pnpm dataset:export`.
 The export's new generation timestamp produces a new archive checksum; publish a
 new release/version for future data, rather than silently replacing a pinned asset.
+
+### Current production deployment
+
+Production is built locally from the checksum-pinned release archive and uploaded
+with `vercel deploy --prebuilt --prod`. Automatic Git deployments are disabled in
+`vercel.json` because the private release requires authentication and the existing
+GitHub credential is not copied to Vercel. To enable remote automatic builds later,
+configure a dedicated read-only `DATASET_GITHUB_TOKEN` for this repository and enable
+`git.deploymentEnabled`. This does not affect the live static viewer.
+
+```sh
+gh release download dataset-v1 --repo MayankBansal12/environment-awareness-eval \
+  --pattern viewer-dataset-v1.json.gz --dir /tmp/eaw-dataset-v1
+pnpm dlx vercel pull --yes --environment=production
+EAW_DATASET_ARCHIVE=/tmp/eaw-dataset-v1/viewer-dataset-v1.json.gz pnpm dlx vercel build --prod
+pnpm dlx vercel deploy --prebuilt --prod
+```

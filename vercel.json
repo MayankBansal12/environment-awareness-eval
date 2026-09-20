@@ -3,5 +3,8 @@
   "framework": null,
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
-  "outputDirectory": "viewer/dist"
+  "outputDirectory": "viewer/dist",
+  "git": {
+    "deploymentEnabled": false
+  }
 }
