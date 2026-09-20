@@ -291,18 +291,22 @@
   }
 
   /* Series by role: the four updates keep a fixed hue order everywhere. */
+  .fill-task_cancellation,
   .fill-requirement_change {
     fill: var(--k1);
     background: var(--k1);
   }
+  .fill-urgency_downgrade,
   .fill-urgent_assignment {
     fill: var(--k2);
     background: var(--k2);
   }
+  .fill-delayed_context,
   .fill-comment_change {
     fill: var(--k3);
     background: var(--k3);
   }
+  .fill-followup_assignment,
   .fill-decoy {
     fill: var(--k4);
     background: var(--k4);
@@ -310,15 +314,19 @@
   .fill-series-neutral {
     fill: var(--neutral);
   }
+  .stroke-task_cancellation,
   .stroke-requirement_change {
     stroke: var(--k1);
   }
+  .stroke-urgency_downgrade,
   .stroke-urgent_assignment {
     stroke: var(--k2);
   }
+  .stroke-delayed_context,
   .stroke-comment_change {
     stroke: var(--k3);
   }
+  .stroke-followup_assignment,
   .stroke-decoy {
     stroke: var(--k4);
   }

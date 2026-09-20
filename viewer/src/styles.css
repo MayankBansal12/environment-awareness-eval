@@ -1469,6 +1469,17 @@ summary {
 table.results-table {
   min-width: 920px;
 }
+table.model-results-table td:first-child {
+  min-width: 200px;
+}
+.table-sort {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+}
 table.grid th {
   font-size: 12px;
   letter-spacing: 0;
@@ -1862,69 +1873,6 @@ pre.block,
   min-height: 30px;
   padding: 4px 9px;
 }
-.agent-summary {
-  padding: 24px;
-}
-.eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--dim);
-}
-.agent-summary h2 {
-  margin: 6px 0 10px;
-  font-size: 25px;
-  font-weight: 550;
-  line-height: 1.25;
-  letter-spacing: -0.035em;
-}
-.agent-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin: 24px 0;
-  padding: 16px 0;
-  border-block: 1px solid var(--line);
-  gap: 12px;
-}
-.agent-stats b {
-  display: block;
-  font-size: 23px;
-  font-weight: 550;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-}
-.agent-stats span {
-  display: block;
-  font-size: 12px;
-  color: var(--dim);
-  margin-top: 5px;
-}
-.summary-update {
-  padding: 16px;
-  margin-bottom: 24px;
-  border: 1px solid #414337;
-  background: #22251f;
-  border-radius: 8px;
-}
-.summary-update p {
-  font-size: 14px;
-  margin: 8px 0 12px;
-}
-.summary-update button {
-  font-size: 12px;
-  background: transparent;
-}
-.agent-summary .fr-title {
-  text-transform: none;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-.agent-summary .fr-body {
-  font-size: 14px;
-  line-height: 1.75;
-}
 .context-disclosure {
   flex: none;
   border: 1px solid var(--line);
@@ -2085,15 +2033,6 @@ button:disabled:active {
   }
   .cockpit .pane .pane-body {
     max-height: 520px;
-  }
-  .agent-summary {
-    padding: 18px;
-  }
-  .agent-stats {
-    gap: 8px;
-  }
-  .agent-stats span {
-    font-size: 11px;
   }
   .runstrip {
     flex-wrap: wrap;

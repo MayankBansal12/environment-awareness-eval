@@ -1,0 +1,587 @@
+{
+  "version": "4.0",
+  "id": "opus5-five-v2",
+  "createdAt": "2026-09-17T23:32:32.935Z",
+  "protocolVersion": "4.0",
+  "scriptVersion": "scenario-arms-1.1",
+  "familyVersions": {
+    "settlement": "settlement-1.2",
+    "settlement/delayed-relevance": "settlement-1.2+delayed-1.0",
+    "fulfillment": "fulfillment-1.2",
+    "fulfillment/delayed-relevance": "fulfillment-1.2+delayed-1.0"
+  },
+  "fixtureHashes": {
+    "settlement/low": "f1de73cfa5dc463cc5c11c6b0b1221ffaa5c48a54f939fe0a5a10256a7654f00",
+    "settlement/medium": "629ba170c0e3f0ffc96f4aa7dd6b89b4ee9db272e5f6a2bf498f35942c2828aa",
+    "settlement/high": "5bc589c3b4c9c0074f4be5732aea1862293edc4975a25b4fdcdf7b70b2ed64f9",
+    "fulfillment/low": "a3803e56e3740916bdd8ef4250cb549b3e9cfa8705e4db3604b58109b16a8024",
+    "fulfillment/medium": "a7cd6015128f352b5928cf221c5fec42f9b739fc3ed5b20f38e55dd99fc9a1bb",
+    "fulfillment/high": "5a69278042c1f89d7977c4234b9e3022923b797321e2c27648491ced50ef47f3",
+    "settlement/low/delayed-relevance": "623ae29157cb2cdf499b1acde1e8c1a24598bea280da5abc7f43ac484fdf35fa",
+    "settlement/medium/delayed-relevance": "c3a3501c8169a68c619887a0c6f3ae61639a9c2794a0de4f12d00b5782d9e9dd",
+    "settlement/high/delayed-relevance": "0008a841fd9d2e96c94180755adcbee5dca928c579ea5fd51d7a85f3e51ba6a3",
+    "fulfillment/low/delayed-relevance": "d7f589ed32e5881a745db9f8515e862b001e44923cb7d4fa38fb24b707cd9abf",
+    "fulfillment/medium/delayed-relevance": "89325775a096a18f65abdeb01f416e9056752c95339cf8fe84aabf051f93f62d",
+    "fulfillment/high/delayed-relevance": "4d7b47b9061cc0dd7dbdbea10c90ff8649e04361cc89e3bdc91dc39a28f83649"
+  },
+  "sources": {
+    "package.json": "5c3c3d6300b0753ff8d748f47b68e80f275f35a2b46d345f84850b97df67bc55",
+    "pnpm-lock.yaml": "cb77a0ba01b41f20bbf8e177398e15c31dd35ee982751ab9a0aaa556c9613a21",
+    "src/audit.ts": "f7752ad82ecbda9a0722f397b767772e8f4a61ff6d0ed708bd542bdfa1020d1d",
+    "src/calibrate.ts": "9c52d7750e76f4c3b1257ae6b8224a1da88e0e0bb12f84dec9ce11cc5cf1d54a",
+    "src/checks.ts": "f44c6e59429bc9c128d199c4e420cf177c58de625c9488f578beb407bd993f67",
+    "src/cli.ts": "d9da9aab4e1e1534c035d54dfa3d617657ffa5890f987ea9819d5b0142a915e1",
+    "src/engine.ts": "bff0af16fdf8b0ab5ef0f9f06440a847d973a2db5e6c8d4a7bfead7cba26bef1",
+    "src/experiment.ts": "21964a5d68c238d735e90b0c4100045d0ccf7ed85b98c9ec9b6461c979501bce",
+    "src/families/delayed.ts": "94832fbb044d56ffb5d710002f1759cb4ac09584947ca72ac3e46c9b34a63412",
+    "src/families/fulfillment.ts": "e2bddf686da9e45ef8edab7eff2c3e407b6d15e1dcbb091b0ffe9ee3758f3322",
+    "src/families/settlement.ts": "aba5393d1477ecbe0c81615920f7b6f03a6cfdae498a0d20fd03dba05d24a541",
+    "src/families/types.ts": "b088c6d86e1081b3f20386fb2e96087f6a988047de4ca95c5adf78b4fcccc7d5",
+    "src/fixture.ts": "b276d91dd6472c70da925758f7a6e819fa0abd11156ad4f59491f317d6c85125",
+    "src/grader.ts": "cd6439447fcf764172bd39517926e151d6fd53f62ac45e9d91153584ec33930f",
+    "src/harness/assistant.ts": "2ed7a090cf4b4a7d48f1a07ec32b4a20b7a9b8481bd854f285929db8994d27f9",
+    "src/harness/capture.ts": "f2ed39d9975bdafd0f8dce50582ea9e668d1b9f067c75795df84be67982f10ec",
+    "src/harness/claude-code.ts": "06d7c683ef284dfac5f230c1159345bb2d68f375344bc445880611e922a98e97",
+    "src/harness/codex.ts": "2731290ab92dedd6c70721b370b5474b444c89e266249aef7f572bd9923eb9c1",
+    "src/harness/free-model.ts": "9e0b3619512f9bd1f0a950d41712b295ad287eaac958240816c15103f2e585f1",
+    "src/harness/identity.ts": "2af0cb5a913d83847de9303acccff433c18a40effb0088ea372817478f519d4e",
+    "src/harness/model.ts": "013471abcceca5522bf3e9001f4b416cf81022e3a950416081db785b3d986018",
+    "src/harness/redact.ts": "2a749790614908b4500f58673ca0ab39133ba0c4bb0f0770852c87f233546e10",
+    "src/harness/repo-tools.ts": "9b488e3b44b58799937a3b982cd72793a875ea9229344d585b75b5161678225e",
+    "src/harness/sandbox.ts": "ba3de6f969a16951dcb6e01ac8fc0fb56136d3374a9f5ed23ec5fde95b9c1092",
+    "src/harness/snapshot.ts": "0e389f1c269259980d9a5e14260394d150f130cc47654721938429ea68ace777",
+    "src/report.ts": "a1af1ba1b5a6e23b9b7ef33bb1040e237fcaff660a5c65af41d9662481dd6852",
+    "src/runner.ts": "bebef24b27281811a2460ab6f83116e895c7315c1531490a5d645ef0f2f2631f",
+    "src/scenario.ts": "10b712e43cdc64101a0a3d54d6cec39087f2170f9cc38a35ab484ad745e41ae5",
+    "src/schema.ts": "cbbf9b41d36d24af07aac12dab2afcbae1f6890458313da127bf867338e1d79d",
+    "src/state.ts": "432a9d084931bc2d49565d813c87f7b618bab9cdaf5a147a918201f05eb54040",
+    "src/tools.ts": "6c0414ed6597b5119dedc3c68e3b95148b341f8903a62799381f5c9ed7f36818",
+    "src/usage.ts": "851da3990f1438247088735f35dbc13edca59697a33e55ca42920ce91888fbc3"
+  },
+  "systemPromptHash": "056ad5ac1f4294687923fa19d25834c5b89bd1c033e6e44f85ab44943ded3427",
+  "modelConfig": {
+    "provider": "anthropic",
+    "model": "claude-opus-5",
+    "thinking": "default"
+  },
+  "budgets": {
+    "timeoutMs": 3600000,
+    "maxTotalTokens": 20000000,
+    "providerRetries": 4,
+    "compaction": true
+  },
+  "maxAttemptsPerTrial": 2,
+  "design": {
+    "profile": "scenario-matrix",
+    "seed": 1,
+    "repetitions": 5,
+    "families": [
+      "settlement",
+      "fulfillment"
+    ]
+  },
+  "trials": [
+    {
+      "scenario": "task-cancellation",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2136586205,
+      "id": "t001",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-new-scenarios-retained/t003/summary.json",
+        "sha256": "9e2ee92421c69be07bd66e8388436bce8cdf8f96c9b699d620ae87e2658e2e65",
+        "integritySha256": "48fb04d021087042dd663bb0284011bead4f6a90bf9cc0f1830c0dbd07df9ae3",
+        "compatibility": "Scenario 1.1 changes downgrade timing only; retained cancellation/delayed evidence is unchanged."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 1775922842,
+      "id": "t002",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-new-scenarios-retained/t002/summary.json",
+        "sha256": "de7e76eb6903cc75259caa7f496edfa28cab2f2c93919f6f0c6ac70dd97cde5c",
+        "integritySha256": "3bca5566be6c223824141c0aa9fbcf30904a4e8c0a997890aabf0b0469e25ae6",
+        "compatibility": "Scenario 1.1 changes downgrade timing only; retained cancellation/delayed evidence is unchanged."
+      }
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 1775922842,
+      "id": "t003",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-new-scenarios-retained/t006/summary.json",
+        "sha256": "dc5d03efbfc9597eac82350baeb506e1b7a34a311ecda41e87eef35b7f1e814d",
+        "integritySha256": "82d4dffc4a95997eed62699eb4b40df18e52082dae4394e2602600403bd89e63",
+        "compatibility": "Scenario 1.1 changes downgrade timing only; retained cancellation/delayed evidence is unchanged."
+      }
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2136586205,
+      "id": "t004",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-new-scenarios-retained/t005/summary.json",
+        "sha256": "d3b603a2945656606cc3eb5ae408be0f1cd03af44419c3b5d638cfb4c211ca20",
+        "integritySha256": "b4a807780adb1f22f9e0cd61f99b0346358eec3b1bb629e031c2f47b7844370b",
+        "compatibility": "Scenario 1.1 changes downgrade timing only; retained cancellation/delayed evidence is unchanged."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 1775922842,
+      "id": "t005",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-downgrade-v11/runs/t002/summary.json",
+        "sha256": "2335c3124953019a8a32493b8054264c2461d92cf5ea34436b8757767125a309",
+        "integritySha256": "81abca3b2677a53180d92a7c4ecbcd09cdc7524dea1b209bab5615a11b4b3da7",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "updates",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 1,
+      "id": "t006",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-milestones-2026-09-17/claude-opus-5-fulfillment-r1/summary.json",
+        "sha256": "bfba3b305948ab1bc4e564c88267e0a21d9352f2a5d52bcdfb65f65e49a62f56",
+        "integritySha256": "d3b34a1d5e74f0aa102e310ae2993251a9746e417588737d5ffa92262e00b05f",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2136586205,
+      "id": "t007",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-downgrade-v11/runs/t001/summary.json",
+        "sha256": "059ad08542be0b0441c93a7625cab6aadaa215fe24a6ad30fc3861ed6b36d4fa",
+        "integritySha256": "b17e3f429b76c3839f88c5ac5c97bf73e9fca9f7d3473efa8ee2d201480d57a6",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "updates",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 1,
+      "id": "t008",
+      "replicate": 1,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-milestones-2026-09-17/claude-opus-5-settlement-r1/summary.json",
+        "sha256": "b3ed6fd9f7fdb80100bdaee48c35ea36ed7b6a9cd8cef280cb5dcb21182015c5",
+        "integritySha256": "e4e0e37a3d5388e92b5ee5af423879197ebd23ea4062996fab595356d0596076",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "updates",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2,
+      "id": "t009",
+      "replicate": 2,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-milestones-2026-09-17/claude-opus-5-settlement-r2/summary.json",
+        "sha256": "47c5092e254f945d71b1379e5d7ede6521ca5d1433cffcc96b99b99ba2db1ecb",
+        "integritySha256": "244931068c8758dc4c0316d219225f2f4c9b305ee4525f9f4b394c9077ae58ac",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2301451625,
+      "id": "t010",
+      "replicate": 2,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-five-v1/runs/t010/summary.json",
+        "sha256": "3bede2a254f8ae822e95759f13bdc6c3e18585b1ef935db9d5f623f62607e4e2",
+        "integritySha256": "0696ca11f0938928392a2582bba3f63e1f4ed4f17e03ac9c90d556144cb0263c",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2483128085,
+      "id": "t011",
+      "replicate": 2,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-five-v1/runs/t011/summary.json",
+        "sha256": "1759d6024ea4108cc8ead5d20dcbe8b54f80e5214c3bcfa99e666114ea67e239",
+        "integritySha256": "6f71c42eb095e4eee8684c7a064ec96bd38ac63b7304df0b0b0806117f26683e",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2483128085,
+      "id": "t012",
+      "replicate": 2,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-five-v1/runs/t012/summary.json",
+        "sha256": "306dc972846688d8ffee11bdd0facb697b19fec194bc70fc1b6dd1b7a87d5402",
+        "integritySha256": "9ecde71ade14b15660dd670c74d8788787fb586658a01e07fa57d307970b6e9a",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2483128085,
+      "id": "t013",
+      "replicate": 2,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-five-v1/runs/t013/summary.json",
+        "sha256": "657c1e3fd43502ba063de1505c56f73110f5042ff4e965ed1a6a2fc9bb09a046",
+        "integritySha256": "727e128ee3f8c56542ddb4ad447653ce725c6d6d61b4ed042a598243bbb7a6f8",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2301451625,
+      "id": "t014",
+      "replicate": 2,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-five-v1/runs/t014/summary.json",
+        "sha256": "630c6fea44e0fbfab9272115ad0f00db16898a4e018b3608579bd064a3051ff4",
+        "integritySha256": "4f319d080c11fd7bebe82b40102885f383183fa9851b111ec891a38a20a40e67",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2301451625,
+      "id": "t015",
+      "replicate": 2
+    },
+    {
+      "scenario": "updates",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2,
+      "id": "t016",
+      "replicate": 2,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-milestones-2026-09-17/claude-opus-5-fulfillment-r2/summary.json",
+        "sha256": "f9975be51c89b819c0bd6804960d750671fdeae3403523a067a815921e1fc026",
+        "integritySha256": "3903384a024ce7b61bfddbeaa2ee1022bc9203cdb0e5bc649ab602e1ed607ab8",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "updates",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 3,
+      "id": "t017",
+      "replicate": 3,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-milestones-2026-09-17/claude-opus-5-fulfillment-r3/summary.json",
+        "sha256": "e920c91aa88519f3057e6df93a4b2b35cfc47e6318d7b6e7d7f9fe46fafc3cac",
+        "integritySha256": "e2c15238c4392a773823318bef7fcabb56abc74cbcc753a7ce8b9ef75d0c91dd",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 655531459,
+      "id": "t018",
+      "replicate": 3
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 3130900766,
+      "id": "t019",
+      "replicate": 3
+    },
+    {
+      "scenario": "updates",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 3,
+      "id": "t020",
+      "replicate": 3,
+      "reused": {
+        "path": "/home/mayank/code/environment-awareness-eval/results/opus5-milestones-2026-09-17/claude-opus-5-settlement-r3/summary.json",
+        "sha256": "967cc8730318989702fe60a3036ae02a60e9f5fd8a63159a09abd148602ed4f3",
+        "integritySha256": "5430a18fb1e8502ce88c1759115793eaa417964c9b753fce4cb2c23cc6503b0c",
+        "compatibility": "Same scenario, fixture, prompt, native agent, model selection, and seed."
+      }
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 655531459,
+      "id": "t021",
+      "replicate": 3
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 655531459,
+      "id": "t022",
+      "replicate": 3
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 3130900766,
+      "id": "t023",
+      "replicate": 3
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 3130900766,
+      "id": "t024",
+      "replicate": 3
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 3194245034,
+      "id": "t025",
+      "replicate": 4
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2541218655,
+      "id": "t026",
+      "replicate": 4
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2541218655,
+      "id": "t027",
+      "replicate": 4
+    },
+    {
+      "scenario": "updates",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 4,
+      "id": "t028",
+      "replicate": 4
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 3194245034,
+      "id": "t029",
+      "replicate": 4
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2541218655,
+      "id": "t030",
+      "replicate": 4
+    },
+    {
+      "scenario": "updates",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 4,
+      "id": "t031",
+      "replicate": 4
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 3194245034,
+      "id": "t032",
+      "replicate": 4
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 1155433493,
+      "id": "t033",
+      "replicate": 5
+    },
+    {
+      "scenario": "updates",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 5,
+      "id": "t034",
+      "replicate": 5
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2424989201,
+      "id": "t035",
+      "replicate": 5
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 1155433493,
+      "id": "t036",
+      "replicate": 5
+    },
+    {
+      "scenario": "urgency-downgrade",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2424989201,
+      "id": "t037",
+      "replicate": 5
+    },
+    {
+      "scenario": "updates",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 5,
+      "id": "t038",
+      "replicate": 5
+    },
+    {
+      "scenario": "task-cancellation",
+      "family": "fulfillment",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 1155433493,
+      "id": "t039",
+      "replicate": 5
+    },
+    {
+      "scenario": "delayed-relevance",
+      "family": "settlement",
+      "load": "high",
+      "noise": "normal",
+      "delivery": "ambient",
+      "seed": 2424989201,
+      "id": "t040",
+      "replicate": 5
+    }
+  ]
+}

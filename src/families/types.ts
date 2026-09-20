@@ -43,7 +43,16 @@ export interface TaskFamily {
   id: string;
   version: string;
   focal: { id: string; title: string; requirements: string; paths: string[] };
-  hotfix: { id: string; title: string; requirements: string; paths: string[] };
+  hotfix: {
+    id: string;
+    title: string;
+    requirements: string;
+    paths: string[];
+    /** Incident tests whose inspection demonstrates engagement before a source edit. */
+    testPaths?: string[];
+  };
+  /** Only the delayed-relevance arm replaces the secondary task with a later assignment. */
+  delayed?: { context: SlackLine; staleReference: Record<string, string> };
   watched: Array<{ id: string; title: string; status: string; assignee: string }>;
   updates: {
     /** Replaces the focal ticket requirements. */

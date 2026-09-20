@@ -63,6 +63,12 @@ export type EventBody =
   | { type: 'tool_action'; observation: ToolObservation }
   | { type: 'snapshot'; snapshot: RepoSnapshot }
   | {
+      type: 'interruption';
+      phase: 'requested' | 'resumed';
+      eventIds: string[];
+      turnId: string;
+    }
+  | {
       type: 'environment_event';
       event: TeamEvent;
       trigger: {
@@ -74,6 +80,11 @@ export type EventBody =
         bundled?: boolean;
         sourceInspection?: boolean;
         focalEdit?: boolean;
+        hotfixEdit?: boolean;
+        hotfixInspection?: boolean;
+        hotfixTestInspection?: boolean;
+        hotfixStarted?: boolean;
+        firstFocalEditDecision?: number | null;
         batchTestRun?: boolean;
         newModule?: boolean;
       };
@@ -150,10 +161,34 @@ export interface EventMetrics {
     responseDecisions: number;
     contentRetrieved: boolean;
     retrievalLatency: number | null;
-    finalBehaviorCorrect: boolean;
+    finalBehaviorCorrect: boolean | null;
     /** Under the contract in force when the event fired; not the new requirement. */
     behaviorCorrectAtFire: boolean | null;
     compactionsAfterContent: number | null;
+  };
+  timing?: {
+    firstFocalEditDecision: number | null;
+    afterFocalEdit: boolean;
+    targetChecksFailingAtFire: number | null;
+    responseOpportunity: boolean;
+    /** Arm-specific adequacy: active unfinished work, or the delayed phase/gap criteria. */
+    eligible: boolean;
+  };
+  suppression?: {
+    target: 'focal' | 'hotfix';
+    sourceChangesAfterFire: number;
+    sourceChangesAfterContent: number | null;
+    testRunsAfterFire: number;
+    forbiddenStatusTransitions: number;
+    checks: Check[];
+  };
+  delayed?: {
+    assignmentDecision: number | null;
+    gapDecisions: number | null;
+    contentBeforeAssignment: boolean;
+    laterRetrievalDecision: number | null;
+    secondaryChangesBeforeAssignment: number;
+    checks: Check[];
   };
   missed: boolean | null;
   focalChangesBeforeContent: number | null;

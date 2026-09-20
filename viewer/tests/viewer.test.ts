@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createElement } from 'react';
@@ -18,10 +18,12 @@ import type { RunDetail, ViewerIndex } from '../src/model.js';
 import { capturedContext } from '../src/derive/capture.js';
 import { indicatorDecision, slackThreadOf, visibilityAt } from '../src/derive/slack.js';
 import { actionRowsOf } from '../src/derive/timeline.js';
+import { modelId } from '../src/derive/results.js';
 import { Comparison } from '../src/ui/Compare.js';
 import { RunView } from '../src/ui/Cockpit.js';
 import { ExperimentView } from '../src/ui/ExperimentView.js';
 import { RunList } from '../src/ui/RunList.js';
+import { ModelCallInspector } from '../src/ui/ModelCallInspector.js';
 
 let dir: string;
 let index: ViewerIndex;
@@ -64,6 +66,69 @@ describe('loading', () => {
         expect(inputMessages(r, c.decision).map((m) => m.message)).toEqual(c.messages);
     expect(r.header?.tools.map((t) => t.name)).toContain('linear_inbox');
     expect(r.capture?.complete).toBe(true);
+  });
+
+  it('includes a saved run in its cached experiment slot without moving its evidence', async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'eaw-viewer-cached-'));
+    try {
+      const manifest = JSON.parse(
+        await readFile(path.join(dir, 'fixture-load-sweep/manifest.json'), 'utf8'),
+      );
+      manifest.id = 'cached-view';
+      manifest.trials = [
+        {
+          ...manifest.trials[0],
+          reused: {
+            path: path.join(dir, 'fixture-load-sweep/runs/t003/summary.json'),
+            sha256: 'fixture',
+            integritySha256: 'fixture',
+            compatibility: 'Synthetic viewer fixture',
+          },
+        },
+      ];
+      await writeFile(path.join(root, 'manifest.json'), JSON.stringify(manifest));
+      const loaded = await loadResults(root);
+      expect(loaded.index.runs).toHaveLength(1);
+      expect(loaded.index.runs[0]!.experiment).toBe('cached-view');
+      expect(loaded.index.runs[0]!.key).toContain('cached/t001');
+      expect(loaded.details[0]!.summary.runId).toBe(
+        run('fixture-load-sweep/runs/t003').summary.runId,
+      );
+      expect(loaded.index.skipped).toEqual([]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('counts one matrix repetition after a provider interruption and retry', async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'eaw-viewer-retry-'));
+    try {
+      const manifest = JSON.parse(
+        await readFile(path.join(dir, 'fixture-load-sweep/manifest.json'), 'utf8'),
+      );
+      manifest.design.profile = 'scenario-matrix';
+      manifest.trials = [manifest.trials[0]];
+      await writeFile(path.join(root, 'manifest.json'), JSON.stringify(manifest));
+      const first = path.join(root, 'runs/t001');
+      const retry = path.join(root, 'runs/t001.r2');
+      await cp(path.join(dir, 'fixture-load-sweep/runs/t003'), first, { recursive: true });
+      await cp(first, retry, { recursive: true });
+      const summaryFile = path.join(first, 'summary.json');
+      const failed = JSON.parse(await readFile(summaryFile, 'utf8'));
+      failed.termination.reason = 'provider_error';
+      await writeFile(summaryFile, JSON.stringify(failed));
+      // A new in-progress directory without a summary cannot hide the saved result.
+      await mkdir(path.join(root, 'runs/t001.r3'));
+      const loaded = await loadResults(root);
+      expect(loaded.index.runs).toHaveLength(1);
+      expect(loaded.index.runs[0]!.key).toBe('runs/t001.r2');
+      expect(loaded.index.runs[0]!.termination).not.toBe('provider_error');
+      expect(JSON.parse(await readFile(summaryFile, 'utf8')).termination.reason).toBe(
+        'provider_error',
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });
 
@@ -129,6 +194,27 @@ describe('aggregates', () => {
 });
 
 describe('rendering', () => {
+  it('keeps every thinking setting inside the same model run view', () => {
+    const sample = index.runs[0]!;
+    const model = modelId(sample.model);
+    const html = renderToStaticMarkup(
+      createElement(RunView, {
+        run: run(sample.key),
+        decision: 2,
+        siblings: [
+          sample,
+          { ...sample, key: 'alternate-thinking-run', model: `${model} · high` },
+          { ...sample, key: 'different-model-run', model: 'another-model · high' },
+        ],
+      }),
+    );
+    expect(html).toContain('← models');
+    expect(html).toContain('title="alternate-thinking-run"');
+    expect(html).not.toContain('title="different-model-run"');
+    expect(html).toContain('<span class="pane-note">2</span>');
+    expect(html.match(new RegExp(`<option value="${model}"`, 'g'))).toHaveLength(1);
+  });
+
   it('renders the run list, cockpit and experiment view', () => {
     const list = renderToStaticMarkup(
       createElement(RunList, { index, query: new URLSearchParams('noise=heavy') }),
@@ -138,9 +224,14 @@ describe('rendering', () => {
     const cockpit = renderToStaticMarkup(
       createElement(RunView, { run: missed, decision: 2 }),
     );
-    expect(cockpit).toContain('Model call · D2');
+    expect(cockpit).toContain('Inspect decision 2');
     expect(cockpit).toContain('missed');
-    expect(cockpit).toContain('environment_status');
+    expect(cockpit).not.toContain('class="model-inspector"');
+    const inspector = renderToStaticMarkup(
+      createElement(ModelCallInspector, { run: missed, decisionIndex: 2 }),
+    );
+    expect(inspector).toContain('Model call · D2');
+    expect(inspector).toContain('environment_status');
     const experiment = renderToStaticMarkup(
       createElement(ExperimentView, { index, id: 'fixture-load-sweep' }),
     );
@@ -222,7 +313,7 @@ describe('restored cockpit on v4 artifacts', () => {
     expect(partial.fidelity.limitations.join(' ')).toContain('Missing outputs: 2');
   });
 
-  it('keeps terminal output readable and renders the original panes and aligned comparison', () => {
+  it('keeps diagnostics available while focusing the default view on activity and updates', () => {
     const r = run('fixture-load-sweep/runs/t018');
     const shell = actionRowsOf(r).find((a) => a.toolName === 'bash')!;
     expect(shell.outputPreview).toBe(
@@ -231,15 +322,16 @@ describe('restored cockpit on v4 artifacts', () => {
     const cockpit = renderToStaticMarkup(
       createElement(RunView, { run: r, decision: null, siblings: index.runs }),
     );
-    for (const pane of [
-      'railpane',
-      'activitypane',
-      'terminalpane',
-      'slackpane',
-      'scrubber',
-      'model-inspector',
-    ])
+    for (const pane of ['railpane', 'activitypane', 'slackpane', 'scrubber'])
       expect(cockpit).toContain(pane);
+    expect(cockpit).not.toContain('class="pane terminalpane"');
+    expect(cockpit).not.toContain('class="model-inspector"');
+    expect(cockpit).not.toContain('Whole-run summary');
+    expect(cockpit).not.toContain('Agent overview');
+    expect(cockpit).toContain('>Tool logs</button>');
+    expect(cockpit).toContain('>Model call</button>');
+    expect(cockpit).toContain('>Run details</button>');
+    expect(cockpit).toContain('aria-label="Show noise messages"');
     expect(cockpit).toContain(`value="${r.summary.usage.turnCalls}"`);
     const shorter = run('fixture-load-sweep/runs/t005');
     const comparison = renderToStaticMarkup(

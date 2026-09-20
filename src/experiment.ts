@@ -1,4 +1,4 @@
-import { mkdir, open, readFile, stat, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, open, readFile, readdir, stat, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { z } from 'zod';
@@ -21,19 +21,43 @@ import {
   conditionSchema,
   FAMILIES,
   familySchema,
+  familyFor,
   importantKinds,
   loadSchema,
   prng,
   SCRIPT_VERSION,
+  scriptVersionFor,
+  scenarioSchema,
+  type Scenario,
   type FamilyId,
+  deliverySchema,
+  noiseSchema,
+  type Delivery,
+  type Noise,
 } from './scenario.js';
-import type { Summary } from './schema.js';
+import { FORMAT, type Summary } from './schema.js';
+import { auditRun } from './audit.js';
 
-export const profileSchema = z.enum(['smoke', 'load-sweep', 'controls']);
+export const profileSchema = z.enum([
+  'smoke',
+  'load-sweep',
+  'controls',
+  'new-scenarios',
+  'scenario-matrix',
+  'interrupt-pilot',
+]);
 export type Profile = z.infer<typeof profileSchema>;
-const trialSchema = conditionSchema.extend({
+const trialSchema = conditionSchema.safeExtend({
   id: z.string().regex(/^t\d{3}$/),
   replicate: z.number().int().min(1).max(10),
+  reused: z
+    .object({
+      path: z.string(),
+      sha256: z.string(),
+      integritySha256: z.string(),
+      compatibility: z.string(),
+    })
+    .optional(),
 });
 type Trial = z.infer<typeof trialSchema>;
 const budgetsSchema = z.object({
@@ -66,7 +90,11 @@ export const manifestSchema = z.object({
     seed: z.number().int().min(0).max(0xffffffff),
     repetitions: z.number().int().min(1).max(10),
     families: z.array(familySchema).min(1),
+    scenarios: z.array(scenarioSchema).min(1).optional(),
+    delivery: deliverySchema.optional(),
+    noise: noiseSchema.optional(),
   }),
+  baselines: z.array(z.object({ path: z.string(), sha256: z.string() })).optional(),
   trials: z.array(trialSchema).min(1).max(500),
 });
 export type Manifest = z.infer<typeof manifestSchema>;
@@ -99,10 +127,66 @@ export function schedule(
   seed: number,
   repetitions: number,
   families: FamilyId[],
+  scenarios: Scenario[] = ['task-cancellation', 'urgency-downgrade', 'delayed-relevance'],
 ): Trial[] {
   type Cell = Omit<Trial, 'id' | 'replicate' | 'seed'>;
   let cells: Cell[];
-  if (profile === 'smoke')
+  if (profile === 'interrupt-pilot') {
+    cells = families.flatMap((family) =>
+      (['task-cancellation', 'urgency-downgrade'] as const).flatMap((scenario) => [
+        {
+          family,
+          scenario,
+          load: 'high' as const,
+          delivery: 'interrupt' as const,
+          noise: 'none' as const,
+        },
+        {
+          family,
+          scenario,
+          load: 'high' as const,
+          delivery: 'interrupt' as const,
+          noise: 'normal' as const,
+        },
+        {
+          family,
+          scenario,
+          load: 'high' as const,
+          delivery: 'interrupt' as const,
+          noise: 'normal' as const,
+          updates: 'disabled' as const,
+        },
+      ]),
+    );
+  } else if (profile === 'scenario-matrix') {
+    cells = families.flatMap((family) =>
+      scenarioSchema.options.map((scenario) => ({
+        family,
+        scenario,
+        load: 'high' as const,
+        noise: 'normal' as const,
+        delivery: 'ambient' as const,
+      })),
+    );
+  } else if (profile === 'new-scenarios') {
+    if (
+      !scenarios.length ||
+      scenarios.includes('updates') ||
+      new Set(scenarios).size !== scenarios.length
+    )
+      throw Error(
+        'new-scenarios requires distinct new scenario arms; updates belong to the baseline',
+      );
+    cells = families.flatMap((family) =>
+      scenarios.map((scenario) => ({
+        family,
+        scenario,
+        load: 'high' as const,
+        noise: 'normal' as const,
+        delivery: 'ambient' as const,
+      })),
+    );
+  } else if (profile === 'smoke')
     cells = [
       { family: families[0]!, load: 'medium', noise: 'normal', delivery: 'ambient' },
     ];
@@ -144,7 +228,10 @@ export function schedule(
         ...cell,
         id: 't' + String(trials.length + 1).padStart(3, '0'),
         replicate,
-        seed: hashCombine(seed, cell.family, replicate),
+        seed:
+          profile === 'scenario-matrix' && cell.scenario === 'updates'
+            ? replicate
+            : hashCombine(seed, cell.family, replicate),
       });
   }
   return trials;
@@ -152,9 +239,18 @@ export function schedule(
 
 function fixtureHashes() {
   return Object.fromEntries(
-    familySchema.options.flatMap((f) =>
-      loadSchema.options.map((l) => [`${f}/${l}`, fixtureDigest(FAMILIES[f], l)]),
-    ),
+    familySchema.options
+      .flatMap((f) =>
+        loadSchema.options.map((l) => [`${f}/${l}`, fixtureDigest(FAMILIES[f], l)]),
+      )
+      .concat(
+        familySchema.options.flatMap((f) =>
+          loadSchema.options.map((l) => [
+            `${f}/${l}/delayed-relevance`,
+            fixtureDigest(familyFor({ family: f, scenario: 'delayed-relevance' }), l),
+          ]),
+        ),
+      ),
   );
 }
 
@@ -169,20 +265,48 @@ export async function freeze(
     modelConfig?: ModelSelection;
     budgets?: Partial<Budgets>;
     maxAttemptsPerTrial?: number;
+    scenarios?: Scenario[];
+    baselineDir?: string;
+    reuseDirs?: string[];
+    delivery?: Delivery;
+    noise?: Noise;
   },
 ) {
   const sources = await sourceIdentity();
   const families = options.families ?? [...familySchema.options];
   const seed = options.seed ?? 0,
     repetitions = options.repetitions ?? 3;
+  if (
+    (options.profile === 'interrupt-pilot' || options.delivery === 'interrupt') &&
+    options.modelConfig?.provider !== 'openai-codex'
+  )
+    throw Error('Interrupt delivery requires native Codex');
+  if (options.profile === 'interrupt-pilot' && (options.delivery || options.noise))
+    throw Error('interrupt-pilot defines its own delivery and noise conditions');
+  if (options.scenarios && options.profile !== 'new-scenarios')
+    throw Error('--scenarios is only supported by new-scenarios');
+  const baselines = options.baselineDir
+    ? await captureBaselines(options.baselineDir)
+    : undefined;
   const manifest = manifestSchema.parse({
     version: '4.0',
     id: options.id,
     createdAt: new Date().toISOString(),
     protocolVersion: PROTOCOL_VERSION,
-    scriptVersion: SCRIPT_VERSION,
+    scriptVersion:
+      options.profile === 'interrupt-pilot' || options.delivery === 'interrupt'
+        ? 'interrupt-1.0'
+        : ['new-scenarios', 'scenario-matrix'].includes(options.profile)
+          ? SCRIPT_VERSION
+          : scriptVersionFor({}),
     familyVersions: Object.fromEntries(
-      familySchema.options.map((f) => [f, FAMILIES[f].version]),
+      familySchema.options.flatMap((f) => [
+        [f, FAMILIES[f].version],
+        [
+          f + '/delayed-relevance',
+          familyFor({ family: f, scenario: 'delayed-relevance' }).version,
+        ],
+      ]),
     ),
     fixtureHashes: fixtureHashes(),
     sources,
@@ -190,9 +314,78 @@ export async function freeze(
     modelConfig: options.modelConfig ?? DEFAULT_SELECTION,
     budgets: { ...DEFAULT_BUDGETS, ...options.budgets },
     maxAttemptsPerTrial: options.maxAttemptsPerTrial ?? 2,
-    design: { profile: options.profile, seed, repetitions, families },
-    trials: schedule(options.profile, seed, repetitions, families),
+    design: {
+      profile: options.profile,
+      seed,
+      repetitions,
+      families,
+      ...(options.delivery ? { delivery: options.delivery } : {}),
+      ...(options.noise ? { noise: options.noise } : {}),
+      ...(options.profile === 'new-scenarios'
+        ? {
+            scenarios: options.scenarios ?? [
+              'task-cancellation',
+              'urgency-downgrade',
+              'delayed-relevance',
+            ],
+          }
+        : {}),
+    },
+    ...(baselines ? { baselines } : {}),
+    trials: schedule(options.profile, seed, repetitions, families, options.scenarios).map(
+      (t) => ({
+        ...t,
+        ...(options.delivery ? { delivery: options.delivery } : {}),
+        ...(options.noise ? { noise: options.noise } : {}),
+      }),
+    ),
   });
+  if (options.reuseDirs?.length) {
+    if (options.profile !== 'scenario-matrix')
+      throw Error('Cached trial reuse requires scenario-matrix');
+    const saved = (await Promise.all(options.reuseDirs.map(captureBaselines))).flat();
+    for (const ref of saved) {
+      const summary = JSON.parse(await readFile(ref.path, 'utf8')) as Summary;
+      const trial = manifest.trials.find((t) => sameCondition(t, summary.condition));
+      if (!trial) throw Error('Saved run has no matching trial: ' + ref.path);
+      if (trial.reused) throw Error('Duplicate saved result for a trial: ' + ref.path);
+      if (
+        !summary.grade.valid ||
+        summary.grade.censored ||
+        !(await auditRun(path.dirname(ref.path))).eligible
+      )
+        throw Error('Saved run is not eligible for reuse: ' + ref.path);
+      const r = summary.runtime,
+        selection = manifest.modelConfig;
+      if (
+        r['model'] !== selection.model ||
+        r['provider'] !== selection.provider ||
+        r['thinking'] !== selection.thinking ||
+        r['agent'] !== (selection.provider === 'anthropic' ? 'claude-code' : 'codex') ||
+        r['fixtureDigest'] !== fixtureDigest(familyFor(trial), trial.load) ||
+        r['systemPromptSha256'] !== manifest.systemPromptHash ||
+        r['protocolVersion'] !== PROTOCOL_VERSION
+      )
+        throw Error(
+          'Saved run has incompatible model, fixture, prompt, or protocol: ' + ref.path,
+        );
+      const script = r['scriptVersion'];
+      const compatiblePrior =
+        script === 'scenario-arms-1.0' &&
+        ['task-cancellation', 'delayed-relevance'].includes(trial.scenario ?? '');
+      if (script !== scriptVersionFor(trial) && !compatiblePrior)
+        throw Error('Saved run has incompatible event timing: ' + ref.path);
+      trial.reused = {
+        ...ref,
+        integritySha256: sha256(
+          await readFile(path.join(path.dirname(ref.path), 'integrity.json')),
+        ),
+        compatibility: compatiblePrior
+          ? 'Scenario 1.1 changes downgrade timing only; retained cancellation/delayed evidence is unchanged.'
+          : 'Same scenario, fixture, prompt, native agent, model selection, and seed.',
+      };
+    }
+  }
   await mkdir(path.dirname(path.resolve(file)), { recursive: true });
   const snapshot = Object.fromEntries(
     await Promise.all(
@@ -211,6 +404,54 @@ export async function freeze(
     },
   );
   return manifest;
+}
+
+/** Saved evidence is referenced and hash-checked, never copied into new trials or regraded. */
+export async function captureBaselines(
+  dir: string,
+): Promise<Array<{ path: string; sha256: string }>> {
+  const found: Array<{ path: string; sha256: string }> = [];
+  async function walk(root: string, depth: number) {
+    const file = path.join(root, 'summary.json');
+    if (await exists(file)) {
+      const bytes = await readFile(file);
+      const summary = JSON.parse(bytes.toString()) as Summary;
+      if (summary.format !== FORMAT) throw Error('Unsupported baseline: ' + file);
+      found.push({ path: file, sha256: sha256(bytes) });
+      return;
+    }
+    if (depth >= 3) return;
+    for (const entry of (await readdir(root, { withFileTypes: true })).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    ))
+      if (entry.isDirectory() && !entry.name.startsWith('.'))
+        await walk(path.join(root, entry.name), depth + 1);
+  }
+  await walk(path.resolve(dir), 0);
+  if (!found.length) throw Error('No saved baseline runs in ' + dir);
+  return found;
+}
+
+export async function readBaselines(manifest: Pick<Manifest, 'baselines'>) {
+  return Promise.all(
+    (manifest.baselines ?? []).map(async (ref) => {
+      const bytes = await readFile(ref.path);
+      if (sha256(bytes) !== ref.sha256) throw Error('Saved baseline changed: ' + ref.path);
+      const s = JSON.parse(bytes.toString()) as Summary;
+      return {
+        path: ref.path,
+        sha256: ref.sha256,
+        runId: s.runId,
+        condition: s.condition,
+        model: s.runtime['model'],
+        scriptVersion: s.runtime['scriptVersion'],
+        graderVersion: s.grade.graderVersion,
+        valid: s.grade.valid,
+        censored: s.grade.censored,
+        summary: s.grade.summary,
+      };
+    }),
+  );
 }
 
 async function exists(p: string) {
@@ -241,7 +482,9 @@ async function attempts(runsDir: string, trial: Trial): Promise<AttemptState[]> 
       out.push(
         summary.termination.reason === 'provider_error'
           ? { id, state: 'provider_error', summary }
-          : { id, state: 'completed', summary },
+          : summary.termination.reason === 'harness_error'
+            ? { id, state: 'harness_error' }
+            : { id, state: 'completed', summary },
       );
     } else {
       const error = (await exists(path.join(dir, 'attempt-error.json')))
@@ -260,6 +503,8 @@ async function attempts(runsDir: string, trial: Trial): Promise<AttemptState[]> 
 }
 
 async function verifyFrozen(manifest: Manifest) {
+  await readBaselines(manifest);
+  for (const trial of manifest.trials) if (trial.reused) await readReused(trial);
   if (JSON.stringify(await sourceIdentity()) !== JSON.stringify(manifest.sources))
     throw Error('Frozen source mismatch: freeze a new manifest after code changes');
   if (manifest.systemPromptHash !== sha256(SYSTEM_PROMPT))
@@ -272,7 +517,14 @@ async function verifyFrozen(manifest: Manifest) {
  * Runs pending trials in schedule order. Behavioral failures never stop the batch. Provider
  * errors are retained and re-attempted; a harness error or incomplete attempt stops the batch.
  */
-export async function execute(file: string, root: string, maxNew = Infinity) {
+export async function execute(
+  file: string,
+  root: string,
+  maxNew = Infinity,
+  concurrency = 1,
+) {
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4)
+    throw Error('Concurrency must be 1–4');
   const manifest = manifestSchema.parse(JSON.parse(await readFile(file, 'utf8')));
   await verifyFrozen(manifest);
   const dir = path.resolve(root, manifest.id),
@@ -281,6 +533,8 @@ export async function execute(file: string, root: string, maxNew = Infinity) {
   const lock = await open(path.join(dir, '.batch.lock'), 'wx');
   let launched = 0;
   let haltedBy: string | null = null;
+  let next = 0;
+  let comparisons: Promise<unknown> = Promise.resolve();
   try {
     const recorded = path.join(dir, 'manifest.json');
     if (await exists(recorded)) {
@@ -291,43 +545,55 @@ export async function execute(file: string, root: string, maxNew = Infinity) {
         throw Error('Result directory belongs to a different manifest');
     } else
       await writeFile(recorded, JSON.stringify(manifest, null, 2) + '\n', { flag: 'wx' });
-    for (const trial of manifest.trials) {
-      if (launched >= maxNew) break;
-      const prior = await attempts(runsDir, trial);
-      const last = prior.at(-1);
-      if (last?.state === 'completed') continue;
-      if (last?.state === 'harness_error' || last?.state === 'incomplete') {
-        haltedBy = `${last.id}: ${last.state}`;
-        break;
+    const worker = async () => {
+      while (next < manifest.trials.length) {
+        if (haltedBy || launched >= maxNew) break;
+        const trial = manifest.trials[next++]!;
+        if (trial.reused) continue;
+        const prior = await attempts(runsDir, trial);
+        const last = prior.at(-1);
+        if (last?.state === 'completed') continue;
+        if (last?.state === 'harness_error' || last?.state === 'incomplete') {
+          haltedBy = `${last.id}: ${last.state}`;
+          break;
+        }
+        if (prior.length >= manifest.maxAttemptsPerTrial) continue;
+        if (haltedBy || launched >= maxNew) break;
+        const runId = prior.length ? `${trial.id}.r${prior.length + 1}` : trial.id;
+        launched++;
+        console.log(
+          `\n=== ${runId} ${trial.family}/${trial.load}/${trial.noise}/${trial.delivery} rep ${trial.replicate}`,
+        );
+        try {
+          const result = await run({
+            runId,
+            resultsDir: runsDir,
+            condition: {
+              family: trial.family,
+              load: trial.load,
+              noise: trial.noise,
+              delivery: trial.delivery,
+              seed: trial.seed,
+              ...(trial.scenario ? { scenario: trial.scenario } : {}),
+              ...(trial.updates ? { updates: trial.updates } : {}),
+            },
+            budgets: manifest.budgets,
+            keepWorkspace: false,
+            expectedSources: manifest.sources,
+            manifestHash: sha256(JSON.stringify(manifest)),
+            modelConfig: manifest.modelConfig,
+          });
+          if (['provider_error', 'harness_error'].includes(result.termination.reason))
+            haltedBy = `${runId}: ${result.termination.reason}: ${result.termination.detail}`;
+        } catch (e) {
+          console.error(`${runId} attempt error: ${String(e)}`);
+          haltedBy = `${runId}: ${String(e)}`;
+        }
+        comparisons = comparisons.then(() => compare(file, root));
+        await comparisons;
       }
-      if (prior.length >= manifest.maxAttemptsPerTrial) continue;
-      const runId = prior.length ? `${trial.id}.r${prior.length + 1}` : trial.id;
-      launched++;
-      console.log(
-        `\n=== ${runId} ${trial.family}/${trial.load}/${trial.noise}/${trial.delivery} rep ${trial.replicate}`,
-      );
-      try {
-        await run({
-          runId,
-          resultsDir: runsDir,
-          condition: {
-            family: trial.family,
-            load: trial.load,
-            noise: trial.noise,
-            delivery: trial.delivery,
-            seed: trial.seed,
-          },
-          budgets: manifest.budgets,
-          keepWorkspace: false,
-          expectedSources: manifest.sources,
-          manifestHash: sha256(JSON.stringify(manifest)),
-          modelConfig: manifest.modelConfig,
-        });
-      } catch (e) {
-        console.error(`${runId} attempt error: ${String(e)}`);
-      }
-      await compare(file, root);
-    }
+    };
+    await Promise.all(Array.from({ length: concurrency }, worker));
   } finally {
     await lock.close();
     await unlink(path.join(dir, '.batch.lock'));
@@ -358,6 +624,10 @@ export async function compare(file: string, root: string) {
     runsDir = path.join(dir, 'runs');
   const trials: TrialRecord[] = [];
   for (const trial of manifest.trials) {
+    if (trial.reused) {
+      trials.push({ trial, attempts: [], summary: await readReused(trial) });
+      continue;
+    }
     const all = (await exists(runsDir)) ? await attempts(runsDir, trial) : [];
     const final = [...all].reverse().find((a) => a.state === 'completed');
     trials.push({
@@ -366,7 +636,11 @@ export async function compare(file: string, root: string) {
       summary: final?.state === 'completed' ? final.summary : null,
     });
   }
-  const result = summarize(manifest, trials);
+  const result = {
+    ...summarize(manifest, trials),
+    reusedTrials: manifest.trials.filter((t) => t.reused).length,
+    baselines: await readBaselines(manifest),
+  };
   if (await exists(dir)) {
     await writeFile(
       path.join(dir, 'comparison.json'),
@@ -376,10 +650,43 @@ export async function compare(file: string, root: string) {
   }
   return result;
 }
-export type Comparison = ReturnType<typeof summarize>;
+
+function sameCondition(a: Trial, b: Summary['condition']) {
+  return (
+    a.family === b.family &&
+    (a.scenario ?? 'updates') === (b.scenario ?? 'updates') &&
+    a.load === b.load &&
+    a.noise === b.noise &&
+    a.delivery === b.delivery &&
+    (a.updates ?? 'enabled') === (b.updates ?? 'enabled') &&
+    a.seed === b.seed
+  );
+}
+
+async function readReused(trial: Trial): Promise<Summary> {
+  const ref = trial.reused!;
+  const bytes = await readFile(ref.path);
+  if (
+    sha256(bytes) !== ref.sha256 ||
+    sha256(await readFile(path.join(path.dirname(ref.path), 'integrity.json'))) !==
+      ref.integritySha256
+  )
+    throw Error('Saved evidence changed: ' + ref.path);
+  const summary = JSON.parse(bytes.toString()) as Summary;
+  if (
+    !sameCondition(trial, summary.condition) ||
+    !(await auditRun(path.dirname(ref.path))).eligible
+  )
+    throw Error('Saved evidence no longer matches its trial: ' + ref.path);
+  return summary;
+}
+export type Comparison = ReturnType<typeof summarize> & {
+  baselines?: Awaited<ReturnType<typeof readBaselines>>;
+};
 
 export function summarize(manifest: Manifest, trials: TrialRecord[]) {
-  const key = (t: Trial) => `${t.family}/${t.load}/${t.noise}/${t.delivery}`;
+  const key = (t: Trial) =>
+    `${t.family}/${t.load}/${t.noise}/${t.delivery}${t.scenario && t.scenario !== 'updates' ? '/' + t.scenario : ''}${t.updates === 'disabled' ? '/noise-only-control' : ''}`;
   const cells = [...new Set(manifest.trials.map(key))].map((cellKey) => {
     const members = trials.filter((t) => key(t.trial) === cellKey);
     const done = members.flatMap((t) => (t.summary ? [t.summary] : []));
@@ -392,12 +699,14 @@ export function summarize(manifest: Manifest, trials: TrialRecord[]) {
           .filter((e) => e?.fired);
         const assessableRetrieval = metrics.filter((e) => e.missed !== null);
         const completedOutcomes = uncensored.flatMap((s) =>
-          s.grade.events.filter((e) => e.kind === kind && e.fired),
+          s.grade.events.filter((e) => e.kind === kind && e.fired && e.adapted !== null),
         );
         return [
           kind,
           {
             fired: metrics.length,
+            behaviorUnassessable: metrics.filter((e) => e.adapted === null).length,
+            timingEligible: metrics.filter((e) => e.timing?.eligible).length,
             missed: fraction(
               assessableRetrieval.filter((e) => e.missed).length,
               assessableRetrieval.length,
@@ -431,6 +740,17 @@ export function summarize(manifest: Manifest, trials: TrialRecord[]) {
       attempts: members.reduce((n, t) => n + t.attempts.length, 0),
       events,
       outcome: {
+        ...(members[0]?.trial.updates === 'disabled'
+          ? {
+              noiseControl: fraction(
+                uncensored.filter((s) => s.grade.outcome['noiseControlPassed'] === true)
+                  .length,
+                uncensored.filter(
+                  (s) => typeof s.grade.outcome['noiseControlPassed'] === 'boolean',
+                ).length,
+              ),
+            }
+          : {}),
         focalBaseChecksPassedMean: avg(
           valid.map((s) => Number(s.grade.outcome['focalBaseChecksPassed'])),
         ),
@@ -441,7 +761,11 @@ export function summarize(manifest: Manifest, trials: TrialRecord[]) {
         ),
         hotfixCorrect: fraction(
           valid.filter((s) => s.grade.urgent['hotfixCorrect'] === true).length,
-          valid.length,
+          valid.filter(
+            (s) =>
+              s.grade.urgent['hotfixCorrect'] !== null &&
+              s.grade.urgent['hotfixCorrect'] !== undefined,
+          ).length,
         ),
         visibleTestsPass: fraction(
           valid.filter((s) => s.grade.outcome['visibleTestsPass']).length,
@@ -507,5 +831,18 @@ function renderComparison(r: Comparison): string {
       `| ${c.cell} | ${n(c.outcome.focalBaseChecksPassedMean)}/${c.outcome.focalBaseChecksTotal ?? '—'} | ${pct(c.outcome.hotfixCorrect)} | ${n(c.usage.totalTokensMean, 0)} | ${n(c.usage.costUsdMean, 2)} / ${n(c.usage.costUsdTotal, 2)} | ${n(c.usage.durationMinutesMean)} |`,
     );
   lines.push('', r.note, '');
+  if (r.baselines?.length) {
+    lines.push(
+      '## Saved baseline (historical; excluded from new-trial totals)',
+      '',
+      '| Run | Model | Script | Grader | Valid | Saved summary |',
+      '| --- | --- | --- | --- | --- | --- |',
+    );
+    for (const b of r.baselines)
+      lines.push(
+        `| ${b.runId} | ${b.model} | ${b.scriptVersion} | ${b.graderVersion} | ${b.valid} | [artifact](${b.path}) |`,
+      );
+    lines.push('');
+  }
   return lines.join('\n');
 }

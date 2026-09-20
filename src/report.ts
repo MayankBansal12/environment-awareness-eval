@@ -15,7 +15,7 @@ export function renderReport(s: Summary): string {
     .join('\n');
   return `# ${s.runId}
 
-${c.family} · load ${c.load} · noise ${c.noise} · ${c.delivery} · seed ${c.seed}
+${c.family} · scenario ${c.scenario ?? 'updates'} · load ${c.load} · noise ${c.noise} · ${c.delivery} · seed ${c.seed}
 Model: ${cell(s.runtime['provider'])}/${cell(s.runtime['model'])} · thinking ${cell(s.runtime['thinking'])}
 ${s.runtime['agent'] === 'claude-code' ? 'Agent: Claude Code · native default effort and fallback behavior\n' : ''}
 
@@ -53,6 +53,22 @@ ${g.events
 ${rows}
 
 Noise events: ${cell(g.summary['noiseEvents'])}
+Scheduled updates not fired: ${cell(g.summary['importantNotFired'])}
+
+${g.events
+  .filter((e) => e.suppression || e.delayed)
+  .map(
+    (e) => `### ${e.kind}
+
+Behavior assessable: ${e.adapted !== null}. Timing eligible: ${cell(e.timing?.eligible)}. A missing work/phase gate or interrupted run is unassessable, not a successful stop or an awareness failure.
+
+${e.suppression ? `Target source changes after update: ${e.suppression.sourceChangesAfterFire}; after the retrieval batch: ${cell(e.suppression.sourceChangesAfterContent)}. Test runs after update: ${e.suppression.testRunsAfterFire}. Forbidden status transitions: ${e.suppression.forbiddenStatusTransitions}.` : ''}
+${e.delayed ? `Second assignment: D${cell(e.delayed.assignmentDecision)}; delay: ${cell(e.delayed.gapDecisions)} decisions. Context read before assignment: ${e.delayed.contentBeforeAssignment}; later retrieval: ${cell(e.delayed.laterRetrievalDecision)}. Premature secondary source changes: ${e.delayed.secondaryChangesBeforeAssignment}.` : ''}
+
+${(e.suppression?.checks ?? e.delayed?.checks ?? []).map((c) => `- ${c.id}: ${c.passed}`).join('\n')}
+`,
+  )
+  .join('\n')}
 
 ## Urgent work
 

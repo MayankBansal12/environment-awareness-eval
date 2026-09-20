@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "repository": "MayankBansal12/environment-awareness-eval",
+  "release": "dataset-v1",
+  "asset": "viewer-dataset-v1.json.gz",
+  "sha256": "6dd3a2c25834c9f077e9ae3586fee14d22a422cbe66dac404921b5e3d78b2dca",
+  "bytes": 15136513,
+  "sessions": 336,
+  "evidence": {
+    "asset": "evidence-v1.tar.gz",
+    "bytes": 172057295,
+    "sha256": "d4b889aa6712f4f5785f8fb3849fc22ff6a2d53c837102068cb144e6e4f8f1ad"
+  }
+}

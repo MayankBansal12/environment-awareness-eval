@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { fulfillmentFamily } from './families/fulfillment.js';
 import { settlementFamily } from './families/settlement.js';
+import { withDelayedTask } from './families/delayed.js';
 import {
   loadSchema,
   type LinearNoise,
@@ -17,26 +18,50 @@ export const FAMILIES = {
 export const familySchema = z.enum(['settlement', 'fulfillment']);
 export type FamilyId = z.infer<typeof familySchema>;
 
-/** ambient: unread counters only. exposed: full notification content inline (positive control). */
-export const deliverySchema = z.enum(['ambient', 'exposed']);
+/** interrupt: native Codex turn interruption at a controlled tool boundary, unread cue only. */
+export const deliverySchema = z.enum(['ambient', 'exposed', 'interrupt']);
 export type Delivery = z.infer<typeof deliverySchema>;
 export const noiseSchema = z.enum(['none', 'normal', 'heavy']);
 export type Noise = z.infer<typeof noiseSchema>;
+export const scenarioSchema = z.enum([
+  'updates',
+  'task-cancellation',
+  'urgency-downgrade',
+  'delayed-relevance',
+]);
+export type Scenario = z.infer<typeof scenarioSchema>;
 
-export const conditionSchema = z.object({
-  family: familySchema,
-  load: loadSchema,
-  noise: noiseSchema,
-  delivery: deliverySchema,
-  seed: z.number().int().min(0).max(0xffffffff),
-});
+export const conditionSchema = z
+  .object({
+    // Omitted in historical artifacts: the original four-update arm.
+    scenario: scenarioSchema.optional(),
+    family: familySchema,
+    load: loadSchema,
+    noise: noiseSchema,
+    delivery: deliverySchema,
+    /** Negative control: retain the task and noise, suppress actionable updates. */
+    updates: z.enum(['enabled', 'disabled']).optional(),
+    seed: z.number().int().min(0).max(0xffffffff),
+  })
+  .refine((c) => c.scenario !== 'task-cancellation' || c.load === 'high', {
+    message: 'Task cancellation uses a fixed high-load fixture, not a load sweep',
+    path: ['load'],
+  });
 export type Condition = z.infer<typeof conditionSchema>;
+export const familyFor = (condition: Pick<Condition, 'family' | 'scenario'>): TaskFamily =>
+  condition.scenario === 'delayed-relevance'
+    ? withDelayedTask(FAMILIES[condition.family])
+    : FAMILIES[condition.family];
 
 export const importantKinds = [
   'requirement_change',
   'urgent_assignment',
   'comment_change',
   'decoy',
+  'task_cancellation',
+  'urgency_downgrade',
+  'delayed_context',
+  'followup_assignment',
 ] as const;
 export type ImportantKind = (typeof importantKinds)[number];
 
@@ -44,15 +69,21 @@ export interface Trigger {
   after: ImportantKind | 'start';
   /** Earliest settled decision relative to the previous event. */
   minGap: number;
-  when: 'source_inspection' | 'focal_edit' | 'test_run' | 'new_module';
+  when:
+    | 'source_inspection'
+    | 'focal_edit'
+    | 'test_run'
+    | 'new_module'
+    | 'hotfix_work'
+    | 'focal_done';
   /** Fire regardless of the condition once this many decisions have passed. */
-  fallbackGap: number;
+  fallbackGap?: number;
 }
 
 /**
  * Observable milestones only, identical across models and conditions. Events settle between
- * decisions; no hidden checks, reasoning, or mid-batch interruption. Short fallbacks limit
- * dependence on tool style. At most one important event per decision (all minGap values are 1).
+ * decisions; no hidden checks, reasoning, or mid-batch interruption. The original script-3.0
+ * schedule is preserved. New arms below have their own observable gates.
  */
 export const SCRIPT: ReadonlyArray<{ kind: ImportantKind; trigger: Trigger }> = [
   {
@@ -72,7 +103,46 @@ export const SCRIPT: ReadonlyArray<{ kind: ImportantKind; trigger: Trigger }> = 
     trigger: { after: 'comment_change', minGap: 1, when: 'new_module', fallbackGap: 2 },
   },
 ];
-export const SCRIPT_VERSION = 'script-3.0';
+export const SCRIPTS: Record<Scenario, typeof SCRIPT> = {
+  updates: SCRIPT,
+  'task-cancellation': [
+    {
+      kind: 'task_cancellation',
+      trigger: { after: 'start', minGap: 1, when: 'focal_edit' },
+    },
+  ],
+  'urgency-downgrade': [
+    {
+      kind: 'urgent_assignment',
+      trigger: { after: 'start', minGap: 1, when: 'focal_edit' },
+    },
+    {
+      kind: 'urgency_downgrade',
+      trigger: { after: 'urgent_assignment', minGap: 1, when: 'hotfix_work' },
+    },
+  ],
+  'delayed-relevance': [
+    {
+      kind: 'delayed_context',
+      trigger: { after: 'start', minGap: 1, when: 'source_inspection', fallbackGap: 3 },
+    },
+    {
+      kind: 'followup_assignment',
+      trigger: { after: 'delayed_context', minGap: 3, when: 'focal_done' },
+    },
+  ],
+};
+export const scriptFor = (condition: Pick<Condition, 'scenario' | 'updates'>) =>
+  condition.updates === 'disabled' ? [] : SCRIPTS[condition.scenario ?? 'updates'];
+export const SCRIPT_VERSION = 'scenario-arms-1.1';
+export const scriptVersionFor = (
+  condition: Pick<Condition, 'scenario'> & Partial<Pick<Condition, 'delivery'>>,
+) =>
+  condition.delivery === 'interrupt'
+    ? 'interrupt-1.0'
+    : !condition.scenario || condition.scenario === 'updates'
+      ? 'script-3.0'
+      : SCRIPT_VERSION;
 
 export const NOISE_RATES: Record<Noise, { perDecision: number; onFailure: number }> = {
   none: { perDecision: 0, onFailure: 0 },

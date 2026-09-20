@@ -170,6 +170,7 @@ export async function runClaudeCode(options: {
   // assistant message would break input/output decision pairing. Track the stop and completion.
   let stopped = false;
   let recorded = false;
+  let recording: Promise<void> | undefined;
   const stop = (...args: Parameters<typeof options.stop>) => {
     stopped = true;
     options.stop(...args);
@@ -189,18 +190,24 @@ export async function runClaudeCode(options: {
       }
     };
   const finish = async (message: SDKAssistantMessage['message'], error?: string) => {
-    if (stopped && recorded) return;
+    if ((stopped || abortController.signal.aborted) && recorded) {
+      await recording;
+      return;
+    }
     const normalized = {
       ...claudeMessage(message),
       ...(error ? { stopReason: 'error', errorMessage: error } : {}),
       ...(abortController.signal.aborted ? { stopReason: 'aborted' } : {}),
     };
+    // Claim this response before any await: abort can make the SDK deliver another
+    // assistant event while afterTurn is still snapshotting the budget-crossing batch.
+    recorded = true;
     meter.add(normalized, 'turn');
     if (meter.totals.totalTokens > options.budgets.maxTotalTokens)
       stop('token_budget', 'Run token budget reached');
     if (abortController.signal.aborted) normalized.stopReason = 'aborted';
-    await options.afterTurn(normalized);
-    recorded = true;
+    recording = options.afterTurn(normalized);
+    await recording;
     completed = true;
   };
   const run = query({
@@ -306,7 +313,10 @@ export async function runClaudeCode(options: {
   try {
     for await (const event of run) {
       options.persist(event);
-      if (stopped && recorded) break;
+      if (stopped && recorded) {
+        await recording;
+        break;
+      }
       if (event.type === 'stream_event' && !event.parent_tool_use_id) {
         const part = event.event;
         if (part.type === 'message_start') {
@@ -345,6 +355,7 @@ export async function runClaudeCode(options: {
       }
     }
   } finally {
+    await recording;
     abortController.abort();
     run.close();
     await run.return();

@@ -4,21 +4,43 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, it, vi } from 'vitest';
 import { run, DEFAULT_BUDGETS } from '../src/runner.js';
-import { FAMILIES } from '../src/scenario.js';
+import { familyFor, type Scenario } from '../src/scenario.js';
+import { BASE_SPEC } from '../src/families/types.js';
 import type { Event } from '../src/schema.js';
 
 // Opt-in: exercises the installed Claude Code binary, MCP, hooks, and bwrap.
 // Only synthetic responses and a dummy key are used; no Anthropic requests.
 it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
-  { delivery: 'ambient' as const, tokenBudget: DEFAULT_BUDGETS.maxTotalTokens },
-  { delivery: 'exposed' as const, tokenBudget: DEFAULT_BUDGETS.maxTotalTokens },
-  { delivery: 'ambient' as const, tokenBudget: 141 },
+  {
+    scenario: 'updates' as Scenario,
+    delivery: 'ambient' as const,
+    tokenBudget: DEFAULT_BUDGETS.maxTotalTokens,
+  },
+  {
+    scenario: 'updates' as Scenario,
+    delivery: 'exposed' as const,
+    tokenBudget: DEFAULT_BUDGETS.maxTotalTokens,
+  },
+  { scenario: 'updates' as Scenario, delivery: 'ambient' as const, tokenBudget: 141 },
+  ...(['task-cancellation', 'urgency-downgrade', 'delayed-relevance'] as const).map(
+    (scenario) => ({
+      scenario,
+      delivery: 'ambient' as const,
+      tokenBudget: DEFAULT_BUDGETS.maxTotalTokens,
+    }),
+  ),
+  {
+    scenario: 'delayed-relevance' as Scenario,
+    delivery: 'exposed' as const,
+    tokenBudget: DEFAULT_BUDGETS.maxTotalTokens,
+  },
 ])(
-  'runs native Claude Code batches with $delivery delivery and a $tokenBudget token budget',
-  async ({ delivery, tokenBudget }) => {
+  'runs native Claude Code $scenario with $delivery delivery and a $tokenBudget token budget',
+  async ({ scenario, delivery, tokenBudget }) => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'cc-eval-test-'));
     await mkdir(path.join(root, 'config'));
-    const family = FAMILIES.settlement;
+    const family = familyFor({ family: 'settlement', scenario });
+    const load = scenario === 'updates' ? 'low' : 'high';
     const focalPath = family.focal.paths[0]!;
     const toolCall = (id: string, name: string, input: Record<string, unknown>) => ({
       type: 'tool_use',
@@ -26,12 +48,12 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
       name: 'mcp__workspace__' + name,
       input,
     });
-    const batches = [
+    const original = [
       [
         toolCall('call_list', 'linear_list_my_issues', {}),
         toolCall('call_write', 'write', {
           path: focalPath,
-          content: family.files('low')[focalPath] + '\n// Integration check\n',
+          content: family.files(load)[focalPath] + '\n// Integration check\n',
         }),
       ],
       [
@@ -41,6 +63,72 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
       [toolCall('call_reread', 'linear_get_issue', { id: family.focal.id })],
       [{ type: 'text', text: 'Finished.' }],
     ];
+    const writeSources = (files: Record<string, string>, prefix: string) =>
+      Object.entries(files).map(([path, content], i) =>
+        toolCall(prefix + i, 'write', { path, content }),
+      );
+    const done = (ticket: string) =>
+      toolCall('done-' + ticket, 'linear_update_issue_status', {
+        id: ticket,
+        status: 'done',
+      });
+    const handoff = (ticket: string) =>
+      toolCall('handoff-' + ticket, 'linear_comment', {
+        id: ticket,
+        body: 'Work stopped and preserved for handoff.',
+      });
+    const batches =
+      scenario === 'updates'
+        ? original
+        : scenario === 'task-cancellation'
+          ? [
+              original[0]!,
+              [
+                toolCall('cancel_read', 'linear_get_issue', { id: family.focal.id }),
+                handoff(family.focal.id),
+              ],
+              original[3]!,
+            ]
+          : scenario === 'urgency-downgrade'
+            ? [
+                original[0]!,
+                [
+                  toolCall('urgent_read', 'linear_get_issue', { id: family.hotfix.id }),
+                  toolCall('urgent_tests', 'read', { path: family.hotfix.testPaths![0] }),
+                ],
+                [
+                  toolCall('downgrade_read', 'linear_get_issue', { id: family.hotfix.id }),
+                  handoff(family.hotfix.id),
+                ],
+                [
+                  ...writeSources(family.referenceFocal(BASE_SPEC), 'focal-'),
+                  done(family.focal.id),
+                ],
+                original[3]!,
+              ]
+            : [
+                [toolCall('inspect', 'read', { path: focalPath })],
+                [toolCall('early_context', 'slack_read', {})],
+                [
+                  toolCall('partial_work', 'write', {
+                    path: focalPath,
+                    content: family.files(load)[focalPath] + '\n// work in progress\n',
+                  }),
+                ],
+                [
+                  ...writeSources(family.referenceFocal(BASE_SPEC), 'focal-'),
+                  done(family.focal.id),
+                ],
+                [
+                  toolCall('followup_read', 'linear_get_issue', { id: family.hotfix.id }),
+                  toolCall('recall', 'slack_search', { query: 'exporter v2' }),
+                ],
+                [
+                  ...writeSources(family.referenceHotfix(), 'followup-'),
+                  done(family.hotfix.id),
+                ],
+                original[3]!,
+              ];
     const requests: Array<Record<string, unknown>> = [];
     const server = createServer(async (req, res) => {
       let body = '';
@@ -71,7 +159,7 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
         return;
       }
       requests.push(payload);
-      const content = batches[requests.length - 1] ?? batches[2]!;
+      const content = batches[requests.length - 1] ?? original[3]!;
       res.setHeader('content-type', 'text/event-stream');
       const send = (event: Record<string, unknown>) =>
         res.write(`event: ${event['type']}\ndata: ${JSON.stringify(event)}\n\n`);
@@ -139,7 +227,14 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
       const result = await run({
         runId: 'synthetic',
         resultsDir: root,
-        condition: { family: 'settlement', load: 'low', noise: 'none', delivery, seed: 1 },
+        condition: {
+          family: 'settlement',
+          scenario,
+          load,
+          noise: 'none',
+          delivery,
+          seed: 1,
+        },
         budgets: { ...DEFAULT_BUDGETS, maxTotalTokens: tokenBudget, timeoutMs: 60_000 },
         keepWorkspace: false,
         modelConfig: { provider: 'anthropic', model: 'claude-opus-5', thinking: 'default' },
@@ -162,9 +257,36 @@ it.skipIf(process.env['CLAUDE_CODE_INTEGRATION_TEST'] !== '1').each([
       expect(result.termination, JSON.stringify(result.termination)).toMatchObject({
         reason: 'agent_finished',
       });
-      expect(requests).toHaveLength(4);
+      expect(requests).toHaveLength(batches.length);
       expect(requests.every((r) => r['model'] === 'claude-opus-5')).toBe(true);
       expect(requests.every((r) => r['max_tokens'] === 8192)).toBe(true);
+      if (scenario !== 'updates') {
+        const outcome = result.grade.events.at(-1)!;
+        expect(result.grade.valid).toBe(true);
+        expect(outcome.adapted, JSON.stringify(outcome)).toBe(true);
+        if (scenario === 'urgency-downgrade') {
+          expect(outcome.timing).toMatchObject({
+            eligible: true,
+            targetChecksFailingAtFire: family.checkIds.hotfix.length - 1,
+          });
+          const trace = (await readFile(path.join(root, 'synthetic/trace.jsonl'), 'utf8'))
+            .trim()
+            .split('\n')
+            .map((line) => JSON.parse(line) as Event);
+          expect(
+            trace.find(
+              (e) => e.type === 'environment_event' && e.event.kind === 'urgency_downgrade',
+            ),
+          ).toMatchObject({ trigger: { hotfixEdit: false, hotfixTestInspection: true } });
+        }
+        if (scenario === 'delayed-relevance')
+          expect(outcome.delayed).toMatchObject({
+            assignmentDecision: 4,
+            contentBeforeAssignment: true,
+            laterRetrievalDecision: 5,
+          });
+        return;
+      }
       const trace = (await readFile(path.join(root, 'synthetic/trace.jsonl'), 'utf8'))
         .trim()
         .split('\n')

@@ -7,3 +7,6 @@ results/
 .env.local
 viewer/dist/
 viewer/public/data/
+
+.vercel/
+.env*

@@ -613,6 +613,7 @@ export const settlementFamily: TaskFamily = {
 
 Make src/webhooks.mjs follow the Webhooks section of the README. This incident takes priority over your current ticket. Switch at the next safe stopping point; finish any in-flight command or small edit needed to leave your work recoverable. Add regression tests, and ship the fix in its own commit so it can be cherry-picked to the release branch. Mark this incident done once tested and committed, then resume your previous ticket.`,
     paths: ['src/webhooks.mjs'],
+    testPaths: ['tests/webhooks.test.mjs'],
   },
   watched: [
     {

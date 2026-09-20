@@ -11,10 +11,6 @@
  * stated intent, would be the viewer inventing evidence.
  */
 
-import { useState } from 'react';
-import { outcomeLabel } from '../derive/metrics.js';
-import { classificationTone } from '../derive/metrics.js';
-import type { RunBundle } from '../derive/model.js';
 import { PHASE_GLYPH } from '../derive/phases.js';
 import type { MarkerRow } from '../derive/model.js';
 import type { ActivityRow, ReasoningState, TurnRow } from '../derive/turns.js';
@@ -38,8 +34,6 @@ interface Props {
   gapFrom: number | null;
   gapTo: number | null;
   onSelect: (decisionIndex: number) => void;
-  finalReport: string;
-  run: RunBundle;
 }
 
 export function ActivityPane({
@@ -48,122 +42,30 @@ export function ActivityPane({
   gapFrom,
   gapTo,
   onSelect,
-  finalReport,
-  run,
 }: Props): JSX.Element {
-  const [view, setView] = useState<'summary' | 'activity'>('summary');
-  const bodyRef = useRevealSelected('.turncard.active', `${cursor}:${view}`);
-  const turns = rows.filter((row): row is TurnRow => row.kind === 'turn');
-  const actions = turns.flatMap((turn) => turn.actions);
+  const bodyRef = useRevealSelected('.turncard.active', cursor);
   const inGap = (decisionIndex: number): boolean =>
     gapFrom !== null &&
     decisionIndex >= gapFrom &&
     (gapTo === null || decisionIndex < gapTo);
 
   return (
-    <section className="pane activitypane">
-      <h3>
-        <span>Agent overview</span>
-        <span className="nav" aria-label="Agent view">
-          <button
-            aria-pressed={view === 'summary'}
-            className={view === 'summary' ? 'active' : ''}
-            onClick={() => setView('summary')}
-          >
-            Summary
-          </button>
-          <button
-            aria-pressed={view === 'activity'}
-            className={view === 'activity' ? 'active' : ''}
-            onClick={() => setView('activity')}
-          >
-            Activity & reasoning
-          </button>
-        </span>
-      </h3>
-
-      {rows.some(
-        (row) => row.kind !== 'marker' && row.reasoningState === 'not_captured',
-      ) && (
-        <p className="capture-note">
-          Some decisions have no captured reasoning. Activity shows the recorded actions.
-        </p>
-      )}
-      <div className="pane-body" ref={bodyRef}>
-        {view === 'summary' ? (
-          <div className="agent-summary">
-            <div className="eyebrow">Whole-run summary</div>
-            <h2>{outcomeLabel(run)}</h2>
-            <span className={`outcome-badge ${classificationTone(run)}`}>
-              Stopped: {run.summary.termination.reason.replace(/_/g, ' ')}
-            </span>
-            <div className="agent-stats">
-              <div>
-                <b>{turns.length}</b>
-                <span>decisions</span>
-              </div>
-              <div>
-                <b>{actions.length}</b>
-                <span>tool calls</span>
-              </div>
-              <div>
-                <b>{actions.filter((action) => action.phase === 'modify').length}</b>
-                <span>edit actions</span>
-              </div>
-              <div>
-                <b>{actions.filter((action) => action.phase === 'test').length}</b>
-                <span>test actions</span>
-              </div>
-            </div>
-            <div className="summary-update">
-              <div className="eyebrow">Response to the selected update</div>
-              <p>
-                {gapFrom === null
-                  ? 'No update indicator was recorded.'
-                  : gapTo === null
-                    ? `The agent received an indicator at D${gapFrom}, but never received the message content.`
-                    : `Update indicated at D${gapFrom}; message content entered the agent’s context at D${gapTo}.`}
-              </p>
-              <button
-                onClick={() => {
-                  setView('activity');
-                  onSelect(gapTo ?? gapFrom ?? cursor);
-                }}
-              >
-                Inspect agent activity →
-              </button>
-            </div>
-            <div className="fr-title">Agent’s closing message · recorded text</div>
-            <div className="fr-body">
-              {finalReport ||
-                'No closing message recorded. Open activity to inspect the recorded actions.'}
-            </div>
-          </div>
+    <div className="activitypane pane-body" ref={bodyRef}>
+      {rows.map((row) =>
+        row.kind === 'marker' ? (
+          <MarkerBand key={`m${row.seq}`} row={row} onSelect={onSelect} />
         ) : (
-          rows.map((row) =>
-            row.kind === 'marker' ? (
-              <MarkerBand key={`m${row.seq}`} row={row} onSelect={onSelect} />
-            ) : (
-              <TurnCard
-                key={`t${row.seq}`}
-                turn={row}
-                active={row.decisionIndex === cursor}
-                future={row.decisionIndex > cursor}
-                inGap={inGap(row.decisionIndex)}
-                onSelect={onSelect}
-              />
-            ),
-          )
-        )}
-
-        {view === 'activity' && finalReport !== '' && (
-          <div className="finalreport">
-            <div className="fr-title">■ final report</div>
-            <div className="fr-body">{finalReport}</div>
-          </div>
-        )}
-      </div>
-    </section>
+          <TurnCard
+            key={`t${row.seq}`}
+            turn={row}
+            active={row.decisionIndex === cursor}
+            future={row.decisionIndex > cursor}
+            inGap={inGap(row.decisionIndex)}
+            onSelect={onSelect}
+          />
+        ),
+      )}
+    </div>
   );
 }
 
@@ -190,49 +92,45 @@ function TurnCard({
     .join(' ');
 
   return (
-    <div
-      className={classes}
-      role="button"
-      tabIndex={0}
-      aria-label={`Inspect decision ${turn.decisionIndex}`}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onSelect(turn.decisionIndex);
-        }
-      }}
-      onClick={() => onSelect(turn.decisionIndex)}
-    >
-      <div className="turn-head">
+    <article className={classes}>
+      <button
+        className="turn-head turn-select"
+        aria-label={`Inspect decision ${turn.decisionIndex}`}
+        aria-current={active ? 'step' : undefined}
+        onClick={() => onSelect(turn.decisionIndex)}
+      >
         <span className="tl-d">D{turn.decisionIndex}</span>
         {turn.phase !== null && (
           <span className={`glyph ${turn.phase}`}>{PHASE_GLYPH[turn.phase]}</span>
         )}
-        <span className="turn-headline">{turn.headline}</span>
+        <span className="turn-headline" title={turn.headline}>
+          {turn.isFinal ? 'Finished' : turn.headline}
+        </span>
         {turn.targets !== '' && <span className="turn-targets">{turn.targets}</span>}
-      </div>
+      </button>
 
-      {turn.reasoning !== null && (
-        <div className="reasoning">
-          <span className="reasoning-tag">reasoning</span>
-          {turn.reasoning}
-        </div>
-      )}
+      {turn.hasNarration &&
+        (turn.isFinal ? (
+          <details className="turn-message">
+            <summary>Final response</summary>
+            <div className="narration">{turn.narration}</div>
+          </details>
+        ) : (
+          <div className="narration">{turn.narration}</div>
+        ))}
 
-      {turn.hasNarration ? (
-        <div className="narration">{turn.narration}</div>
-      ) : (
-        turn.reasoning === null &&
-        turn.reasoningState !== 'not_captured' && (
-          <div className="narration none">{REASONING_NOTE[turn.reasoningState]}</div>
-        )
-      )}
-
-      {turn.reasoningTokens !== null && turn.reasoning === null && (
-        <div className="narration none">
-          {turn.reasoningTokens} reasoning token
-          {turn.reasoningTokens === 1 ? '' : 's'} billed — text not returned by the provider
-        </div>
+      {active && turn.reasoningState !== 'none_returned' && (
+        <details className="turn-reasoning">
+          <summary>
+            {turn.reasoning !== null ? 'Reasoning' : REASONING_NOTE[turn.reasoningState]}
+          </summary>
+          {turn.reasoning !== null && <div className="reasoning">{turn.reasoning}</div>}
+          {turn.reasoningTokens !== null && turn.reasoning === null && (
+            <p className="muted small">
+              {turn.reasoningTokens} reasoning tokens billed; text unavailable.
+            </p>
+          )}
+        </details>
       )}
 
       {turn.actions.length > 0 && (
@@ -251,7 +149,7 @@ function TurnCard({
           ))}
         </div>
       )}
-    </div>
+    </article>
   );
 }
 
@@ -263,13 +161,16 @@ function MarkerBand({
   onSelect: (decisionIndex: number) => void;
 }): JSX.Element {
   return (
-    <div className={`band ${row.marker}`} onClick={() => onSelect(row.decisionIndex)}>
+    <button
+      className={`band ${row.marker}`}
+      title={row.detail}
+      onClick={() => onSelect(row.decisionIndex)}
+    >
       <div className="band-title">
         {row.marker === 'trigger' || row.marker === 'termination'
           ? row.title
           : `${row.title}  ·  D${row.decisionIndex}`}
       </div>
-      {row.detail !== '' && <div className="band-detail">{row.detail}</div>}
-    </div>
+    </button>
   );
 }

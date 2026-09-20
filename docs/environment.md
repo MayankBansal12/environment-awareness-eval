@@ -23,6 +23,9 @@ pre-update solution fails the changed checks.
 
 ## Update script
 
+This section describes the original `updates` arm. See [new scenarios](new-scenarios.md)
+for cancellation, urgency downgrade, and the two-phase delayed-relevance arm.
+
 Updates are applied only after continuing tool turns, on trajectory conditions (never hidden checks).
 Terminal responses do not publish new updates or noise. A run can still end before all updates fire,
 or be interrupted before the next input; response-opportunity interpretation remains a grading concern.
@@ -88,6 +91,8 @@ sources, prompt, fixtures, model and budgets; any code change requires a new man
 - `smoke`: one settlement/medium run.
 - `load-sweep`: families × 3 loads × reps, normal noise, ambient.
 - `controls`: high load with no noise, and with exposed delivery.
+- `new-scenarios`: selected new arms × families × reps, fixed high fixture, normal noise,
+  ambient delivery. Optional saved baselines are referenced separately and never rerun.
 
 ## Limits
 

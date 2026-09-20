@@ -14,6 +14,7 @@ import { manifestSchema, type Comparison } from '../../src/experiment.js';
 import type { CapturedMessage } from '../../src/harness/capture.js';
 import { contextSchema, FORMAT, type Event, type Summary } from '../../src/schema.js';
 import type { ExperimentEntry, RunDetail, RunRow, ViewerIndex } from '../src/model.js';
+import { scenarioBehavior } from '../src/derive/metrics.js';
 
 const viewerRoot = fileURLToPath(new URL('..', import.meta.url));
 
@@ -81,6 +82,7 @@ export function rowOf(run: RunDetail, experiment: string | null): RunRow {
     durationMs: s.durationMs,
     importantFired: s.grade.summary['importantFired'] ?? 0,
     importantMissed: s.grade.summary['importantMissed'] ?? 0,
+    ...(scenarioBehavior(s) ? { scenarioBehavior: scenarioBehavior(s)! } : {}),
   };
 }
 
@@ -97,8 +99,8 @@ export async function loadResults(resultsDir: string) {
     stat(p)
       .then((s) => s.isDirectory())
       .catch(() => false);
-  const tryRun = async (dir: string, experiment: string | null) => {
-    const key = path.relative(resultsDir, dir).split(path.sep).join('/');
+  const tryRun = async (dir: string, experiment: string | null, savedKey?: string) => {
+    const key = savedKey ?? path.relative(resultsDir, dir).split(path.sep).join('/');
     try {
       const run = await loadRun(dir, key);
       details.push(run);
@@ -125,9 +127,35 @@ export async function loadResults(resultsDir: string) {
           comparison: JSON.parse(comparison) as Comparison,
         } satisfies ExperimentEntry);
       const runs = path.join(dir, 'runs');
-      if (await isDir(runs))
-        for (const name of (await readdir(runs)).sort())
-          await tryRun(path.join(runs, name), parsed.data.id);
+      for (const trial of parsed.data.trials)
+        if (trial.reused)
+          await tryRun(
+            path.dirname(trial.reused.path),
+            parsed.data.id,
+            path.posix.join(key, 'cached', trial.id),
+          );
+      if (await isDir(runs)) {
+        const names = (await readdir(runs)).sort((a, b) =>
+          a.localeCompare(b, undefined, { numeric: true }),
+        );
+        if (['scenario-matrix', 'interrupt-pilot'].includes(parsed.data.design.profile)) {
+          // One result per planned repetition. Retries retain their original evidence
+          // on disk, but a provider interruption must not become an extra repetition.
+          for (const trial of parsed.data.trials) {
+            if (trial.reused) continue;
+            for (const name of names.toReversed()) {
+              if (name !== trial.id && !name.startsWith(trial.id + '.r')) continue;
+              if (!(await readIfPresent(path.join(runs, name, 'summary.json')))) continue;
+              await tryRun(path.join(runs, name), parsed.data.id);
+              break;
+            }
+          }
+        } else {
+          for (const name of names)
+            if (await readIfPresent(path.join(runs, name, 'summary.json')))
+              await tryRun(path.join(runs, name), parsed.data.id);
+        }
+      }
       return;
     }
     if ((await readIfPresent(path.join(dir, 'summary.json'))) !== null)

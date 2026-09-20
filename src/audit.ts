@@ -106,7 +106,7 @@ export function inspect(trace: Event[], context: Context[], team?: TeamSnapshot)
   const delivery = start[0]?.type === 'run_start' ? start[0].condition.delivery : undefined;
   check(
     'delivery_mode',
-    delivery === 'ambient'
+    delivery !== 'exposed'
       ? inputs.every((c) => c.messages.every((m) => !m.text.includes('<notification>')))
       : fired.every((f) => {
           if (f.type !== 'environment_event') return true;
@@ -119,6 +119,64 @@ export function inspect(trace: Event[], context: Context[], team?: TeamSnapshot)
           );
         }),
   );
+  if (delivery === 'interrupt') {
+    const requested = trace.filter(
+      (e) => e.type === 'interruption' && e.phase === 'requested',
+    );
+    const resumed = trace.filter((e) => e.type === 'interruption' && e.phase === 'resumed');
+    check(
+      'interruptions_paired',
+      requested.length === resumed.length &&
+        requested.every(
+          (r) =>
+            r.type === 'interruption' &&
+            resumed.some(
+              (s) => s.type === 'interruption' && s.turnId === r.turnId && s.seq > r.seq,
+            ),
+        ),
+    );
+    check(
+      'interruptions_follow_events',
+      requested.every(
+        (r) =>
+          r.type === 'interruption' &&
+          r.eventIds.length > 0 &&
+          r.eventIds.every((id) =>
+            fired.some(
+              (f) => f.event.id === id && f.seq < r.seq && f.decision === r.decision,
+            ),
+          ),
+      ),
+    );
+    check(
+      'interrupt_event_coverage',
+      fired.every((f) =>
+        requested.some(
+          (r) =>
+            r.type === 'interruption' &&
+            r.eventIds.includes(f.event.id) &&
+            r.decision === f.decision,
+        ),
+      ),
+    );
+    check(
+      'no_actions_after_interrupt',
+      requested.every(
+        (r) =>
+          !trace.some(
+            (e) =>
+              e.type === 'tool_action' &&
+              !e.observation.isError &&
+              e.decision === r.decision &&
+              e.seq > r.seq,
+          ),
+      ),
+    );
+    check(
+      'interrupt_response_opportunity',
+      resumed.every((r) => inputs.some((i) => i.decision === r.decision + 1)),
+    );
+  }
   return { eligible: checks.every((c) => c.passed), checks, hashes: {} };
 }
 

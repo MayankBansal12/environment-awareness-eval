@@ -10,6 +10,10 @@ export const KIND_LABEL: Record<ImportantKind, string> = {
   urgent_assignment: 'Urgent hotfix',
   comment_change: 'Buried comment',
   decoy: 'Decoy opinion',
+  task_cancellation: 'Task cancellation',
+  urgency_downgrade: 'Urgency downgrade',
+  delayed_context: 'Context for later',
+  followup_assignment: 'Follow-up assignment',
 };
 
 export interface UpdateMark {
@@ -123,28 +127,34 @@ export function decisionRows(trace: Event[]): DecisionRow[] {
 }
 
 export interface RunFilters {
+  scenario: string;
   experiment: string;
   family: string;
   load: string;
   noise: string;
   delivery: string;
+  updates: string;
 }
 export const NO_FILTERS: RunFilters = {
+  scenario: '',
   experiment: '',
   family: '',
   load: '',
   noise: '',
   delivery: '',
+  updates: '',
 };
 
 export function filterRuns(rows: RunRow[], f: RunFilters): RunRow[] {
   return rows.filter(
     (r) =>
+      (!f.scenario || (r.condition.scenario ?? 'updates') === f.scenario) &&
       (!f.experiment || (r.experiment ?? 'dev') === f.experiment) &&
       (!f.family || r.condition.family === f.family) &&
       (!f.load || r.condition.load === f.load) &&
       (!f.noise || r.condition.noise === f.noise) &&
-      (!f.delivery || r.condition.delivery === f.delivery),
+      (!f.delivery || r.condition.delivery === f.delivery) &&
+      (!f.updates || (r.condition.updates ?? 'enabled') === f.updates),
   );
 }
 
@@ -159,13 +169,15 @@ export interface TrendGroup {
 export function trendGroups(comparison: Comparison): TrendGroup[] {
   const groups = new Map<string, TrendGroup>();
   for (const cell of comparison.cells) {
-    const [family, load, noise, delivery] = cell.cell.split('/') as [
+    const [family, load, noise, delivery, scenario, control] = cell.cell.split('/') as [
       string,
       string,
       string,
       string,
+      string?,
+      string?,
     ];
-    const key = `${family}/${noise}/${delivery}`;
+    const key = `${family}/${noise}/${delivery}${scenario ? '/' + scenario : ''}${control ? '/' + control : ''}`;
     const group = groups.get(key) ?? { key, byLoad: {} };
     group.byLoad[load as (typeof LOADS)[number]] = cell;
     groups.set(key, group);
@@ -175,7 +187,22 @@ export function trendGroups(comparison: Comparison): TrendGroup[] {
 
 export { importantKinds };
 /** Comparison cells always carry every important kind. */
-export const cellEvent = (cell: Cell, kind: ImportantKind) => cell.events[kind]!;
+export const cellEvent = (cell: Cell, kind: ImportantKind): Cell['events'][string] =>
+  cell.events[kind] ?? {
+    fired: 0,
+    behaviorUnassessable: 0,
+    timingEligible: 0,
+    missed: { successes: 0, n: 0, proportion: null, interval95: null },
+    retrievalUnassessable: 0,
+    detectionLatencyMedian: null,
+    detectionLatencyMean: null,
+    focalChangesBeforeContentMean: null,
+    commitsBeforeContentMean: null,
+    adapted: { successes: 0, n: 0, proportion: null, interval95: null },
+    contextTokensAtFireMean: null,
+    focalChecksFailingAtFireMean: null,
+    firedDuringTestFailure: 0,
+  };
 
 /** Captured input messages for a decision, flagging those not present in the previous input. */
 export function inputMessages(run: RunDetail, decision: number) {

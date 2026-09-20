@@ -1,33 +1,29 @@
 import { useState } from 'react';
 import { filterRuns, LOADS, NO_FILTERS, type RunFilters } from '../derive.js';
+import { modelName, modelResults, type ModelResult } from '../derive/results.js';
 import { minutes, tokens, usd } from '../format.js';
-import type { RunRow, ViewerIndex } from '../model.js';
+import type { ViewerIndex } from '../model.js';
 import { href } from './App.js';
-import { Status } from './Status.js';
+import { prefetchRun } from '../data.js';
 
 const OPTIONS: Record<keyof RunFilters, string[]> = {
+  scenario: ['updates', 'task-cancellation', 'urgency-downgrade', 'delayed-relevance'],
   experiment: [],
   family: ['settlement', 'fulfillment'],
   load: [...LOADS],
   noise: ['none', 'normal', 'heavy'],
-  delivery: ['ambient', 'exposed'],
+  delivery: ['ambient', 'exposed', 'interrupt'],
+  updates: ['enabled', 'disabled'],
 };
-type SortKey =
-  'key' | 'load' | 'decisions' | 'totalTokens' | 'costUsd' | 'durationMs' | 'missed';
-const sortValue = (r: RunRow, k: SortKey): string | number =>
-  k === 'load'
-    ? LOADS.indexOf(r.condition.load)
-    : k === 'missed'
-      ? r.importantMissed
-      : k === 'key'
-        ? r.key
-        : r[k];
+type SortKey = keyof ModelResult;
+const sortValue = (r: ModelResult, k: SortKey): string | number =>
+  k === 'runs' ? r.runs.length : r[k];
 
 export function RunList({ index, query }: { index: ViewerIndex; query: URLSearchParams }) {
   const filters: RunFilters = { ...NO_FILTERS };
   for (const k of Object.keys(NO_FILTERS) as Array<keyof RunFilters>)
     filters[k] = query.get(k) ?? '';
-  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'key', dir: 1 });
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'model', dir: 1 });
   const setFilter = (k: keyof RunFilters, v: string) => {
     const next = Object.fromEntries(
       Object.entries({ ...filters, [k]: v }).filter(([, value]) => value),
@@ -35,7 +31,8 @@ export function RunList({ index, query }: { index: ViewerIndex; query: URLSearch
     location.hash = href.runs(next);
   };
   const experiments = [...new Set(index.runs.map((r) => r.experiment ?? 'dev'))].sort();
-  const rows = filterRuns(index.runs, filters).sort((a, b) => {
+  const rows = filterRuns(index.runs, filters);
+  const models = modelResults(rows).sort((a, b) => {
     const x = sortValue(a, sort.key),
       y = sortValue(b, sort.key);
     return (x < y ? -1 : x > y ? 1 : 0) * sort.dir;
@@ -44,10 +41,14 @@ export function RunList({ index, query }: { index: ViewerIndex; query: URLSearch
     <th
       className={`sortable${numeric ? ' num' : ''}`}
       aria-sort={sort.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}
-      onClick={() => setSort({ key, dir: sort.key === key ? (-sort.dir as 1 | -1) : 1 })}
     >
-      {label}
-      {sort.key === key ? (sort.dir === 1 ? ' ↑' : ' ↓') : ''}
+      <button
+        className="table-sort"
+        onClick={() => setSort({ key, dir: sort.key === key ? (-sort.dir as 1 | -1) : 1 })}
+      >
+        {label}
+        {sort.key === key ? (sort.dir === 1 ? ' ↑' : ' ↓') : ''}
+      </button>
     </th>
   );
 
@@ -68,9 +69,15 @@ export function RunList({ index, query }: { index: ViewerIndex; query: URLSearch
       <header className="page-heading">
         <div>
           <h2>Evaluation results</h2>
-          <p>How each model noticed an update, responded, and finished the task.</p>
+          <p>
+            Saved and new runs. Filter by experiment and scenario to compare like
+            conditions.
+          </p>
         </div>
-        <span className="count-label">{rows.length} runs</span>
+        <span className="count-label">
+          {models.length} {models.length === 1 ? 'model' : 'models'} · {rows.length}{' '}
+          {rows.length === 1 ? 'run' : 'runs'}
+        </span>
       </header>
       <div className="summary-cards">
         <div className="card">
@@ -110,84 +117,70 @@ export function RunList({ index, query }: { index: ViewerIndex; query: URLSearch
         </span>
       </div>
       <div className="results-table-wrap">
-        <table className="grid results-table">
+        <table className="grid results-table model-results-table">
           <thead>
             <tr>
-              {th('key', 'Run')}
-              <th>Family</th>
-              {th('load', 'Load')}
-              <th>Noise</th>
-              <th>Delivery</th>
-              <th>Model</th>
-              <th>Termination</th>
-              <th>Validity</th>
-              {th('missed', 'Missed', true)}
-              {th('decisions', 'Decisions', true)}
-              {th('totalTokens', 'Tokens', true)}
-              {th('costUsd', 'Cost', true)}
-              {th('durationMs', 'Duration', true)}
-              <th>Compare</th>
+              {th('model', 'Model')}
+              {th('runs', 'Runs', true)}
+              {th('finishedRuns', 'Finished', true)}
+              {th('validRuns', 'Valid', true)}
+              {th('importantMissed', 'Missed updates', true)}
+              {th('decisions', 'Total decisions', true)}
+              {th('totalTokens', 'Total tokens', true)}
+              {th('costUsd', 'Total cost', true)}
+              {th('durationMs', 'Total duration', true)}
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {models.map((r) => (
               <tr
                 className="result-row"
-                key={r.key}
+                key={r.model}
                 onClick={(e) => {
                   if (!(e.target as HTMLElement).closest('a, button'))
-                    location.hash = href.run(r.key);
+                    location.hash = href.run(r.runs[0]!.key);
                 }}
               >
                 <td>
-                  <a href={href.run(r.key)}>{r.runId}</a>
-                  <div className="muted small">{r.experiment ?? 'dev'}</div>
+                  <a
+                    href={href.run(r.runs[0]!.key)}
+                    onPointerEnter={() => prefetchRun(r.runs[0]!.key)}
+                    onFocus={() => prefetchRun(r.runs[0]!.key)}
+                  >
+                    {modelName(r.model)}
+                  </a>
+                  <div className="muted small">View runs →</div>
                 </td>
-                <td>{r.condition.family}</td>
-                <td>
-                  <span className={`load load-${r.condition.load}`}>
-                    {r.condition.load}
-                  </span>
-                </td>
-                <td>{r.condition.noise}</td>
-                <td>{r.condition.delivery}</td>
-                <td className="small">{r.model}</td>
-                <td className="small">{r.termination}</td>
-                <td>
-                  <Status valid={r.valid} censored={r.censored} />
+                <td className="num">{r.runs.length}</td>
+                <td className="num">
+                  {r.finishedRuns}/{r.runs.length}
                 </td>
                 <td className="num">
-                  {r.importantMissed}/{r.importantFired}
+                  {r.validRuns}/{r.runs.length}
+                </td>
+                <td className="num">
+                  {r.importantFired ? `${r.importantMissed}/${r.importantFired}` : '—'}
                 </td>
                 <td className="num">{r.decisions}</td>
                 <td className="num">{tokens(r.totalTokens)}</td>
                 <td className="num">{usd(r.costUsd)}</td>
                 <td className="num">{minutes(r.durationMs)}</td>
-                <td>
-                  <a
-                    className="compare-run"
-                    href={href.compare(
-                      r.key,
-                      index.runs.find(
-                        (other) =>
-                          other.key !== r.key &&
-                          other.experiment === r.experiment &&
-                          other.model === r.model &&
-                          other.condition.family === r.condition.family &&
-                          other.condition.load === r.condition.load &&
-                          other.condition.noise === r.condition.noise &&
-                          other.condition.delivery === r.condition.delivery,
-                      )?.key,
-                    )}
-                  >
-                    Compare
-                  </a>
-                </td>
               </tr>
             ))}
+            {!models.length && (
+              <tr>
+                <td colSpan={9} className="muted">
+                  No runs match these filters.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+      <p className="muted small">
+        Valid and missed-update counts use valid, uncensored runs. Usage and duration are
+        totals across all matching runs.
+      </p>
       <Skipped index={index} />
     </section>
   );
